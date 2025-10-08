@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.rinorsi.cadeditor.mixin",
+  "plugin": "com.github.rinorsi.cadeditor.mixin.CADEditorMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractContainerScreenMixin",
+    "AbstractSelectionListMixin",
+    "AbstractWidgetMixin",
+    "CompoundTagMixin",
+    "CreativeModeInventoryScreenMixin",
+    "EditBoxMixin",
+    "MultiLineEditBoxMixin",
+    "MultilineTextFieldMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

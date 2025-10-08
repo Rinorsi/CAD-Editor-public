@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "cadeditor",
+  "version": "${version}",
+  "name": "CAD Editor",
+  "description": "A simple GUI mod to edit items, blocks, and entities in your world.",
+  "license": "MIT",
+  "icon": "logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.github.rinorsi.cadeditor.fabric.FabricCADEditorMod"
+    ],
+    "client": [
+      "com.github.rinorsi.cadeditor.fabric.FabricCADEditorModClient"
+    ],
+    "modmenu": [
+      "com.github.rinorsi.cadeditor.fabric.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "cadeditor-common.mixins.json"
+  ],
+  "accessWidener": "cadeditor.accesswidener",
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_api_version}",
+    "minecraft": "${minecraft_version}",
+    "java": ">=21"
+  },
+  "suggests": {
+    "modmenu": ">=${modmenu_version}"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.modrinth": "https://modrinth.com/project/cad-editor",
+        "modmenu.curseforge": "https://legacy.curseforge.com/minecraft/mc-mods/cad-editor"
+      }
+    }
+  }
+}

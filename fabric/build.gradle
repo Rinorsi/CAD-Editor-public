@@ -1,0 +1,127 @@
+plugins {
+    id "dev.architectury.loom" version "1.10.433"
+    id "architectury-plugin"
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    exclude 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/ATTRIBUTION.txt'
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+loom {
+    accessWidenerPath = project(":common").file("src/main/resources/cadeditor.accesswidener")
+    runs {
+        client {
+            vmArg "-Dfile.encoding=UTF-8"
+        }
+        server {
+            vmArg "-Dfile.encoding=UTF-8"
+        }
+    }
+}
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+
+    modCompileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    modRuntimeOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive = false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive = false }
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "loader_version", rootProject.loader_version
+    inputs.property "fabric_api_version", rootProject.fabric_api_version
+    inputs.property "minecraft_version", rootProject.minecraft_version
+    inputs.property "modmenu_version", rootProject.modmenu_version
+    filesMatching("fabric.mod.json") {
+        expand(
+                version: project.version,
+                loader_version: rootProject.loader_version,
+                fabric_api_version: rootProject.fabric_api_version,
+                minecraft_version: rootProject.minecraft_version,
+                modmenu_version: rootProject.modmenu_version
+        )
+    }
+
+    from(project(":common").file("src/main/resources")) {
+        include "cadeditor.accesswidener"
+    }
+
+    from(rootProject.file('LICENSE')) { into 'META-INF' }
+    from(rootProject.file('ATTRIBUTION.txt')) { into 'META-INF' }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+
+    from(rootProject.file('LICENSE')) { into 'META-INF' }
+    from(rootProject.file('ATTRIBUTION.txt')) { into 'META-INF' }
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = "fabric"
+
+    doFirst {
+        try {
+            from(rootProject.file('LICENSE')) { into 'META-INF' }
+            from(rootProject.file('ATTRIBUTION.txt')) { into 'META-INF' }
+        } catch (Throwable ignored) {}
+    }
+}
+
+jar {
+    archiveClassifier = "dev"
+    from(rootProject.file('LICENSE')) { into 'META-INF' }
+    from(rootProject.file('ATTRIBUTION.txt')) { into 'META-INF' }
+}
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+tasks.withType(JavaCompile).configureEach { options.encoding = "UTF-8" }
+
+afterEvaluate {
+    def aw = project(":common").file("src/main/resources/cadeditor.accesswidener")
+    if (!aw.exists()) {
+        logger.warn("Warning: accesswidener file missing at " + aw.path + " — run will likely fail with 'Missing accessWidener file' at runtime.")
+    }
+}
+
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = "fabric"
+}
+
+jar { archiveClassifier = "dev" }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+tasks.withType(JavaCompile).configureEach { options.encoding = "UTF-8" }

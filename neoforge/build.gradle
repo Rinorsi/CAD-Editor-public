@@ -1,0 +1,101 @@
+plugins {
+    id "dev.architectury.loom" version "1.10.433"
+    id "architectury-plugin"
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id "me.shedaniel.unified-publishing"
+}
+
+loom {
+    accessWidenerPath = project(":common").file("src/main/resources/cadeditor.accesswidener")
+
+    runs {
+        client {
+            vmArg "-Dfile.encoding=UTF-8"
+            vmArg "-Dsun.stdout.encoding=UTF-8"
+            vmArg "-Dsun.stderr.encoding=UTF-8"
+        }
+        server {
+            vmArg "-Dfile.encoding=UTF-8"
+            vmArg "-Dsun.stdout.encoding=UTF-8"
+            vmArg "-Dsun.stderr.encoding=UTF-8"
+        }
+    }
+}
+
+repositories {
+    maven { url = uri("https://maven.neoforged.net/releases/") }
+}
+
+architectury {
+    platformSetupLoomIde()
+    neoForge()
+}
+
+configurations {
+    create('common')
+    create('shadowCommon')
+}
+
+configurations.compileClasspath.extendsFrom(configurations.common)
+configurations.runtimeClasspath.extendsFrom(configurations.common)
+
+if (configurations.findByName('developmentNeoForge') != null) {
+    configurations.developmentNeoForge.extendsFrom(configurations.common)
+}
+
+dependencies {
+    neoForge "net.neoforged:neoforge:${rootProject.neo_version}"
+    common(project(path: ":common", configuration: "namedElements")) { transitive = false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive = false }
+    compileOnly "org.jetbrains:annotations:24.1.0"
+}
+
+processResources {
+    from(project(":common").file("src/main/resources")) {
+        include "cadeditor.accesswidener"
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/ATTRIBUTION.txt'
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+    def sc = project.configurations.findByName('shadowCommon')
+    if (sc != null) {
+        configurations = [sc]
+    } else {
+        configurations = []
+    }
+
+    archiveClassifier = "dev-shadow"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = "neoforge"
+
+    from(rootProject.file('LICENSE')) { into 'META-INF' }
+    from(rootProject.file('ATTRIBUTION.txt')) { into 'META-INF' }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jar {
+    archiveClassifier = "dev"
+}
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+tasks.withType(JavaCompile).configureEach { options.encoding = "UTF-8" }
+
+afterEvaluate {
+    def aw = project(":common").file("src/main/resources/cadeditor.accesswidener")
+    if (!aw.exists()) {
+        logger.warn("Warning: accesswidener file missing at " + aw.path + " — runtime may fail with 'Missing accessWidener file' error.")
+    }
+}
