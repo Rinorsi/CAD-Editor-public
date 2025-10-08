@@ -31,11 +31,18 @@
   "suggests": {
     "modmenu": ">=${modmenu_version}"
   },
+  "contact": {
+    "homepage": "https://modrinth.com/project/cad-editor",
+    "sources": "https://github.com/Rinorsi/CAD-Editor-public",
+    "issues": "https://github.com/Rinorsi/CAD-Editor-public/issues"
+  },
   "custom": {
     "modmenu": {
       "links": {
         "modmenu.modrinth": "https://modrinth.com/project/cad-editor",
-        "modmenu.curseforge": "https://legacy.curseforge.com/minecraft/mc-mods/cad-editor"
+        "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/cad-editor",
+        "modmenu.source": "https://github.com/Rinorsi/CAD-Editor-public",
+        "modmenu.issues": "https://github.com/Rinorsi/CAD-Editor-public/issues"
       }
     }
   }

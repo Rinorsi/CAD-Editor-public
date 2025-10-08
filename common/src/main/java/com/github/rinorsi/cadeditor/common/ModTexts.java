@@ -3,6 +3,8 @@ package com.github.rinorsi.cadeditor.common;
 import static com.github.franckyi.guapi.api.GuapiHelper.text;
 import static com.github.franckyi.guapi.api.GuapiHelper.translated;
 
+import java.util.Locale;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -258,7 +260,16 @@ public final class ModTexts {
         if (type == null || type.isEmpty()) {
             return text("");
         }
-        return translated("cadeditor.gui.version_type." + type);
+        String norm = type.trim().toLowerCase(Locale.ROOT);
+
+        String key = switch (norm) {
+            case "alpha", "a" -> "cadeditor.gui.version_type.alpha";
+            case "beta", "b"  -> "cadeditor.gui.version_type.beta";
+            case "release", "r" -> "cadeditor.gui.version_type.release";
+            default -> null;
+        };
+
+        return (key != null) ? translated(key) : text(type);
     }
 
     public static MutableComponent addTag(String color, String with) {

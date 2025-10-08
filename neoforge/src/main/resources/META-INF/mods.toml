@@ -1,14 +1,14 @@
 modLoader = "javafml"
 loaderVersion = "[1,)"
 license = "MIT"
-issueTrackerURL = ""
+issueTrackerURL = "https://github.com/Rinorsi/CAD-Editor-public/issues"
 logoFile = "logo.png"
 
 [[mods]]
 modId = "cadeditor"
 version = "${file.jarVersion}"
 displayName = "CAD Editor"
-displayURL = "https://legacy.curseforge.com/minecraft/mc-mods/cad-editor"
+displayURL = "https://www.curseforge.com/minecraft/mc-mods/cad-editor"
 credits = "Rework based on IBE Editor by Skye (MIT); thanks to the original author and contributors."
 authors = "skyecodes(original author) Rinorsi(rework)"
 description = "Component And Data Editor — a visual, data-component–based editor for items, blocks, and entities. See first, then edit."
@@ -29,6 +29,6 @@ side = "BOTH"
 [[dependencies.cadeditor]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.21,1.21.4]"
+versionRange = "[1.21.1]"
 ordering = "NONE"
 side = "BOTH"
