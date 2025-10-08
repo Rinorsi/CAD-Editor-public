@@ -13,6 +13,11 @@
 A simple, in-game visual editor that lets you edit items, blocks, and entities right inside your current world.
 It supports Minecraft’s **data components** system (1.20.5+), covering common gameplay fields like Custom Model Data, attributes, enchantments, name/lore, container & loot tables, effects, sign text, and more.
 
+CAD Editor (Component And Data Editor) is a refactored and actively maintained continuation based on IBE Editor (original by Skye, MIT license). I am not affiliated with Skye and this is not an official version; all original credits and notices are preserved.
+
+Original project address:
+https://github.com/skyecodes/IBE-Editor
+
 ## Key features
 
 * **In-game GUI editing** – what you see is what you get, then grab the result instantly
