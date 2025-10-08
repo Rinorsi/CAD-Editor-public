@@ -11,6 +11,11 @@
 一款简洁直观的游戏内可视化编辑器，让你在当前世界里直接编辑物品、方块或实体。
 支持 Minecraft 组件系统（1.20.5+），涵盖常见要素：自定义模型数据、属性、附魔、名字/描述、容器与战利品表、效果、告示牌文本等。
 
+CAD Editor（Component And Data Editor）是在 IBE Editor（原作者 Skye，MIT 许可）基础上重构并持续维护的版本。 我与 Skye 无隶属关系，亦非官方版本，但完整保留了原版权声明与署名。
+
+原项目地址：
+https://github.com/skyecodes/IBE-Editor
+
 ## 主要特性
 * 局内 GUI 编辑：所见即所得地修改并拿到结果
 * 组件优先：面向 1.21+ 的 `components` 工作流，同时兼容常见 NBT 用例
