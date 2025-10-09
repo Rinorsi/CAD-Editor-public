@@ -25,7 +25,8 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     protected void setupEntries() {
-        getEntries().add(new TextEntryModel(this, ModTexts.CUSTOM_NAME, getItemName(), this::setItemName));
+        getEntries().add(new TextEntryModel(this, ModTexts.ITEM_NAME, getItemNameOverride(), this::setItemNameOverride));
+        getEntries().add(new TextEntryModel(this, ModTexts.CUSTOM_NAME, getCustomName(), this::setCustomName));
         ItemLore lore = getStack().get(DataComponents.LORE);
         if (lore != null) {
             lore.lines().stream()
@@ -73,12 +74,29 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private MutableComponent getItemName() {
+    private MutableComponent getItemNameOverride() {
+        Component component = getStack().get(DataComponents.ITEM_NAME);
+        return component == null ? null : component.copy();
+    }
+
+    private void setItemNameOverride(MutableComponent value) {
+        ItemStack stack = getStack();
+        if (value == null || value.getString().isEmpty()) {
+            stack.remove(DataComponents.ITEM_NAME);
+            return;
+        }
+        if (!value.getSiblings().isEmpty() && value.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
+            value.withStyle(style -> style.withItalic(false));
+        }
+        stack.set(DataComponents.ITEM_NAME, value.copy());
+    }
+
+    private MutableComponent getCustomName() {
         Component component = getStack().get(DataComponents.CUSTOM_NAME);
         return component == null ? null : component.copy();
     }
 
-    private void setItemName(MutableComponent value) {
+    private void setCustomName(MutableComponent value) {
         if (value == null) {
             getStack().remove(DataComponents.CUSTOM_NAME);
             return;

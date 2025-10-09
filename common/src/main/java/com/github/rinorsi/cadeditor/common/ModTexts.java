@@ -69,9 +69,14 @@ public final class ModTexts {
     public static final MutableComponent GREEN = translated("cadeditor.gui.green").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent GREEN_COLOR = translated("cadeditor.gui.green");
     public static final MutableComponent HIDE_FLAGS = translated("cadeditor.gui.hide_flags");
+    public static final MutableComponent FIRE_RESISTANT = translated("cadeditor.gui.fire_resistant");
+    public static final MutableComponent INTANGIBLE_PROJECTILE = translated("cadeditor.gui.intangible_projectile");
+    public static final MutableComponent MAX_STACK_SIZE = translated("cadeditor.gui.max_stack_size");
+    public static final MutableComponent MAX_DAMAGE = translated("cadeditor.gui.max_damage");
     public static final MutableComponent[] HIDE_OTHER_TOOLTIP = arrayText("cadeditor.gui.hide_other_tooltip", 8);
     public static final MutableComponent ITALIC = translated("cadeditor.gui.italic");
     public static final MutableComponent ITEM = translated("cadeditor.text.item");
+    public static final MutableComponent ITEM_NAME = translated("cadeditor.gui.item_name");
     public static final MutableComponent ITEM_ID = translated("cadeditor.gui.item_id");
     public static final MutableComponent LEVEL_ADD = translated("cadeditor.gui.level_add", text("+1")).withStyle(ChatFormatting.GREEN);
     public static final MutableComponent LEVEL_REMOVE = translated("cadeditor.gui.level_add", text("-1")).withStyle(ChatFormatting.GREEN);
