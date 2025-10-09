@@ -166,11 +166,12 @@ public class NBTEditorController extends AbstractController<NBTEditorModel, NBTE
     }
 
     private void addChildTag(NBTTagModel parent, Tag newTag, String name) {
-        addChildTag(parent, new NBTTagModel(newTag, parent, parent.getTagType() != Tag.TAG_LIST ? name : null, null));
+        addChildTag(parent, new NBTTagModel(parent.getContext(), newTag, parent,
+                parent.getTagType() != Tag.TAG_LIST ? name : null, null));
     }
 
     private void addChildTag(NBTTagModel parent, byte target, String value) {
-        addChildTag(parent, new NBTTagModel(target, parent, value));
+        addChildTag(parent, new NBTTagModel(parent.getContext(), target, parent, value));
     }
 
     private void addChildTag(NBTTagModel parent, NBTTagModel tag) {

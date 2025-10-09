@@ -81,6 +81,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((MapDecorationEntryModel) model, MapDecorationEntryView::new, MapDecorationEntryController::new);
             case TOOL_RULE ->
                     MVC.createViewAndBind((ToolRuleEntryModel) model, ToolRuleEntryView::new, ToolRuleEntryController::new);
+            case FOOD_USING_CONVERTS_TO ->
+                    MVC.createViewAndBind((FoodUsingConvertsToEntryModel) model, FoodUsingConvertsToEntryView::new, FoodUsingConvertsToEntryController::new);
         };
     }
 

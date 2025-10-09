@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client;
 import com.github.franckyi.guapi.api.Color;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.*;
 import com.github.rinorsi.cadeditor.common.ColoredItemHelper;
+import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -56,6 +57,8 @@ public final class ClientCache {
     private static List<TrimMaterialSelectionElementModel> trimMaterialSelectionItems;
     private static List<String> instrumentSuggestions;
     private static List<ListSelectionElementModel> instrumentSelectionItems;
+    private static List<String> blockEntityTypeSuggestions;
+    private static List<String> lootTableSuggestions;
 
     public static List<String> getItemSuggestions() {
         return itemSuggestions == null ? itemSuggestions = buildSuggestions(BuiltInRegistries.ITEM) : itemSuggestions;
@@ -77,6 +80,13 @@ public final class ClientCache {
     public static List<TagListSelectionElementModel> getBlockTagSelectionItems() {
         return blockTagSelectionItems == null ? blockTagSelectionItems = buildBlockTagSelectionItems() : blockTagSelectionItems;
     }
+
+    public static List<String> getBlockEntityTypeSuggestions() {
+        return blockEntityTypeSuggestions == null
+                ? blockEntityTypeSuggestions = buildSuggestions(BuiltInRegistries.BLOCK_ENTITY_TYPE)
+                : blockEntityTypeSuggestions;
+    }
+
     public static List<String> getEnchantmentSuggestions() {
         if (enchantmentSuggestions == null) {
             enchantmentSuggestions = registryAccess().lookup(Registries.ENCHANTMENT)
@@ -270,6 +280,13 @@ public final class ClientCache {
         return instrumentSelectionItems;
     }
 
+    public static List<String> getLootTableSuggestions() {
+        if (lootTableSuggestions == null) {
+            lootTableSuggestions = buildLootTableSuggestions();
+        }
+        return lootTableSuggestions;
+    }
+
     public static Optional<SpriteListSelectionElementModel> findEffectSelectionItem(ResourceLocation id) {
         if (id == null) {
             return Optional.empty();
@@ -304,6 +321,22 @@ public final class ClientCache {
             }
         });
         return suggestions;
+    }
+
+    private static List<String> buildLootTableSuggestions() {
+        List<ResourceLocation> ids = LootTableIndex.getAll();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        LinkedHashSet<String> values = new LinkedHashSet<>();
+        for (ResourceLocation id : ids) {
+            String full = id.toString();
+            values.add(full);
+            if (full.startsWith("minecraft:")) {
+                values.add(full.substring(10));
+            }
+        }
+        return List.copyOf(values);
     }
 
     private static List<ItemListSelectionElementModel> buildItemSelectionItems() {
