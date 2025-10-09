@@ -143,12 +143,12 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof BlockItem) {
             getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_PLACE_ON, this, "CanPlaceOn"));
         }
-        //TODO 下一步要补上耐火、无形弹矢、物品名覆盖这些轻量组件
+        //TODO 下一步要补上耐火、虚实弹矢、物品名覆盖这些轻量组件
         //TODO 最大耐久组件编辑
         //TODO Note Block 音效选择/过滤器还有自定义Sound Event试听
         //TODO 烟火之星/烟花的配置面板还空着，顺便加个多阶段扩展
         //TODO 束口袋和容器网格要融合，拖拽/模板如果可以也做一下
-        //TODO 可疑炖蘑菇的效果列表得有预设，还有概率
+        //TODO 可疑的炖菜的效果列表得有预设，还有概率
         //TODO 玩家头颅要加离线皮肤和历史UUID管理
         //TODO 陶罐纹饰挑选界面要补四面预览，再加扩展的纹理预设
         //TODO 方块实体数据、通用自定义数据和SNBT结构校验模板都得在这里挂入口
