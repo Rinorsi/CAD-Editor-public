@@ -14,6 +14,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.component.FireworkExplosion;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public final class ColoredItemHelper {
     private ColoredItemHelper() {
@@ -61,6 +64,19 @@ public final class ColoredItemHelper {
             copy.set(DataComponents.DYED_COLOR, new DyedItemColor(color, true));
         }
         return copy;
+    }
+
+    public static ItemStack createFireworkStarItem(int color) {
+        ItemStack stack = new ItemStack(Items.FIREWORK_STAR);
+        if (color == Color.NONE) {
+            stack.remove(DataComponents.FIREWORK_EXPLOSION);
+            return stack;
+        }
+        IntArrayList colors = new IntArrayList();
+        colors.add(color);
+        FireworkExplosion explosion = new FireworkExplosion(FireworkExplosion.Shape.SMALL_BALL, colors, new IntArrayList(), false, false);
+        stack.set(DataComponents.FIREWORK_EXPLOSION, explosion);
+        return stack;
     }
 
     private static HolderLookup.Provider registryAccess() {

@@ -11,8 +11,12 @@ public class VaultItemListSelectionElementModel extends ItemListSelectionElement
     private final String hoverNameLowercase;
 
     public VaultItemListSelectionElementModel(ResourceLocation id, ItemStack stack) {
-        super(stack.getDescriptionId(), id, stack.copy());
-        this.displayName = stack.getHoverName().copy();
+        this(id, stack.copy(), stack.getHoverName().copy());
+    }
+
+    private VaultItemListSelectionElementModel(ResourceLocation id, ItemStack copy, Component displayName) {
+        super(copy.getDescriptionId(), id, () -> copy.copy());
+        this.displayName = displayName;
         this.hoverNameLowercase = displayName.getString().toLowerCase(Locale.ROOT);
     }
 

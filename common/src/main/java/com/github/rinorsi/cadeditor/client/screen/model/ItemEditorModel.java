@@ -99,6 +99,12 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof CompassItem || stack.has(DataComponents.LODESTONE_TRACKER)) {
             getCategories().add(new ItemLodestoneCategoryModel(this));
         }
+        if (item == Items.SUSPICIOUS_STEW) {
+            getCategories().add(new ItemSuspiciousStewEffectsCategoryModel(this));
+        }
+        if (item == Items.PLAYER_HEAD) {
+            getCategories().add(new ItemProfileCategoryModel(this));
+        }
         boolean isContainerBlockItem = false;
         if (item instanceof BlockItem bi) {
             var block = bi.getBlock();
@@ -129,8 +135,24 @@ public class ItemEditorModel extends StandardEditorModel {
         if (stack.has(DataComponents.INSTRUMENT) || item == Items.GOAT_HORN) {
             getCategories().add(new ItemInstrumentCategoryModel(this));
         }
+        // Temporarily disable the note block sound editor until the backend supports it reliably.
+        // if (stack.has(DataComponents.NOTE_BLOCK_SOUND) || item == Items.NOTE_BLOCK) {
+        //     getCategories().add(new ItemNoteBlockCategoryModel(this));
+        // }
+        if (stack.has(DataComponents.FIREWORK_EXPLOSION) || item == Items.FIREWORK_STAR) {
+            getCategories().add(new ItemFireworkStarCategoryModel(this));
+        }
+        if (stack.has(DataComponents.FIREWORKS) || item == Items.FIREWORK_ROCKET) {
+            getCategories().add(new ItemFireworksCategoryModel(this));
+        }
         if (stack.has(DataComponents.OMINOUS_BOTTLE_AMPLIFIER) || item == Items.OMINOUS_BOTTLE) {
             getCategories().add(new ItemOminousBottleCategoryModel(this));
+        }
+        if (stack.has(DataComponents.CUSTOM_DATA)) {
+            getCategories().add(new ItemCustomDataCategoryModel(this));
+        }
+        if (item == Items.WRITABLE_BOOK) {
+            getCategories().add(new ItemWritableBookPagesCategoryModel(this));
         }
         getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_DESTROY, this, "CanDestroy"));
         foodState.loadFrom(stack);
@@ -147,7 +169,7 @@ public class ItemEditorModel extends StandardEditorModel {
         //TODO Note Block 音效选择/过滤器还有自定义Sound Event试听
         //TODO 烟火之星/烟花的配置面板还空着，顺便加个多阶段扩展
         //TODO 束口袋和容器网格要融合，拖拽/模板如果可以也做一下
-        //TODO 可疑的炖菜的效果列表得有预设，还有概率
+        //TODO 迷之炖菜的效果列表得有预设，还有概率
         //TODO 玩家头颅要加离线皮肤和历史UUID管理
         //TODO 陶罐纹饰挑选界面要补四面预览，再加扩展的纹理预设
         //TODO 方块实体数据、通用自定义数据和SNBT结构校验模板都得在这里挂入口

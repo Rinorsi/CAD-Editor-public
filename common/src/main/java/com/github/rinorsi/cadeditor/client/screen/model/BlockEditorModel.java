@@ -29,5 +29,8 @@ public class BlockEditorModel extends StandardEditorModel {
             getCategories().add(new BlockContainerLootCategoryModel(this));
         }
         getCategories().add(new BlockLootTableCategoryModel(this));
+        if (getContext().getBlockEntity() != null) {
+            getCategories().add(new com.github.rinorsi.cadeditor.client.screen.model.category.block.BlockEntityDataCategoryModel(this));
+        }
     }
 }

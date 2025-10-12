@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.fabric;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientContext;
 import com.github.rinorsi.cadeditor.client.ClientEventHandler;
 import com.github.rinorsi.cadeditor.client.ClientInit;
@@ -30,8 +31,14 @@ public final class FabricCADEditorModClient implements ClientModInitializer {
             }
         });
 
-        ClientPlayConnectionEvents.INIT.register((handler, client) -> ClientContext.setModInstalledOnServer(false));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientContext.setModInstalledOnServer(false));
+        ClientPlayConnectionEvents.INIT.register((handler, client) -> {
+            ClientCache.invalidate();
+            ClientContext.setModInstalledOnServer(false);
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            ClientCache.invalidate();
+            ClientContext.setModInstalledOnServer(false);
+        });
 
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) ->
                 registerContainerScreenKeyHandler(screen));

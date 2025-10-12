@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.neoforge;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientContext;
 import com.github.rinorsi.cadeditor.client.ClientEventHandler;
 import com.github.rinorsi.cadeditor.client.ClientInit;
@@ -94,10 +95,12 @@ public final class ForgeCADEditorMod {
     }
 
     private void onPlayerLoggingIn(final ClientPlayerNetworkEvent.LoggingIn event) {
+        ClientCache.invalidate();
         ClientContext.setModInstalledOnServer(false);
     }
 
     private void onPlayerLoggingOut(final ClientPlayerNetworkEvent.LoggingOut event) {
+        ClientCache.invalidate();
         ClientContext.setModInstalledOnServer(false);
     }
 

@@ -41,13 +41,23 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
         view.getHeaderLabel().setLabel(model.getContext().getTargetName());
         view.getTextEditorButtons().visibleProperty().bind(model.activeTextEditorProperty().notNull());
         view.setTextEditorSupplier(model::getActiveTextEditor);
+        model.activeTextEditorProperty().addListener(editor -> view.updateTextEditorToolbar(editor));
+        view.updateTextEditorToolbar(model.getActiveTextEditor());
         view.getChooseCustomColorButton().onAction(e -> {
             e.consume();
-            ModScreenHandler.openColorSelectionScreen(ColorSelectionScreenModel.Target.TEXT, Color.fromHex(model.getTextEditorCustomColor()), this::updateCustomColor);
+            if (model.getActiveTextEditor() != null
+                    && model.getActiveTextEditor().supportsColorFormatting()
+                    && model.getActiveTextEditor().supportsCustomColorPicker()) {
+                ModScreenHandler.openColorSelectionScreen(ColorSelectionScreenModel.Target.TEXT, Color.fromHex(model.getTextEditorCustomColor()), this::updateCustomColor);
+            }
         });
         model.textEditorCustomColor().addListener(value -> {
             view.getCustomColorButton().setBackgroundColor(Color.fromHex(value));
-            view.getCustomColorButton().setVisible(value != null);
+            boolean show = value != null
+                    && model.getActiveTextEditor() != null
+                    && model.getActiveTextEditor().supportsColorFormatting()
+                    && model.getActiveTextEditor().supportsCustomColorPicker();
+            view.getCustomColorButton().setVisible(show);
         });
         view.getCustomColorButton().onAction(e -> {
             e.consume();
@@ -56,6 +66,11 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
     }
 
     private void updateCustomColor(String hex) {
+        if (model.getActiveTextEditor() == null
+                || !model.getActiveTextEditor().supportsColorFormatting()
+                || !model.getActiveTextEditor().supportsCustomColorPicker()) {
+            return;
+        }
         model.setTextEditorCustomColor(hex);
         model.getActiveTextEditor().addColorFormatting(hex);
     }

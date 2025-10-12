@@ -214,6 +214,19 @@ public final class ModTexts {
     public static final MutableComponent BUCKET_TROPICAL_BODY_COLOR = translated("cadeditor.gui.bucket_tropical_body_color");
     public static final MutableComponent BUCKET_TROPICAL_PATTERN_COLOR = translated("cadeditor.gui.bucket_tropical_pattern_color");
     public static final MutableComponent BUCKET_ENTITY_DATA = translated("cadeditor.gui.bucket_entity_data");
+    public static final MutableComponent NOTE_BLOCK_SOUND_CATEGORY = translated("cadeditor.gui.note_block_sound_category");
+    public static final MutableComponent NOTE_BLOCK_SOUND = translated("cadeditor.gui.note_block_sound");
+    public static final MutableComponent SOUND_EVENT = translated("cadeditor.gui.sound_event");
+    public static final MutableComponent SOUND_FILTER_ALL = translated("cadeditor.gui.sound_filter_all");
+    public static final MutableComponent FIREWORK_STAR = translated("cadeditor.gui.firework_star");
+    public static final MutableComponent FIREWORK_ROCKET = translated("cadeditor.gui.firework_rocket");
+    public static final MutableComponent FIREWORK_SHAPE = translated("cadeditor.gui.firework_shape");
+    public static final MutableComponent FIREWORK_TRAIL = translated("cadeditor.gui.firework_trail");
+    public static final MutableComponent FIREWORK_TWINKLE = translated("cadeditor.gui.firework_twinkle");
+    public static final MutableComponent FIREWORK_ADD_PRIMARY_COLOR = translated("cadeditor.gui.firework_add_primary_color");
+    public static final MutableComponent FIREWORK_ADD_FADE_COLOR = translated("cadeditor.gui.firework_add_fade_color");
+    public static final MutableComponent FIREWORK_ADD_EXPLOSION = translated("cadeditor.gui.firework_add_explosion");
+    public static final MutableComponent FIREWORK_FLIGHT_DURATION = translated("cadeditor.gui.firework_flight_duration");
     public static MutableComponent errorServerModRequired(MutableComponent with) {
         return translated("cadeditor.message.error_server_mod", with).withStyle(ChatFormatting.RED);
     }
@@ -337,6 +350,26 @@ public final class ModTexts {
 
     public static MutableComponent give(MutableComponent with) {
         return translated("cadeditor.gui.give", with);
+    }
+
+    public static MutableComponent soundFilterNamespace(String namespace) {
+        return translated("cadeditor.gui.sound_filter_namespace", namespace);
+    }
+
+    public static MutableComponent fireworkPrimaryColor(int index) {
+        return translated("cadeditor.gui.firework_color_primary", index);
+    }
+
+    public static MutableComponent fireworkFadeColor(int index) {
+        return translated("cadeditor.gui.firework_color_fade", index);
+    }
+
+    public static MutableComponent fireworkExplosion(int index) {
+        return translated("cadeditor.gui.firework_explosion", index);
+    }
+
+    public static MutableComponent fireworkRemoveExplosion(int index) {
+        return translated("cadeditor.gui.firework_remove_explosion", index);
     }
 
     private static MutableComponent[] arrayText(String key, int size) {

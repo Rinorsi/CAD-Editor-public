@@ -15,12 +15,23 @@ public record ListSelectionScreenModel(MutableComponent title, String initialVal
                                        Consumer<String> action,
                                        boolean multiSelect,
                                        Consumer<List<ResourceLocation>> multiAction,
-                                       Set<ResourceLocation> initiallySelected) implements Model {
+                                       Set<ResourceLocation> initiallySelected,
+                                       List<ListSelectionFilter> filters,
+                                       String initialFilterId) implements Model {
 
     public ListSelectionScreenModel(MutableComponent title, String initialValue,
                                     List<? extends ListSelectionElementModel> items,
                                     Consumer<String> action) {
-        this(title, initialValue, items, action, false, null, Collections.emptySet());
+        this(title, initialValue, items, action, false, null, Collections.emptySet(), Collections.emptyList(), null);
+    }
+
+    public ListSelectionScreenModel(MutableComponent title, String initialValue,
+                                    List<? extends ListSelectionElementModel> items,
+                                    Consumer<String> action,
+                                    boolean multiSelect,
+                                    Consumer<List<ResourceLocation>> multiAction,
+                                    Set<ResourceLocation> initiallySelected) {
+        this(title, initialValue, items, action, multiSelect, multiAction, initiallySelected, Collections.emptyList(), null);
     }
 
     public MutableComponent getTitle() {
@@ -49,5 +60,13 @@ public record ListSelectionScreenModel(MutableComponent title, String initialVal
 
     public Set<ResourceLocation> getInitiallySelected() {
         return initiallySelected;
+    }
+
+    public List<ListSelectionFilter> getFilters() {
+        return filters;
+    }
+
+    public String getInitialFilterId() {
+        return initialFilterId;
     }
 }

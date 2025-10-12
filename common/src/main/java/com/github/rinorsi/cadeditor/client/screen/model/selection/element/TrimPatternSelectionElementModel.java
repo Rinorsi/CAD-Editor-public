@@ -4,6 +4,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.function.Supplier;
+
 import java.util.Locale;
 
 public class TrimPatternSelectionElementModel extends ItemListSelectionElementModel {
@@ -12,6 +14,12 @@ public class TrimPatternSelectionElementModel extends ItemListSelectionElementMo
 
     public TrimPatternSelectionElementModel(Component displayName, ResourceLocation id, ItemStack icon) {
         super(displayName.getString(), id, icon);
+        this.displayName = displayName;
+        this.searchText = displayName.getString().toLowerCase(Locale.ROOT);
+    }
+
+    public TrimPatternSelectionElementModel(Component displayName, ResourceLocation id, Supplier<ItemStack> iconSupplier) {
+        super(displayName.getString(), id, iconSupplier);
         this.displayName = displayName;
         this.searchText = displayName.getString().toLowerCase(Locale.ROOT);
     }
