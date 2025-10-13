@@ -197,6 +197,12 @@ public final class ModTexts {
     public static final MutableComponent LODESTONE_TRACKED = translated("cadeditor.gui.lodestone_tracked");
     public static final MutableComponent CONTAINER_CONTENTS = translated("cadeditor.gui.container_contents");
     public static final MutableComponent CONTAINER_SLOT = translated("cadeditor.gui.container_slot_data");
+    public static final MutableComponent BUNDLE_CONTENTS = translated("cadeditor.gui.bundle_contents");
+    public static final MutableComponent POT_DECORATIONS = translated("cadeditor.gui.pot_decorations");
+    public static final MutableComponent POT_BACK = translated("cadeditor.gui.pot_back");
+    public static final MutableComponent POT_LEFT = translated("cadeditor.gui.pot_left");
+    public static final MutableComponent POT_RIGHT = translated("cadeditor.gui.pot_right");
+    public static final MutableComponent POT_FRONT = translated("cadeditor.gui.pot_front");
     public static final MutableComponent TRIM = translated("cadeditor.gui.trim");
     public static final MutableComponent TRIM_PATTERN = translated("cadeditor.gui.trim_pattern");
     public static final MutableComponent TRIM_MATERIAL = translated("cadeditor.gui.trim_material");
@@ -445,6 +451,10 @@ public final class ModTexts {
 
         public static MutableComponent containerLootExample() {
             return prefixed(translated("cadeditor.message.container_loot_example")).withStyle(ChatFormatting.YELLOW);
+        }
+
+        public static MutableComponent potDecorationInvalid() {
+            return prefixed(translated("cadeditor.message.pot_decoration_invalid")).withStyle(ChatFormatting.RED);
         }
 
         private static MutableComponent prefixed(MutableComponent arg) {
