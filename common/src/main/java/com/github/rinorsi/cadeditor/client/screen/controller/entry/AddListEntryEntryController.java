@@ -12,6 +12,6 @@ public class AddListEntryEntryController extends EntryController<AddListEntryEnt
     public void bind() {
         super.bind();
         getView().getButton().getTooltip().add(getModel().getTooltip());
-        getView().getButton().onAction(getModel().getCategory()::addEntryInList);
+        getView().getButton().onAction(getModel().getAction());
     }
 }

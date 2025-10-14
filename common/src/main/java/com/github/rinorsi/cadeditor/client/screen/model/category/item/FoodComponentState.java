@@ -26,6 +26,7 @@ public class FoodComponentState {
     private float eatSeconds = 1.6f;
     private String usingConvertsToId = "";
     private Optional<ItemStack> originalUsingConvertsTo = Optional.empty();
+    private Optional<ItemStack> customUsingConvertsTo = Optional.empty();
     private List<FoodProperties.PossibleEffect> effects = new ArrayList<>();
 
     public void loadFrom(ItemStack stack) {
@@ -37,7 +38,8 @@ public class FoodComponentState {
             saturation = properties.saturation();
             alwaysEat = properties.canAlwaysEat();
             eatSeconds = properties.eatSeconds();
-            originalUsingConvertsTo = properties.usingConvertsTo().map(ItemStack::copy);
+            originalUsingConvertsTo = properties.usingConvertsTo().map(this::prepareConvertStack);
+            customUsingConvertsTo = originalUsingConvertsTo.map(ItemStack::copy);
             usingConvertsToId = originalUsingConvertsTo
                     .map(ItemStack::getItem)
                     .map(item -> BuiltInRegistries.ITEM.getKey(item).toString())
@@ -53,6 +55,7 @@ public class FoodComponentState {
             eatSeconds = 1.6f;
             originalUsingConvertsTo = Optional.empty();
             usingConvertsToId = "";
+            customUsingConvertsTo = Optional.empty();
             effects = new ArrayList<>();
             DebugLog.infoKey("cadeditor.debug.food.missing", describeStack(stack));
         }
@@ -107,6 +110,13 @@ public class FoodComponentState {
 
     public void setUsingConvertsToId(String usingConvertsToId) {
         this.usingConvertsToId = usingConvertsToId == null ? "" : usingConvertsToId.trim();
+        if (this.usingConvertsToId.isBlank()) {
+            customUsingConvertsTo = Optional.empty();
+            originalUsingConvertsTo = Optional.empty();
+        } else {
+            customUsingConvertsTo = filterStackById(customUsingConvertsTo, this.usingConvertsToId);
+            originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, this.usingConvertsToId);
+        }
     }
 
     public void prepareForInitialEnable(ItemStack stack) {
@@ -119,6 +129,7 @@ public class FoodComponentState {
         setEatSeconds(1.6f);
         usingConvertsToId = "";
         originalUsingConvertsTo = Optional.empty();
+        customUsingConvertsTo = Optional.empty();
         DebugLog.infoKey("cadeditor.debug.food.prepared", describeStack(stack));
     }
 
@@ -144,6 +155,13 @@ public class FoodComponentState {
         if (item == null) {
             LOGGER.warn("Unknown using_converts_to item id '{}'", usingConvertsToId);
             return Optional.empty();
+        }
+        Optional<ItemStack> customized = customUsingConvertsTo
+                .filter(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(rl))
+                .map(ItemStack::copy);
+        if (customized.isPresent()) {
+            DebugLog.infoKey("cadeditor.debug.food.convert_reuse", describeStack(customized.get()));
+            return customized;
         }
         Optional<ItemStack> preserved = originalUsingConvertsTo
                 .filter(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(rl))
@@ -175,17 +193,53 @@ public class FoodComponentState {
         DebugLog.infoKey("cadeditor.debug.food.convert_update", originalUsingConvertsTo.map(this::describeStack).orElse("<empty>"));
     }
 
+    public Optional<ItemStack> getUsingConvertsToPreview() {
+        return customUsingConvertsTo.filter(stack -> !stack.isEmpty())
+                .or(() -> originalUsingConvertsTo.filter(stack -> !stack.isEmpty()))
+                .map(ItemStack::copy);
+    }
+
+    public Optional<ItemStack> getUsingConvertsToEditorStack() {
+        return customUsingConvertsTo.filter(stack -> !stack.isEmpty())
+                .or(() -> originalUsingConvertsTo.filter(stack -> !stack.isEmpty()))
+                .map(this::prepareConvertStack)
+                .map(ItemStack::copy);
+    }
+
+    public void useCustomUsingConvertsTo(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            customUsingConvertsTo = Optional.empty();
+            setUsingConvertsToId("");
+            return;
+        }
+        ItemStack sanitized = prepareConvertStack(stack);
+        customUsingConvertsTo = Optional.of(sanitized);
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(sanitized.getItem());
+        if (id != null) {
+            usingConvertsToId = id.toString();
+        } else {
+            usingConvertsToId = "";
+        }
+        originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, usingConvertsToId);
+    }
+
     private ItemStack prepareConvertStack(ItemStack source) {
         if (source.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack sanitized = new ItemStack(source.getItem());
+        ItemStack sanitized = source.copy();
         sanitized.setCount(1);
-
         sanitized.remove(DataComponents.FOOD);
         DebugLog.infoKey("cadeditor.debug.food.convert_sanitize", describeStack(sanitized));
         return sanitized;
+    }
+
+    private Optional<ItemStack> filterStackById(Optional<ItemStack> stack, String id) {
+        if (stack.isEmpty()) {
+            return Optional.empty();
+        }
+        return stack.filter(s -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString().equals(id));
     }
 
     private String describeStack(ItemStack stack) {

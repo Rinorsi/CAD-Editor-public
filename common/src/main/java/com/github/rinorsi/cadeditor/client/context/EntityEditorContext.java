@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.context;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -10,6 +11,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class EntityEditorContext extends EditorContext<EntityEditorContext> {
@@ -46,6 +48,57 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
     @Override
     protected String getCommand() {
         return String.format("/summon %s ~ ~ ~ %s", getTag().getString("id"), getSimpleTag());
+    }
+
+    @Override
+    public List<String> getStringSuggestions(List<String> path) {
+        List<String> suggestions = super.getStringSuggestions(path);
+        if (!suggestions.isEmpty()) {
+            return suggestions;
+        }
+        if (path == null || path.isEmpty()) {
+            return List.of();
+        }
+        String key = lastKey(path);
+        if (key == null) {
+            return List.of();
+        }
+        String parent = previousNamedKey(path, 1);
+        String grandParent = previousNamedKey(path, 2);
+
+        if ("id".equals(key)) {
+            if (path.size() == 1) {
+                return ClientCache.getEntitySuggestions();
+            }
+            if (isItemSlot(parent, grandParent)) {
+                return ClientCache.getItemSuggestions();
+            }
+            if (isEffectContainer(parent, grandParent)) {
+                return ClientCache.getEffectSuggestions();
+            }
+        }
+
+        if (equalsAnyIgnoreCase(key, "item", "Item")) {
+            return ClientCache.getItemSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "potion")) {
+            return ClientCache.getPotionSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "effect")) {
+            return ClientCache.getEffectSuggestions();
+        }
+
+        return List.of();
+    }
+
+    private static boolean isItemSlot(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "HandItems", "ArmorItems", "Items", "Inventory", "item", "Item", "SaddleItem")
+                || (equalsAnyIgnoreCase(parent, "stack") && equalsAnyIgnoreCase(grandParent, "minecraft:equipment"));
+    }
+
+    private static boolean isEffectContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "ActiveEffects", "effects")
+                || equalsAnyIgnoreCase(grandParent, "ActiveEffects");
     }
 
     private CompoundTag getSimpleTag() {

@@ -21,6 +21,10 @@ public class SelectionEntryView extends StringEntryView {
         });
     }
 
+    protected HBox getSelectionBox() {
+        return selectionBox;
+    }
+
     public TexturedButton getSelectionScreenButton() {
         return selectionScreenButton;
     }

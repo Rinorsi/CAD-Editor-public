@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.context;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -64,6 +65,82 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
 
     public void setItemStack(ItemStack stack) {
         this.itemStack = stack;
+    }
+
+    @Override
+    public List<String> getStringSuggestions(List<String> path) {
+        List<String> suggestions = super.getStringSuggestions(path);
+        if (!suggestions.isEmpty()) {
+            return suggestions;
+        }
+        if (path == null || path.isEmpty()) {
+            return List.of();
+        }
+        String key = lastKey(path);
+        if (key == null) {
+            return List.of();
+        }
+        String parent = previousNamedKey(path, 1);
+        String grandParent = previousNamedKey(path, 2);
+
+        if ("id".equals(key)) {
+            if (path.size() == 1) {
+                return ClientCache.getItemSuggestions();
+            }
+            if (isEnchantmentContainer(parent, grandParent)) {
+                return ClientCache.getEnchantmentSuggestions();
+            }
+            if (isEffectContainer(parent, grandParent)) {
+                return ClientCache.getEffectSuggestions();
+            }
+            if (isItemContainer(parent, grandParent)) {
+                return ClientCache.getItemSuggestions();
+            }
+            if (equalsAnyIgnoreCase(parent, "entity")
+                    && equalsAnyIgnoreCase(grandParent, "minecraft:bucket_entity_data", "BucketEntityData")) {
+                return ClientCache.getEntitySuggestions();
+            }
+        }
+
+        if (equalsAnyIgnoreCase(key, "item", "Item")) {
+            return ClientCache.getItemSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "potion")) {
+            return ClientCache.getPotionSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "effect")) {
+            return ClientCache.getEffectSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "instrument")) {
+            return ClientCache.getInstrumentSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "pattern", "pattern_id") && containsTrimContext(path)) {
+            return ClientCache.getTrimPatternSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "material", "material_id") && containsTrimContext(path)) {
+            return ClientCache.getTrimMaterialSuggestions();
+        }
+
+        return List.of();
+    }
+
+    private static boolean isEnchantmentContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "Enchantments", "StoredEnchantments", "minecraft:enchantments")
+                || (equalsAnyIgnoreCase(parent, "levels") && equalsAnyIgnoreCase(grandParent, "minecraft:enchantments"));
+    }
+
+    private static boolean isEffectContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "effects", "custom_potion_effects", "status_effects")
+                || (equalsAnyIgnoreCase(parent, "entries") && equalsAnyIgnoreCase(grandParent, "minecraft:food"));
+    }
+
+    private static boolean isItemContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "Items", "items", "HandItems", "ArmorItems", "ChargedProjectiles", "contents")
+                || (equalsAnyIgnoreCase(parent, "stacks") && equalsAnyIgnoreCase(grandParent, "minecraft:container"));
+    }
+
+    private static boolean containsTrimContext(List<String> path) {
+        return pathContains(path, "minecraft:trim") || pathContains(path, "Trim") || pathContains(path, "trim");
     }
 
     @Override

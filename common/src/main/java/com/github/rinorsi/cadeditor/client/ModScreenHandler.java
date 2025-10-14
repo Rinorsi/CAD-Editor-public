@@ -9,6 +9,7 @@ import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.context.ItemEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.*;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.mvc.*;
@@ -20,6 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -37,14 +39,34 @@ public final class ModScreenHandler {
         openScaledScreen(mvc(UpdateLogScreenMVC.INSTANCE, new UpdateLogScreenModel()));
     }
 
-    public static void openListSelectionScreen(MutableComponent title, String attributeName, List<? extends ListSelectionElementModel> items, Consumer<String> action) {
-        openListSelectionScreen(title, attributeName, items, action, false, null, Set.of());
+    public static void openListSelectionScreen(MutableComponent title, String attributeName,
+                                               List<? extends ListSelectionElementModel> items, Consumer<String> action) {
+        openListSelectionScreen(title, attributeName, items, action, false, null, Set.of(), Collections.emptyList(), null);
     }
 
     public static void openListSelectionScreen(MutableComponent title, String attributeName, List<? extends ListSelectionElementModel> items,
                                                Consumer<String> action, boolean multiSelect,
                                                Consumer<List<ResourceLocation>> multiAction, Set<ResourceLocation> initiallySelected) {
-        openScaledScreen(mvc(ListSelectionScreenMVC.INSTANCE, new ListSelectionScreenModel(title, attributeName, items, action, multiSelect, multiAction, initiallySelected)));
+        openListSelectionScreen(title, attributeName, items, action, multiSelect, multiAction, initiallySelected,
+                Collections.emptyList(), null);
+    }
+
+    public static void openListSelectionScreen(MutableComponent title, String attributeName,
+                                               List<? extends ListSelectionElementModel> items, Consumer<String> action,
+                                               List<ListSelectionFilter> filters, String initialFilterId) {
+        openListSelectionScreen(title, attributeName, items, action, false, null, Set.of(), filters, initialFilterId);
+    }
+
+    public static void openListSelectionScreen(MutableComponent title, String attributeName,
+                                               List<? extends ListSelectionElementModel> items, Consumer<String> action,
+                                               boolean multiSelect,
+                                               Consumer<List<ResourceLocation>> multiAction,
+                                               Set<ResourceLocation> initiallySelected,
+                                               List<ListSelectionFilter> filters,
+                                               String initialFilterId) {
+        openScaledScreen(mvc(ListSelectionScreenMVC.INSTANCE,
+                new ListSelectionScreenModel(title, attributeName, items, action, multiSelect, multiAction,
+                        initiallySelected, filters == null ? Collections.emptyList() : filters, initialFilterId)));
     }
 
     public static void openColorSelectionScreen(ColorSelectionScreenModel.Target target, int color, Consumer<String> action) {

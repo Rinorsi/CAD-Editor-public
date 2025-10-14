@@ -2,7 +2,6 @@ package com.github.rinorsi.cadeditor.client.screen.view;
 
 import com.github.franckyi.guapi.api.node.HBox;
 import com.github.franckyi.guapi.api.node.TexturedButton;
-import com.github.franckyi.guapi.api.node.builder.TexturedButtonBuilder;
 import com.github.rinorsi.cadeditor.client.ModTextures;
 import com.github.rinorsi.cadeditor.client.util.texteditor.StyleType;
 import com.github.rinorsi.cadeditor.client.util.texteditor.TextEditorActionHandler;
@@ -17,9 +16,11 @@ import java.util.function.Supplier;
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class StandardEditorView extends CategoryEntryScreenView {
+    private List<TexturedButton> styleButtons;
     private List<TexturedButton> colorButtons;
+    private TexturedButton resetColorButton;
     private TexturedButton customColorButton;
-    private TexturedButtonBuilder chooseCustomColorButton;
+    private TexturedButton chooseCustomColorButton;
     private HBox textEditorButtons;
     private Supplier<TextEditorActionHandler> textEditorSupplier;
 
@@ -48,24 +49,19 @@ public class StandardEditorView extends CategoryEntryScreenView {
                 createTextColorButton(YELLOW, ModTextures.COLOR_YELLOW, ModTexts.YELLOW),
                 createTextColorButton(WHITE, ModTextures.COLOR_WHITE, ModTexts.WHITE)
         );
+        styleButtons = Arrays.asList(
+                createTextButton(StyleType.BOLD, ModTextures.TEXT_BOLD, ModTexts.BOLD),
+                createTextButton(StyleType.ITALIC, ModTextures.TEXT_ITALIC, ModTexts.ITALIC),
+                createTextButton(StyleType.UNDERLINED, ModTextures.TEXT_UNDERLINED, ModTexts.UNDERLINED),
+                createTextButton(StyleType.STRIKETHROUGH, ModTextures.TEXT_STRIKETHROUGH, ModTexts.STRIKETHROUGH),
+                createTextButton(StyleType.OBFUSCATED, ModTextures.TEXT_OBFUSCATED, ModTexts.OBFUSCATED)
+        );
         buttonBarRight.getChildren().add(0, textEditorButtons = hBox(buttons -> {
             buttons.add(hBox(middle -> {
-                middle.add(createTextButton(StyleType.BOLD, ModTextures.TEXT_BOLD, ModTexts.BOLD));
-                middle.add(createTextButton(StyleType.ITALIC, ModTextures.TEXT_ITALIC, ModTexts.ITALIC));
-                middle.add(createTextButton(StyleType.UNDERLINED, ModTextures.TEXT_UNDERLINED, ModTexts.UNDERLINED));
-                middle.add(createTextButton(StyleType.STRIKETHROUGH, ModTextures.TEXT_STRIKETHROUGH, ModTexts.STRIKETHROUGH));
-                middle.add(createTextButton(StyleType.OBFUSCATED, ModTextures.TEXT_OBFUSCATED, ModTexts.OBFUSCATED));
+                styleButtons.forEach(middle::add);
                 middle.spacing(2);
             }));
             buttons.add(hBox(right -> {
-                right.add(texturedButton(ModTextures.RESET_COLOR, 7, 16, false)
-                        .tooltip(ModTexts.RESET_COLOR)
-                        .action(e -> {
-                            if (textEditorSupplier != null) {
-                                e.consume();
-                                textEditorSupplier.get().removeColorFormatting();
-                            }
-                        }));
                 right.add(vBox(colors -> {
                     colors.add(hBox(2, colorButtons.subList(0, colorButtons.size() / 2)));
                     colors.add(hBox(2, colorButtons.subList(colorButtons.size() / 2, colorButtons.size())));
@@ -82,7 +78,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
         }).align(CENTER_RIGHT));
     }
 
-    private TexturedButtonBuilder createTextButton(StyleType target, ResourceLocation id, MutableComponent tooltipText) {
+    private TexturedButton createTextButton(StyleType target, ResourceLocation id, MutableComponent tooltipText) {
         return texturedButton(id, 16, 16, false)
                 .tooltip(tooltipText)
                 .action(e -> {
@@ -93,7 +89,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
                 });
     }
 
-    private TexturedButtonBuilder createTextColorButton(String color, ResourceLocation id, MutableComponent tooltipText) {
+    private TexturedButton createTextColorButton(String color, ResourceLocation id, MutableComponent tooltipText) {
         return texturedButton(id, 7, 7, false)
                 .tooltip(tooltipText)
                 .action(e -> {
@@ -118,5 +114,21 @@ public class StandardEditorView extends CategoryEntryScreenView {
 
     public void setTextEditorSupplier(Supplier<TextEditorActionHandler> supplier) {
         textEditorSupplier = supplier;
+    }
+
+    public void updateTextEditorToolbar(TextEditorActionHandler handler) {
+        boolean hasEditor = handler != null;
+        boolean allowColors = hasEditor && handler.supportsColorFormatting();
+        boolean allowStyles = hasEditor && handler.supportsStyleFormatting();
+        boolean allowReset = hasEditor && handler.supportsColorReset();
+        boolean allowCustomPicker = hasEditor && handler.supportsCustomColorPicker();
+
+        styleButtons.forEach(button -> button.setDisable(!allowStyles));
+
+        colorButtons.forEach(button -> button.setDisable(!allowColors));
+        chooseCustomColorButton.setDisable(!allowColors);
+        chooseCustomColorButton.setVisible(allowCustomPicker);
+        customColorButton.setDisable(!allowColors);
+        customColorButton.setVisible(allowCustomPicker);
     }
 }

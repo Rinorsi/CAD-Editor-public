@@ -69,9 +69,14 @@ public final class ModTexts {
     public static final MutableComponent GREEN = translated("cadeditor.gui.green").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent GREEN_COLOR = translated("cadeditor.gui.green");
     public static final MutableComponent HIDE_FLAGS = translated("cadeditor.gui.hide_flags");
+    public static final MutableComponent FIRE_RESISTANT = translated("cadeditor.gui.fire_resistant");
+    public static final MutableComponent INTANGIBLE_PROJECTILE = translated("cadeditor.gui.intangible_projectile");
+    public static final MutableComponent MAX_STACK_SIZE = translated("cadeditor.gui.max_stack_size");
+    public static final MutableComponent MAX_DAMAGE = translated("cadeditor.gui.max_damage");
     public static final MutableComponent[] HIDE_OTHER_TOOLTIP = arrayText("cadeditor.gui.hide_other_tooltip", 8);
     public static final MutableComponent ITALIC = translated("cadeditor.gui.italic");
     public static final MutableComponent ITEM = translated("cadeditor.text.item");
+    public static final MutableComponent ITEM_NAME = translated("cadeditor.gui.item_name");
     public static final MutableComponent ITEM_ID = translated("cadeditor.gui.item_id");
     public static final MutableComponent LEVEL_ADD = translated("cadeditor.gui.level_add", text("+1")).withStyle(ChatFormatting.GREEN);
     public static final MutableComponent LEVEL_REMOVE = translated("cadeditor.gui.level_add", text("-1")).withStyle(ChatFormatting.GREEN);
@@ -192,6 +197,12 @@ public final class ModTexts {
     public static final MutableComponent LODESTONE_TRACKED = translated("cadeditor.gui.lodestone_tracked");
     public static final MutableComponent CONTAINER_CONTENTS = translated("cadeditor.gui.container_contents");
     public static final MutableComponent CONTAINER_SLOT = translated("cadeditor.gui.container_slot_data");
+    public static final MutableComponent BUNDLE_CONTENTS = translated("cadeditor.gui.bundle_contents");
+    public static final MutableComponent POT_DECORATIONS = translated("cadeditor.gui.pot_decorations");
+    public static final MutableComponent POT_BACK = translated("cadeditor.gui.pot_back");
+    public static final MutableComponent POT_LEFT = translated("cadeditor.gui.pot_left");
+    public static final MutableComponent POT_RIGHT = translated("cadeditor.gui.pot_right");
+    public static final MutableComponent POT_FRONT = translated("cadeditor.gui.pot_front");
     public static final MutableComponent TRIM = translated("cadeditor.gui.trim");
     public static final MutableComponent TRIM_PATTERN = translated("cadeditor.gui.trim_pattern");
     public static final MutableComponent TRIM_MATERIAL = translated("cadeditor.gui.trim_material");
@@ -209,6 +220,19 @@ public final class ModTexts {
     public static final MutableComponent BUCKET_TROPICAL_BODY_COLOR = translated("cadeditor.gui.bucket_tropical_body_color");
     public static final MutableComponent BUCKET_TROPICAL_PATTERN_COLOR = translated("cadeditor.gui.bucket_tropical_pattern_color");
     public static final MutableComponent BUCKET_ENTITY_DATA = translated("cadeditor.gui.bucket_entity_data");
+    public static final MutableComponent NOTE_BLOCK_SOUND_CATEGORY = translated("cadeditor.gui.note_block_sound_category");
+    public static final MutableComponent NOTE_BLOCK_SOUND = translated("cadeditor.gui.note_block_sound");
+    public static final MutableComponent SOUND_EVENT = translated("cadeditor.gui.sound_event");
+    public static final MutableComponent SOUND_FILTER_ALL = translated("cadeditor.gui.sound_filter_all");
+    public static final MutableComponent FIREWORK_STAR = translated("cadeditor.gui.firework_star");
+    public static final MutableComponent FIREWORK_ROCKET = translated("cadeditor.gui.firework_rocket");
+    public static final MutableComponent FIREWORK_SHAPE = translated("cadeditor.gui.firework_shape");
+    public static final MutableComponent FIREWORK_TRAIL = translated("cadeditor.gui.firework_trail");
+    public static final MutableComponent FIREWORK_TWINKLE = translated("cadeditor.gui.firework_twinkle");
+    public static final MutableComponent FIREWORK_ADD_PRIMARY_COLOR = translated("cadeditor.gui.firework_add_primary_color");
+    public static final MutableComponent FIREWORK_ADD_FADE_COLOR = translated("cadeditor.gui.firework_add_fade_color");
+    public static final MutableComponent FIREWORK_ADD_EXPLOSION = translated("cadeditor.gui.firework_add_explosion");
+    public static final MutableComponent FIREWORK_FLIGHT_DURATION = translated("cadeditor.gui.firework_flight_duration");
     public static MutableComponent errorServerModRequired(MutableComponent with) {
         return translated("cadeditor.message.error_server_mod", with).withStyle(ChatFormatting.RED);
     }
@@ -334,6 +358,26 @@ public final class ModTexts {
         return translated("cadeditor.gui.give", with);
     }
 
+    public static MutableComponent soundFilterNamespace(String namespace) {
+        return translated("cadeditor.gui.sound_filter_namespace", namespace);
+    }
+
+    public static MutableComponent fireworkPrimaryColor(int index) {
+        return translated("cadeditor.gui.firework_color_primary", index);
+    }
+
+    public static MutableComponent fireworkFadeColor(int index) {
+        return translated("cadeditor.gui.firework_color_fade", index);
+    }
+
+    public static MutableComponent fireworkExplosion(int index) {
+        return translated("cadeditor.gui.firework_explosion", index);
+    }
+
+    public static MutableComponent fireworkRemoveExplosion(int index) {
+        return translated("cadeditor.gui.firework_remove_explosion", index);
+    }
+
     private static MutableComponent[] arrayText(String key, int size) {
         MutableComponent[] array = new MutableComponent[size];
         for (int i = 0; i < size; i++) {
@@ -407,6 +451,10 @@ public final class ModTexts {
 
         public static MutableComponent containerLootExample() {
             return prefixed(translated("cadeditor.message.container_loot_example")).withStyle(ChatFormatting.YELLOW);
+        }
+
+        public static MutableComponent potDecorationInvalid() {
+            return prefixed(translated("cadeditor.message.pot_decoration_invalid")).withStyle(ChatFormatting.RED);
         }
 
         private static MutableComponent prefixed(MutableComponent arg) {

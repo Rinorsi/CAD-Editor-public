@@ -13,7 +13,7 @@ public class EntityListSelectionElementModel extends ItemListSelectionElementMod
     private final String displayNameLowercase;
 
     public EntityListSelectionElementModel(EntityType<?> entityType, ResourceLocation id) {
-        super(entityType.getDescriptionId(), id, buildIcon(entityType));
+        super(entityType.getDescriptionId(), id, () -> buildIcon(entityType));
         this.displayName = entityType.getDescription().copy();
         this.displayNameLowercase = displayName.getString().toLowerCase(Locale.ROOT);
     }

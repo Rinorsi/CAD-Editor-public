@@ -6,14 +6,17 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ItemSelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.CustomModelData;
+import net.minecraft.world.item.component.Unbreakable;
 
 public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private BooleanEntryModel foodToggleEntry;
@@ -31,16 +34,19 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
 
         getEntries().add(new ItemSelectionEntryModel(this, ModTexts.ITEM_ID, currentId, this::setItemId));
         getEntries().add(new IntegerEntryModel(this, ModTexts.COUNT, currentCount, this::setCount));
+        getEntries().add(new IntegerEntryModel(this, ModTexts.MAX_STACK_SIZE, getMaxStackSizeValue(stack), this::setMaxStackSize, value -> value >= 0 && value <= Item.ABSOLUTE_MAX_STACK_SIZE));
         getEntries().add(new IntegerEntryModel(this, ModTexts.DAMAGE, currentDamage, this::setDamage));
+        getEntries().add(new IntegerEntryModel(this, ModTexts.MAX_DAMAGE, getMaxDamageValue(stack), this::setMaxDamage, value -> value >= 0));
         getEntries().add(new BooleanEntryModel(this, ModTexts.UNBREAKABLE, isUnbreakable, this::setUnbreakable));
         getEntries().add(new RaritySelectionEntryModel(this, ModTexts.gui("rarity"), getRarityString(stack), this::setRarity));
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("custom_model_data"), getCustomModelData(stack), this::setCustomModelData));
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("repair_cost"), getRepairCost(stack), this::setRepairCost));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("glint_override"), getGlintOverride(stack), this::setGlintOverride));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.FIRE_RESISTANT, stack.has(DataComponents.FIRE_RESISTANT), this::setFireResistant));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.INTANGIBLE_PROJECTILE, stack.has(DataComponents.INTANGIBLE_PROJECTILE), this::setIntangibleProjectile));
         foodToggleEntry = new BooleanEntryModel(this, ModTexts.gui("food_enabled"), getParent().getFoodState().isEnabled(), this::setFoodEnabled);
         getEntries().add(foodToggleEntry);
         // Creative slot lock (1.21 data component has no effect, disabled for now)
-        //TODO 要把耐火、虚实弹矢、堆叠上限这些通用开关都排进来
     }
 
     private void setDamage(int value) {
@@ -57,6 +63,61 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
             stack.set(DataComponents.UNBREAKABLE, new Unbreakable(true));
         } else {
             stack.remove(DataComponents.UNBREAKABLE);
+        }
+    }
+
+    private int getMaxStackSizeValue(ItemStack stack) {
+        Integer override = stack.get(DataComponents.MAX_STACK_SIZE);
+        return override != null ? override : stack.getItem().getDefaultMaxStackSize();
+    }
+
+    private void setMaxStackSize(int value) {
+        ItemStack stack = getParent().getContext().getItemStack();
+        int defaultMax = stack.getItem().getDefaultMaxStackSize();
+        if (value <= 0) {
+            stack.remove(DataComponents.MAX_STACK_SIZE);
+        } else {
+            int clamped = Math.max(1, Math.min(Item.ABSOLUTE_MAX_STACK_SIZE, value));
+            if (clamped == defaultMax) {
+                stack.remove(DataComponents.MAX_STACK_SIZE);
+            } else {
+                stack.set(DataComponents.MAX_STACK_SIZE, clamped);
+            }
+        }
+        int actualMax = stack.getMaxStackSize();
+        if (stack.getCount() > actualMax) {
+            stack.setCount(actualMax);
+        }
+    }
+
+    private int getMaxDamageValue(ItemStack stack) {
+        Integer override = stack.get(DataComponents.MAX_DAMAGE);
+        if (override != null) {
+            return override;
+        }
+        Integer base = stack.getItem().components().get(DataComponents.MAX_DAMAGE);
+        return base != null ? base : 0;
+    }
+
+    private void setMaxDamage(int value) {
+        ItemStack stack = getParent().getContext().getItemStack();
+        int sanitized = Math.max(0, value);
+        Integer base = stack.getItem().components().get(DataComponents.MAX_DAMAGE);
+        int baseValue = base != null ? base : 0;
+        if (sanitized == 0) {
+            stack.remove(DataComponents.MAX_DAMAGE);
+        } else if (sanitized == baseValue) {
+            stack.remove(DataComponents.MAX_DAMAGE);
+        } else {
+            stack.set(DataComponents.MAX_DAMAGE, sanitized);
+        }
+        int max = stack.getMaxDamage();
+        if (max > 0) {
+            int clamped = Math.max(0, Math.min(stack.getDamageValue(), Math.max(0, max - 1)));
+            stack.setDamageValue(clamped);
+        } else {
+            stack.setDamageValue(0);
+            stack.remove(DataComponents.DAMAGE);
         }
     }
 
@@ -139,6 +200,50 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private void setGlintOverride(boolean value) {
         ItemStack stack = getParent().getContext().getItemStack();
         if (value) stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true); else stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
+    }
+
+    private void setFireResistant(boolean value) {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (value) {
+            stack.set(DataComponents.FIRE_RESISTANT, Unit.INSTANCE);
+        } else {
+            stack.remove(DataComponents.FIRE_RESISTANT);
+        }
+    }
+
+    private void setIntangibleProjectile(boolean value) {
+        ItemEditorModel parent = getParent();
+        ItemStack stack = parent.getContext().getItemStack();
+        if (value) {
+            stack.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
+        } else {
+            stack.remove(DataComponents.INTANGIBLE_PROJECTILE);
+        }
+        syncIntangibleProjectileComponent(parent, value);
+    }
+
+    private void syncIntangibleProjectileComponent(ItemEditorModel parent, boolean enabled) {
+        var context = parent.getContext();
+        CompoundTag root = context.getTag();
+        if (root == null) {
+            return;
+        }
+        CompoundTag components = root.getCompound("components");
+        if (enabled) {
+            if (!root.contains("components", Tag.TAG_COMPOUND)) {
+                components = new CompoundTag();
+                root.put("components", components);
+            }
+            components.put("minecraft:intangible_projectile", new CompoundTag());
+            components.remove("!minecraft:intangible_projectile");
+        } else if (root.contains("components", Tag.TAG_COMPOUND)) {
+            components.remove("minecraft:intangible_projectile");
+            components.remove("!minecraft:intangible_projectile");
+            if (components.isEmpty()) {
+                root.remove("components");
+            }
+        }
+        context.setTag(root);
     }
 
     private void setFoodEnabled(boolean value) {

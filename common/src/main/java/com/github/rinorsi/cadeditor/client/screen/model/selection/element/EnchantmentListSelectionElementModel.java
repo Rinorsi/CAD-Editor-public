@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 public class EnchantmentListSelectionElementModel extends ItemListSelectionElementModel {
     private final Holder<Enchantment> enchantment;
@@ -14,7 +15,12 @@ public class EnchantmentListSelectionElementModel extends ItemListSelectionEleme
 
     public EnchantmentListSelectionElementModel(String name, ResourceLocation id, Holder<Enchantment> enchantment,
                                                 ItemStack item, Component categoryLabel) {
-        super(name, id, item);
+        this(name, id, enchantment, () -> item == null ? ItemStack.EMPTY : item.copy(), categoryLabel);
+    }
+
+    public EnchantmentListSelectionElementModel(String name, ResourceLocation id, Holder<Enchantment> enchantment,
+                                                Supplier<ItemStack> itemSupplier, Component categoryLabel) {
+        super(name, id, itemSupplier);
         this.enchantment = enchantment;
         this.categoryLabel = categoryLabel;
     }

@@ -54,6 +54,9 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((AttributeModifierEntryModel) model, AttributeModifierEntryView::new, AttributeModifierEntryController::new);
             case SELECTION ->
                     MVC.createViewAndBind((SelectionEntryModel) model, SelectionEntryView::new, SelectionEntryController::new);
+            case FILTERED_SELECTION ->
+                    MVC.createViewAndBind((FilteredSelectionEntryModel) model, SelectionEntryView::new,
+                            FilteredSelectionEntryController::new);
             case SELECTION_POTION ->
                     MVC.createViewAndBind(((PotionSelectionEntryModel) model), PotionSelectionEntryView::new, PotionSelectionEntryController::new);
             case POTION_EFFECT ->
@@ -69,6 +72,9 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                 }
             case ARMOR_COLOR ->
                     MVC.createViewAndBind((ArmorColorEntryModel) model, ArmorColorEntryView::new, ArmorColorEntryController::new);
+            case FIREWORK_COLOR ->
+                    MVC.createViewAndBind((FireworkColorEntryModel) model, FireworkColorEntryView::new,
+                            FireworkColorEntryController::new);
             case VAULT_ITEM ->
                     MVC.createViewAndBind((VaultItemEntryModel) model, VaultItemEntryView::new, VaultItemEntryController::new);
             case ENTITY_EQUIPMENT ->
@@ -81,6 +87,10 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((MapDecorationEntryModel) model, MapDecorationEntryView::new, MapDecorationEntryController::new);
             case TOOL_RULE ->
                     MVC.createViewAndBind((ToolRuleEntryModel) model, ToolRuleEntryView::new, ToolRuleEntryController::new);
+            case FOOD_USING_CONVERTS_TO ->
+                    MVC.createViewAndBind((FoodUsingConvertsToEntryModel) model, FoodUsingConvertsToEntryView::new, FoodUsingConvertsToEntryController::new);
+            case WRITABLE_BOOK_PAGES ->
+                    MVC.createViewAndBind((WritableBookPagesEntryModel) model, WritableBookPagesEntryView::new, WritableBookPagesEntryController::new);
         };
     }
 

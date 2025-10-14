@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.controller.selection;
 import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
 import com.github.rinorsi.cadeditor.client.ClientConfiguration;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SelectableListSelectionElementModel;
@@ -12,9 +13,12 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ListSelectionScreenController extends AbstractController<ListSelectionScreenModel, ListSelectionScreenView> {
+    private ListSelectionFilter activeFilter;
+
     public ListSelectionScreenController(ListSelectionScreenModel model, ListSelectionScreenView view) {
         super(model, view);
     }
@@ -23,6 +27,7 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
     public void bind() {
         view.getHeaderLabel().setLabel(ModTexts.title(ModTexts.choose(model.getTitle())));
         view.getSearchField().textProperty().addListener(this::filter);
+        setupFilterButton();
         if (model.isMultiSelect()) {
             model.getElements().forEach(item -> initializeSelectableItem(item));
         } else {
@@ -57,9 +62,36 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         filter("");
     }
 
+    private void setupFilterButton() {
+        var filters = model.getFilters();
+        if (filters == null || filters.isEmpty()) {
+            view.getFilterButton().setVisible(false);
+            view.getFilterButton().setMinWidth(0);
+            view.getFilterButton().setPrefWidth(0);
+            view.getFilterButton().setMaxWidth(0);
+            return;
+        }
+        view.getFilterButton().setVisible(true);
+        view.getFilterButton().setMinWidth(80);
+        view.getFilterButton().setPrefWidth(100);
+        view.getFilterButton().setMaxWidth(140);
+        view.getFilterButton().getValues().setAll(filters);
+        view.getFilterButton().setTextFactory(ListSelectionFilter::label);
+        Optional<ListSelectionFilter> initial = filters.stream()
+                .filter(filter -> filter.getId().equals(model.getInitialFilterId()))
+                .findFirst();
+        activeFilter = initial.orElse(filters.get(0));
+        view.getFilterButton().setValue(activeFilter);
+        view.getFilterButton().valueProperty().addListener(() -> {
+            activeFilter = view.getFilterButton().getValue();
+            filter(view.getSearchField().getText());
+        });
+    }
+
     private void filter(String filter) {
         view.getListView().getItems().setAll(model.getElements()
                 .stream()
+                .filter(item -> activeFilter == null || activeFilter.test(item))
                 .filter(item -> item.matches(filter))
                 .limit(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems())
                 .toList());

@@ -36,4 +36,9 @@ public class HideFlagEntryModel extends BooleanEntryModel {
     public Type getType() {
         return Type.HIDE_FLAG;
     }
+
+    public void syncValue(boolean value) {
+        setValue(value);
+        defaultValue = value;
+    }
 }

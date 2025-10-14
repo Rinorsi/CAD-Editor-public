@@ -4,6 +4,8 @@ import com.github.franckyi.guapi.api.mvc.View;
 import com.github.franckyi.guapi.api.node.HBox;
 import com.github.franckyi.guapi.api.node.Label;
 import com.github.franckyi.guapi.api.node.TextField;
+import com.github.franckyi.guapi.api.node.TexturedButton;
+import com.github.rinorsi.cadeditor.client.ModTextures;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 
@@ -19,6 +21,7 @@ public class NBTTagView implements View {
     private TextField nameField;
     private Label separator;
     private TextField valueField;
+    private TexturedButton suggestionButton;
 
     public NBTTagView(ResourceLocation texture, MutableComponent tooltip, Predicate<String> validator) {
         this(texture, tooltip);
@@ -37,11 +40,14 @@ public class NBTTagView implements View {
             root.add(nameField = textField().prefHeight(14).prefWidth(120));
             root.add(separator = label(":"));
             root.add(valueField = textField().prefHeight(14));
+            root.add(suggestionButton = texturedButton(ModTextures.SEARCH, 16, 16, false));
             root.spacing(5).align(CENTER_LEFT);
         });
         if (validator != null) {
             valueField.setValidator(validator);
         }
+        suggestionButton.setVisible(false);
+        suggestionButton.setDisable(true);
     }
 
     @Override
@@ -59,5 +65,9 @@ public class NBTTagView implements View {
 
     public TextField getValueField() {
         return valueField;
+    }
+
+    public TexturedButton getSuggestionButton() {
+        return suggestionButton;
     }
 }

@@ -1,9 +1,11 @@
 package com.github.rinorsi.cadeditor.client.screen.view.selection;
 
+import com.github.franckyi.guapi.api.node.EnumButton;
 import com.github.franckyi.guapi.api.node.ListView;
 import com.github.franckyi.guapi.api.node.Node;
 import com.github.franckyi.guapi.api.node.TextField;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.mvc.ListSelectionElementMVC;
 import com.github.rinorsi.cadeditor.client.screen.view.ScreenView;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -13,6 +15,7 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 public class ListSelectionScreenView extends ScreenView {
     private ListView<ListSelectionElementModel> listView;
     private TextField searchField;
+    private EnumButton<ListSelectionFilter> filterButton;
 
     public ListSelectionScreenView() {
         super();
@@ -23,7 +26,16 @@ public class ListSelectionScreenView extends ScreenView {
         return hBox(editor -> {
             editor.add(vBox(), 1);
             editor.add(vBox(center -> {
-                center.add(searchField = textField().placeholder(ModTexts.SEARCH));
+                center.add(hBox(row -> {
+                    filterButton = enumButton();
+                    filterButton.setVisible(false);
+                    filterButton.setMinWidth(0);
+                    filterButton.setPrefWidth(0);
+                    filterButton.setMaxWidth(0);
+                    row.add(filterButton);
+                    row.add(searchField = textField().placeholder(ModTexts.SEARCH), 1);
+                    row.spacing(5);
+                }));
                 center.add(listView = listView(ListSelectionElementModel.class, 25)
                         .renderer(item -> mvc(ListSelectionElementMVC.INSTANCE, item))
                         .padding(5).childrenFocusable(), 1);
@@ -40,5 +52,9 @@ public class ListSelectionScreenView extends ScreenView {
 
     public TextField getSearchField() {
         return searchField;
+    }
+
+    public EnumButton<ListSelectionFilter> getFilterButton() {
+        return filterButton;
     }
 }

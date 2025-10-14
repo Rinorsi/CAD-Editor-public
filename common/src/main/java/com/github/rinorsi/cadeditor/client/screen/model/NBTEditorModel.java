@@ -14,7 +14,7 @@ public class NBTEditorModel implements EditorModel {
 
     public NBTEditorModel(EditorContext<?> context) {
         this.context = context;
-        rootTagProperty = ObjectProperty.create(new NBTTagModel(getContext().getTag()));
+        rootTagProperty = ObjectProperty.create(new NBTTagModel(getContext(), getContext().getTag()));
         validProperty = rootTagProperty().mapToObservableBoolean(NBTTagModel::validProperty);
     }
 

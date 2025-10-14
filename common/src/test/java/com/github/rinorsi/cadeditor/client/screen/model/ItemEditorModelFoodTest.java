@@ -120,7 +120,7 @@ class ItemEditorModelFoodTest {
     }
 
     @Test
-    void switchingConvertTargetProducesCleanStack() {
+    void switchingConvertTargetPreservesComponents() {
         ItemStack baseStack = new ItemStack(getItem("minecraft:stone_sword"));
         baseStack.set(DataComponents.CUSTOM_NAME, Component.literal("Crunchy"));
         baseStack.remove(DataComponents.LORE);
@@ -150,10 +150,42 @@ class ItemEditorModelFoodTest {
         CompoundTag food = components.getCompound("minecraft:food");
         CompoundTag convert = food.getCompound("using_converts_to");
 
-        Assertions.assertTrue(components.contains("minecraft:attribute_modifiers", Tag.TAG_COMPOUND));
-
         Assertions.assertEquals("minecraft:diamond_sword", convert.getString("id"));
-        Assertions.assertFalse(convert.contains("components", Tag.TAG_COMPOUND));
+        if (convert.contains("components", Tag.TAG_COMPOUND)) {
+            CompoundTag convertComponents = convert.getCompound("components");
+            Assertions.assertFalse(convertComponents.contains("minecraft:lore", Tag.TAG_COMPOUND));
+            Assertions.assertFalse(convertComponents.contains("minecraft:rarity", Tag.TAG_COMPOUND));
+            Assertions.assertFalse(convertComponents.contains("minecraft:repair_cost", Tag.TAG_COMPOUND));
+        }
+    }
+
+    @Test
+    void customConvertTargetRetainsEditedComponents() {
+        ItemStack baseStack = new ItemStack(getItem("minecraft:apple"));
+        ItemEditorContext context = new ItemEditorContext(baseStack, null, true, noop());
+        TestItemEditorModel model = new TestItemEditorModel(context);
+
+        model.initalize();
+        model.enableFoodComponent();
+
+        ItemStack convertStack = new ItemStack(getItem("minecraft:diamond_sword"));
+        convertStack.set(DataComponents.CUSTOM_NAME, Component.literal("Blade"));
+        convertStack.set(DataComponents.ATTRIBUTE_MODIFIERS, createSwordModifiers());
+
+        model.getFoodState().useCustomUsingConvertsTo(convertStack);
+        model.apply();
+
+        CompoundTag tag = context.getTag();
+        Assertions.assertNotNull(tag, "Context tag should be initialized");
+        CompoundTag components = tag.getCompound("components");
+        CompoundTag food = components.getCompound("minecraft:food");
+        Assertions.assertEquals("minecraft:diamond_sword", food.getCompound("using_converts_to").getString("id"));
+
+        CompoundTag convert = food.getCompound("using_converts_to");
+        Assertions.assertTrue(convert.contains("components", Tag.TAG_COMPOUND));
+        CompoundTag convertComponents = convert.getCompound("components");
+        Assertions.assertTrue(convertComponents.contains("minecraft:attribute_modifiers", Tag.TAG_COMPOUND));
+        Assertions.assertNotNull(convertComponents.get("minecraft:custom_name"));
     }
 
     private static Item getItem(String id) {

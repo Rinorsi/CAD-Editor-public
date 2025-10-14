@@ -1,8 +1,11 @@
 package com.github.rinorsi.cadeditor.client;
 
 import com.github.franckyi.guapi.api.Color;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.*;
 import com.github.rinorsi.cadeditor.common.ColoredItemHelper;
+import com.github.rinorsi.cadeditor.common.ModTexts;
+import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -33,6 +36,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public final class ClientCache {
     private static List<String> itemSuggestions;
@@ -56,6 +60,40 @@ public final class ClientCache {
     private static List<TrimMaterialSelectionElementModel> trimMaterialSelectionItems;
     private static List<String> instrumentSuggestions;
     private static List<ListSelectionElementModel> instrumentSelectionItems;
+    private static List<String> soundEventSuggestions;
+    private static List<SoundEventListSelectionElementModel> soundEventSelectionItems;
+    private static List<ListSelectionFilter> soundEventFilters;
+    private static List<String> blockEntityTypeSuggestions;
+    private static List<String> lootTableSuggestions;
+
+    public static void invalidate() {
+        itemSuggestions = null;
+        itemSelectionItems = null;
+        blockSuggestions = null;
+        blockSelectionItems = null;
+        blockTagSelectionItems = null;
+        enchantmentSuggestions = null;
+        enchantmentSelectionItems = null;
+        attributeSuggestions = null;
+        attributeSelectionItems = null;
+        potionSuggestions = null;
+        potionSelectionItems = null;
+        effectSuggestions = null;
+        effectSelectionItems = null;
+        entitySuggestions = null;
+        entitySelectionItems = null;
+        trimPatternSuggestions = null;
+        trimPatternSelectionItems = null;
+        trimMaterialSuggestions = null;
+        trimMaterialSelectionItems = null;
+        instrumentSuggestions = null;
+        instrumentSelectionItems = null;
+        soundEventSuggestions = null;
+        soundEventSelectionItems = null;
+        soundEventFilters = null;
+        blockEntityTypeSuggestions = null;
+        lootTableSuggestions = null;
+    }
 
     public static List<String> getItemSuggestions() {
         return itemSuggestions == null ? itemSuggestions = buildSuggestions(BuiltInRegistries.ITEM) : itemSuggestions;
@@ -77,6 +115,13 @@ public final class ClientCache {
     public static List<TagListSelectionElementModel> getBlockTagSelectionItems() {
         return blockTagSelectionItems == null ? blockTagSelectionItems = buildBlockTagSelectionItems() : blockTagSelectionItems;
     }
+
+    public static List<String> getBlockEntityTypeSuggestions() {
+        return blockEntityTypeSuggestions == null
+                ? blockEntityTypeSuggestions = buildSuggestions(BuiltInRegistries.BLOCK_ENTITY_TYPE)
+                : blockEntityTypeSuggestions;
+    }
+
     public static List<String> getEnchantmentSuggestions() {
         if (enchantmentSuggestions == null) {
             enchantmentSuggestions = registryAccess().lookup(Registries.ENCHANTMENT)
@@ -270,6 +315,33 @@ public final class ClientCache {
         return instrumentSelectionItems;
     }
 
+    public static List<String> getSoundEventSuggestions() {
+        return soundEventSuggestions == null
+                ? soundEventSuggestions = buildSuggestions(BuiltInRegistries.SOUND_EVENT)
+                : soundEventSuggestions;
+    }
+
+    public static List<SoundEventListSelectionElementModel> getSoundEventSelectionItems() {
+        if (soundEventSelectionItems == null) {
+            soundEventSelectionItems = buildSoundEventSelectionItems();
+        }
+        return soundEventSelectionItems;
+    }
+
+    public static List<ListSelectionFilter> getSoundEventFilters() {
+        if (soundEventFilters == null) {
+            soundEventFilters = buildSoundEventFilters();
+        }
+        return soundEventFilters;
+    }
+
+    public static List<String> getLootTableSuggestions() {
+        if (lootTableSuggestions == null) {
+            lootTableSuggestions = buildLootTableSuggestions();
+        }
+        return lootTableSuggestions;
+    }
+
     public static Optional<SpriteListSelectionElementModel> findEffectSelectionItem(ResourceLocation id) {
         if (id == null) {
             return Optional.empty();
@@ -306,9 +378,28 @@ public final class ClientCache {
         return suggestions;
     }
 
+    private static List<String> buildLootTableSuggestions() {
+        List<ResourceLocation> ids = LootTableIndex.getAll();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        LinkedHashSet<String> values = new LinkedHashSet<>();
+        for (ResourceLocation id : ids) {
+            String full = id.toString();
+            values.add(full);
+            if (full.startsWith("minecraft:")) {
+                values.add(full.substring(10));
+            }
+        }
+        return List.copyOf(values);
+    }
+
     private static List<ItemListSelectionElementModel> buildItemSelectionItems() {
         return BuiltInRegistries.ITEM.entrySet().stream()
-                .map(e -> new ItemListSelectionElementModel(e.getValue().getDescriptionId(), e.getKey().location(), new ItemStack(e.getValue())))
+                .map(e -> new ItemListSelectionElementModel(
+                        e.getValue().getDescriptionId(),
+                        e.getKey().location(),
+                        () -> new ItemStack(e.getValue())))
                 .sorted().toList();
     }
 
@@ -323,7 +414,10 @@ public final class ClientCache {
 
     private static List<ItemListSelectionElementModel> buildBlockSelectionItems() {
         return BuiltInRegistries.BLOCK.entrySet().stream()
-                .map(e -> (ItemListSelectionElementModel) new SelectableItemListSelectionElementModel(e.getValue().getDescriptionId(), e.getKey().location(), new ItemStack(e.getValue())))
+                .map(e -> (ItemListSelectionElementModel) new SelectableItemListSelectionElementModel(
+                        e.getValue().getDescriptionId(),
+                        e.getKey().location(),
+                        () -> new ItemStack(e.getValue())))
                 .sorted().toList();
     }
 
@@ -337,9 +431,15 @@ public final class ClientCache {
         return registryAccess().lookup(Registries.ENCHANTMENT)
                 .map(lookup -> lookup.listElements()
                         .map(ref -> {
-                            ItemStack icon = new ItemStack(getEnchantmentTypeItem(ref));
+                            Item iconItem = getEnchantmentTypeItem(ref);
+                            ItemStack icon = new ItemStack(iconItem);
                             Component categoryLabel = buildEnchantmentCategoryLabel(ref, icon);
-                            return new EnchantmentListSelectionElementModel(ref.value().description().getString(), ref.key().location(), ref, icon, categoryLabel);
+                            return new EnchantmentListSelectionElementModel(
+                                    ref.value().description().getString(),
+                                    ref.key().location(),
+                                    ref,
+                                    () -> new ItemStack(iconItem),
+                                    categoryLabel);
                         })
                         .sorted()
                         .toList())
@@ -482,7 +582,7 @@ public final class ClientCache {
                         .map(holder -> new ItemListSelectionElementModel(
                                 Potion.getName(Optional.of(holder), Items.POTION.getDescriptionId() + ".effect."),
                                 e.getKey().location(),
-                                ColoredItemHelper.createColoredPotionItem(e.getKey().location(), Color.NONE)))
+                                () -> ColoredItemHelper.createColoredPotionItem(e.getKey().location(), Color.NONE)))
                         .orElse(null))
                 .filter(Objects::nonNull)
                 .sorted().toList();
@@ -521,12 +621,38 @@ public final class ClientCache {
                 .toList();
     }
 
-    private static ItemStack iconFromHolder(Holder<Item> holder) {
-        try {
-            return holder.value().getDefaultInstance();
-        } catch (IllegalStateException ignored) {
-            return ItemStack.EMPTY;
+    private static List<SoundEventListSelectionElementModel> buildSoundEventSelectionItems() {
+        return BuiltInRegistries.SOUND_EVENT.entrySet().stream()
+                .map(entry -> new SoundEventListSelectionElementModel(entry.getKey().location(), entry.getValue()))
+                .sorted()
+                .toList();
+    }
+
+    private static List<ListSelectionFilter> buildSoundEventFilters() {
+        List<SoundEventListSelectionElementModel> items = getSoundEventSelectionItems();
+        if (items.isEmpty()) {
+            return List.of(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
         }
+        List<ListSelectionFilter> filters = new ArrayList<>();
+        filters.add(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
+        items.stream()
+                .map(SoundEventListSelectionElementModel::getNamespace)
+                .distinct()
+                .sorted()
+                .forEach(namespace -> filters.add(new ListSelectionFilter("namespace:" + namespace,
+                        ModTexts.soundFilterNamespace(namespace), element -> element instanceof SoundEventListSelectionElementModel sound
+                                && sound.getNamespace().equals(namespace))));
+        return List.copyOf(filters);
+    }
+
+    private static Supplier<ItemStack> iconFromHolder(Holder<Item> holder) {
+        return () -> {
+            try {
+                return holder.value().getDefaultInstance();
+            } catch (IllegalStateException ignored) {
+                return ItemStack.EMPTY;
+            }
+        };
     }
 
     private static HolderLookup.Provider registryAccess() {

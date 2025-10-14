@@ -6,10 +6,13 @@ import com.github.franckyi.databindings.api.ObservableList;
 import com.github.franckyi.databindings.api.StringProperty;
 import com.github.franckyi.guapi.api.mvc.Model;
 import com.github.franckyi.guapi.api.node.TreeView;
+import com.github.rinorsi.cadeditor.client.context.EditorContext;
 import com.github.rinorsi.cadeditor.mixin.CompoundTagMixin;
 import net.minecraft.nbt.*;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Stream;
 
 @SuppressWarnings("this-escape")
@@ -23,19 +26,21 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
     private final BooleanProperty validProperty = BooleanProperty.create();
     protected final Tag tag;
     protected byte forcedTagType;
+    private final EditorContext<?> context;
 
-    public NBTTagModel(Tag tag) {
-        this(tag, null, null, null);
+    public NBTTagModel(EditorContext<?> context, Tag tag) {
+        this(context, tag, null, null, null);
         setExpanded(true);
     }
 
-    public NBTTagModel(byte forcedTagType, NBTTagModel parent, String value) {
-        this(null, parent, null, value);
+    public NBTTagModel(EditorContext<?> context, byte forcedTagType, NBTTagModel parent, String value) {
+        this(context, null, parent, null, value);
         this.forcedTagType = forcedTagType;
     }
 
-    public NBTTagModel(Tag tag, NBTTagModel parent, String name, String value) {
+    public NBTTagModel(EditorContext<?> context, Tag tag, NBTTagModel parent, String name, String value) {
         this.tag = tag;
+        this.context = context != null ? context : parent != null ? parent.getContext() : null;
         parentProperty = ObjectProperty.create(parent);
         nameProperty = StringProperty.create(name);
         valueProperty = StringProperty.create(value);
@@ -43,24 +48,24 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
             switch (tag.getId()) {
                 case Tag.TAG_COMPOUND -> children.setAll(((CompoundTagMixin) tag).getEntries()
                         .stream()
-                        .map(entry -> new NBTTagModel(entry.getValue(), this, entry.getKey(), null))
+                        .map(entry -> new NBTTagModel(getContext(), entry.getValue(), this, entry.getKey(), null))
                         .toList()
                 );
                 case Tag.TAG_LIST -> children.setAll(((ListTag) tag)
                         .stream()
-                        .map(tag1 -> new NBTTagModel(tag1, this, null, null))
+                        .map(tag1 -> new NBTTagModel(getContext(), tag1, this, null, null))
                         .toList()
                 );
                 case Tag.TAG_BYTE_ARRAY -> children.setAll(Stream.of(ArrayUtils.toObject(((ByteArrayTag) tag).getAsByteArray()))
-                        .map(b -> new NBTTagModel(Tag.TAG_BYTE, this, Byte.toString(b)))
+                        .map(b -> new NBTTagModel(getContext(), Tag.TAG_BYTE, this, Byte.toString(b)))
                         .toList()
                 );
                 case Tag.TAG_INT_ARRAY -> children.setAll(Stream.of(ArrayUtils.toObject(((IntArrayTag) tag).getAsIntArray()))
-                        .map(i -> new NBTTagModel(Tag.TAG_INT, this, Integer.toString(i)))
+                        .map(i -> new NBTTagModel(getContext(), Tag.TAG_INT, this, Integer.toString(i)))
                         .toList()
                 );
                 case Tag.TAG_LONG_ARRAY -> children.setAll(Stream.of(ArrayUtils.toObject(((LongArrayTag) tag).getAsLongArray()))
-                        .map(l -> new NBTTagModel(Tag.TAG_LONG, this, Long.toString(l)))
+                        .map(l -> new NBTTagModel(getContext(), Tag.TAG_LONG, this, Long.toString(l)))
                         .toList()
                 );
                 case Tag.TAG_BYTE -> setValue(Byte.toString(((ByteTag) tag).getAsByte()));
@@ -94,6 +99,10 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
     @Override
     public BooleanProperty childrenChangedProperty() {
         return childrenChangedProperty;
+    }
+
+    public EditorContext<?> getContext() {
+        return context;
     }
 
     public String getName() {
@@ -130,6 +139,10 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
 
     public void setValid(boolean value) {
         validProperty().setValue(value);
+    }
+
+    public NBTTagModel getParent() {
+        return parentProperty().getValue();
     }
 
     public byte getTagType() {
@@ -195,6 +208,32 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
     }
 
     public NBTTagModel createClipboardTag() {
-        return canBuild() ? new NBTTagModel(build(), null, getName(), getValue()) : new NBTTagModel(getTagType(), null, getValue());
+        return canBuild()
+                ? new NBTTagModel(getContext(), build(), null, getName(), getValue())
+                : new NBTTagModel(getContext(), getTagType(), null, getValue());
+    }
+
+    public List<String> getPath() {
+        LinkedList<String> path = new LinkedList<>();
+        NBTTagModel current = this;
+        while (current != null) {
+            String name = current.getName();
+            if (name != null) {
+                path.addFirst(name);
+            } else if (current.getParent() != null && current.getParent().getTagType() == Tag.TAG_LIST) {
+                int index = current.getParent().getChildren().indexOf(current);
+                path.addFirst("[" + index + "]");
+            }
+            current = current.getParent();
+        }
+        return List.copyOf(path);
+    }
+
+    public List<String> getStringSuggestions() {
+        EditorContext<?> ctx = getContext();
+        if (ctx == null) {
+            return List.of();
+        }
+        return ctx.getStringSuggestions(getPath());
     }
 }
