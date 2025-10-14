@@ -171,7 +171,6 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof BlockItem) {
             getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_PLACE_ON, this, "CanPlaceOn"));
         }
-    }
         //TODO 方块状态、调试棒、直接Damage写入这些比较小众的功能可以考虑放到一个“实验性”分类里
         //TODO 创造栏锁定的行为还要验证，等弄清楚再开放
         //TODO 新分类的脚手架要更加模板化，顺手把数据导入导出也连起来
