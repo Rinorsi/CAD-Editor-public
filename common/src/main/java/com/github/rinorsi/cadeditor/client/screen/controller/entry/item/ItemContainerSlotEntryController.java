@@ -25,7 +25,7 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
     public void bind() {
         super.bind();
         view.setListButtonsVisible(false);
-        view.getDeleteButton().setVisible(false);
+        view.disableDeleteButton();
         view.getUpButton().setVisible(false);
         view.getDownButton().setVisible(false);
 

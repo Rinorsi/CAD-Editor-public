@@ -12,12 +12,11 @@ import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
-    private List<MutableComponent> newLore;
+    private TextEntryModel itemNameEntry;
+    private TextEntryModel customNameEntry;
 
     public ItemDisplayCategoryModel(ItemEditorModel editor) {
         super(ModTexts.DISPLAY, editor);
@@ -25,8 +24,10 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     protected void setupEntries() {
-        getEntries().add(new TextEntryModel(this, ModTexts.ITEM_NAME, getItemNameOverride(), this::setItemNameOverride));
-        getEntries().add(new TextEntryModel(this, ModTexts.CUSTOM_NAME, getCustomName(), this::setCustomName));
+        itemNameEntry = new TextEntryModel(this, ModTexts.ITEM_NAME, getItemNameOverride(), this::setItemNameOverride);
+        customNameEntry = new TextEntryModel(this, ModTexts.CUSTOM_NAME, getCustomName(), this::setCustomName);
+        getEntries().add(itemNameEntry);
+        getEntries().add(customNameEntry);
         ItemLore lore = getStack().get(DataComponents.LORE);
         if (lore != null) {
             lore.lines().stream()
@@ -38,7 +39,7 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     public int getEntryListStart() {
-        return 1;
+        return 2;
     }
 
     @Override
@@ -52,43 +53,53 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
     }
 
     private EntryModel createLoreEntry(MutableComponent value) {
-        TextEntryModel entry = new TextEntryModel(this, null, value, this::addLore);
+        TextEntryModel entry = new TextEntryModel(this, null, value, lore -> {});
         entry.listIndexProperty().addListener(index -> entry.setLabel(ModTexts.lore(index + 1)));
         return entry;
     }
 
     @Override
     public void apply() {
-        newLore = new ArrayList<>();
         super.apply();
+        setItemNameOverride(itemNameEntry.getValue());
+        setCustomName(customNameEntry.getValue());
         ItemStack stack = getStack();
-        if (!newLore.isEmpty()) {
-            List<Component> loreLines = newLore.stream()
-                    .filter(Objects::nonNull)
-                    .map(MutableComponent::copy)
-                    .map(Component.class::cast)
-                    .toList();
+        List<Component> loreLines = getLoreEntries().stream()
+                .map(TextEntryModel::getValue)
+                .map(this::normalizeLoreLine)
+                .filter(v -> v != null)
+                .map(Component.class::cast)
+                .toList();
+        if (!loreLines.isEmpty()) {
             stack.set(DataComponents.LORE, new ItemLore(loreLines));
         } else {
             stack.remove(DataComponents.LORE);
+        }
+        Component customName = stack.get(DataComponents.CUSTOM_NAME);
+        if (customName != null && customName.getString().isEmpty()) {
+            stack.remove(DataComponents.CUSTOM_NAME);
         }
     }
 
     private MutableComponent getItemNameOverride() {
         Component component = getStack().get(DataComponents.ITEM_NAME);
-        return component == null ? null : component.copy();
+        if (component != null) {
+            return component.copy();
+        }
+        return Component.translatable(getStack().getDescriptionId()).copy();
     }
 
     private void setItemNameOverride(MutableComponent value) {
         ItemStack stack = getStack();
-        if (value == null || value.getString().isEmpty()) {
+        if (isBlank(value)) {
             stack.remove(DataComponents.ITEM_NAME);
             return;
         }
-        if (!value.getSiblings().isEmpty() && value.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
-            value.withStyle(style -> style.withItalic(false));
+        MutableComponent copy = value.copy();
+        if (!copy.getSiblings().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
+            copy = copy.withStyle(style -> style.withItalic(false));
         }
-        stack.set(DataComponents.ITEM_NAME, value.copy());
+        stack.set(DataComponents.ITEM_NAME, copy);
     }
 
     private MutableComponent getCustomName() {
@@ -97,28 +108,55 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void setCustomName(MutableComponent value) {
-        if (value == null) {
+        if (isBlank(value)) {
             getStack().remove(DataComponents.CUSTOM_NAME);
             return;
         }
         if (!value.getString().isEmpty()) {
-            if (!value.getSiblings().isEmpty() && value.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
-                value.withStyle(style -> style.withItalic(false));
+            MutableComponent copy = value.copy();
+            if (!copy.getSiblings().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
+                copy = copy.withStyle(style -> style.withItalic(false));
             }
-            getStack().set(DataComponents.CUSTOM_NAME, value.copy());
+            getStack().set(DataComponents.CUSTOM_NAME, copy);
         } else {
             getStack().remove(DataComponents.CUSTOM_NAME);
         }
     }
 
-    private void addLore(MutableComponent value) {
+    private List<TextEntryModel> getLoreEntries() {
+        int start = getEntryListStart();
+        if (start < 0) {
+            return List.of();
+        }
+        int end = getEntries().size();
+        if (canAddEntryInList()) {
+            end -= 1;
+        }
+        if (start >= end) {
+            return List.of();
+        }
+        return getEntries().subList(start, end).stream()
+                .filter(TextEntryModel.class::isInstance)
+                .map(TextEntryModel.class::cast)
+                .toList();
+    }
+
+    private MutableComponent normalizeLoreLine(MutableComponent value) {
         if (value == null) {
-            return;
+            return null;
         }
-        if (!value.getString().isEmpty() && value.getContents() instanceof PlainTextContents lc && lc.text().isEmpty() && !value.getSiblings().isEmpty()) {
-            value.withStyle(style -> style.withItalic(false).withColor(ChatFormatting.WHITE));
+        MutableComponent copy = value.copy();
+        if (copy.getString().isEmpty() && copy.getSiblings().isEmpty()) {
+            return null;
         }
-        newLore.add(value);
+        if (!copy.getString().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty() && !copy.getSiblings().isEmpty()) {
+            copy = copy.withStyle(style -> style.withItalic(false).withColor(ChatFormatting.WHITE));
+        }
+        return copy;
+    }
+
+    private static boolean isBlank(Component c) {
+        return c == null || c.getString().isEmpty();
     }
 
     private ItemStack getStack() {
