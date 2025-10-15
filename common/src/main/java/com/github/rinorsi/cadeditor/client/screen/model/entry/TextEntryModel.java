@@ -9,6 +9,7 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class TextEntryModel extends ValueEntryModel<MutableComponent> {
     private Runnable onApply;
+    private boolean deletable = true;
 
     public TextEntryModel(CategoryModel category, MutableComponent label, MutableComponent value, Consumer<MutableComponent> action) {
         super(category, label, value == null ? text() : value, action);
@@ -37,5 +38,14 @@ public class TextEntryModel extends ValueEntryModel<MutableComponent> {
 
     public void resetDefaultValue() {
         defaultValue = getValue();
+    }
+
+    public void setDeletable(boolean deletable) {
+        this.deletable = deletable;
+    }
+
+    @Override
+    public boolean isDeletable() {
+        return deletable && super.isDeletable();
     }
 }

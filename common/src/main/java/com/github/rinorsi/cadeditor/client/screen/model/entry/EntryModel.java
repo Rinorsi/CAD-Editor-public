@@ -61,6 +61,10 @@ public abstract class EntryModel implements Model {
 
     public abstract void apply();
 
+    public boolean isDeletable() {
+        return true;
+    }
+
     public void reset() {
     }
 

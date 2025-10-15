@@ -77,4 +77,10 @@ public abstract class EntryView implements View {
     public TexturedButton getResetButton() {
         return resetButton;
     }
+
+    public void disableDeleteButton() {
+        if (listButtons != null && deleteButton != null) {
+            listButtons.getChildren().remove(deleteButton);
+        }
+    }
 }

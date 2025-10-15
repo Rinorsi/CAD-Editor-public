@@ -49,7 +49,8 @@ public class ItemEditorModel extends StandardEditorModel {
         "minecraft:hide_tooltip",
         "minecraft:hide_additional_tooltip",
         "minecraft:tooltip_display",
-        "minecraft:enchantment_glint_override"
+        "minecraft:enchantment_glint_override",
+        "minecraft:custom_name"
     );
 
     private static final int MIN_NUTRITION = 0;
