@@ -6,19 +6,24 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ItemSelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.CustomModelData;
+import net.minecraft.world.item.component.DamageResistant;
 import net.minecraft.world.item.component.Unbreakable;
 
 public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
+    private static final DamageResistant FIRE_DAMAGE_RESISTANCE = new DamageResistant(DamageTypeTags.IS_FIRE);
     private BooleanEntryModel foodToggleEntry;
     public ItemGeneralCategoryModel(ItemEditorModel editor) {
         super(ModTexts.GENERAL, editor);
@@ -42,7 +47,7 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("custom_model_data"), getCustomModelData(stack), this::setCustomModelData));
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("repair_cost"), getRepairCost(stack), this::setRepairCost));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("glint_override"), getGlintOverride(stack), this::setGlintOverride));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.FIRE_RESISTANT, stack.has(DataComponents.FIRE_RESISTANT), this::setFireResistant));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.FIRE_RESISTANT, isFireResistant(stack), this::setFireResistant));
         getEntries().add(new BooleanEntryModel(this, ModTexts.INTANGIBLE_PROJECTILE, stack.has(DataComponents.INTANGIBLE_PROJECTILE), this::setIntangibleProjectile));
         foodToggleEntry = new BooleanEntryModel(this, ModTexts.gui("food_enabled"), getParent().getFoodState().isEnabled(), this::setFoodEnabled);
         getEntries().add(foodToggleEntry);
@@ -130,14 +135,12 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private void setItemId(String id) {
         try {
             ResourceLocation rl = ResourceLocation.parse(id);
-            Item item = BuiltInRegistries.ITEM.get(rl);
-            if (item != null) {
+            BuiltInRegistries.ITEM.getOptional(rl).ifPresent(item -> {
                 ItemStack old = getParent().getContext().getItemStack();
                 int count = old.getCount();
-                // Create a fresh stack for the new item id. Components/lore/name are item-specific; keep none by default.
                 ItemStack repl = new ItemStack(item, count);
                 getParent().handleStackReplaced(repl);
-            }
+            });
         } catch (Exception ignored) {
         }
     }
@@ -170,13 +173,32 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
 
     private int getCustomModelData(ItemStack stack) {
         CustomModelData cmd = stack.get(DataComponents.CUSTOM_MODEL_DATA);
-        return cmd != null ? cmd.value() : 0;
+        if (cmd == null || cmd.colors().isEmpty()) {
+            return 0;
+        }
+        Integer first = cmd.colors().get(0);
+        return first != null ? first : 0;
     }
 
     private void setCustomModelData(int value) {
         ItemStack stack = getParent().getContext().getItemStack();
         if (value > 0) {
-            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(value));
+            CustomModelData existing = stack.get(DataComponents.CUSTOM_MODEL_DATA);
+            List<Float> floats = existing != null ? existing.floats() : List.of();
+            List<Boolean> flags = existing != null ? existing.flags() : List.of();
+            List<String> strings = existing != null ? existing.strings() : List.of();
+            List<Integer> colors = new ArrayList<>(existing != null ? existing.colors() : List.of());
+            if (colors.isEmpty()) {
+                colors.add(value);
+            } else {
+                colors.set(0, value);
+            }
+            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(
+                    List.copyOf(floats),
+                    List.copyOf(flags),
+                    List.copyOf(strings),
+                    List.copyOf(colors)
+            ));
         } else {
             stack.remove(DataComponents.CUSTOM_MODEL_DATA);
         }
@@ -202,12 +224,20 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         if (value) stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true); else stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
     }
 
+    private boolean isFireResistant(ItemStack stack) {
+        DamageResistant resistant = stack.get(DataComponents.DAMAGE_RESISTANT);
+        return resistant != null && resistant.types().equals(DamageTypeTags.IS_FIRE);
+    }
+
     private void setFireResistant(boolean value) {
         ItemStack stack = getParent().getContext().getItemStack();
         if (value) {
-            stack.set(DataComponents.FIRE_RESISTANT, Unit.INSTANCE);
+            stack.set(DataComponents.DAMAGE_RESISTANT, FIRE_DAMAGE_RESISTANCE);
         } else {
-            stack.remove(DataComponents.FIRE_RESISTANT);
+            DamageResistant existing = stack.get(DataComponents.DAMAGE_RESISTANT);
+            if (existing != null && existing.types().equals(DamageTypeTags.IS_FIRE)) {
+                stack.remove(DataComponents.DAMAGE_RESISTANT);
+            }
         }
     }
 

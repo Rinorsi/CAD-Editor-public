@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -19,7 +20,7 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
 
     public EntityEditorContext(CompoundTag tag, Component errorTooltip, boolean canSaveToVault, Consumer<EntityEditorContext> action) {
         super(tag, errorTooltip, canSaveToVault, action);
-        entity = EntityType.create(tag, Minecraft.getInstance().level).orElse(null);
+        entity = EntityType.create(tag, Minecraft.getInstance().level, EntitySpawnReason.LOAD).orElse(null);
         if (entity == null) {
             this.canSaveToVault = false;
         }

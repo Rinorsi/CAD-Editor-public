@@ -7,6 +7,9 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultEntityE
 import com.github.rinorsi.cadeditor.client.screen.view.entry.vault.VaultEntityEntryView;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
@@ -32,7 +35,41 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
     }
 
     private ResourceLocation getEntityIconTexture() {
-        var entityTexture = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(model.getEntity()).getTextureLocation(model.getEntity());
-        return ResourceLocation.fromNamespaceAndPath(entityTexture.getNamespace(), entityTexture.getPath().replace("/entity/", "/entity_icon/"));
+        Entity entity = model.getEntity();
+        if (entity == null) {
+            return ResourceLocation.withDefaultNamespace("textures/entity_icon/missing.png");
+        }
+        var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        var renderer = dispatcher.getRenderer(entity);
+        EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, 0.0f);
+        ResourceLocation texture = null;
+        if (renderer instanceof LivingEntityRenderer<?, ?, ?> livingRenderer && state instanceof LivingEntityRenderState livingState) {
+            texture = ((LivingEntityRenderer) livingRenderer).getTextureLocation(livingState);
+        }
+        if (texture == null) {
+            for (var method : renderer.getClass().getMethods()) {
+                if (!method.getName().equals("getTextureLocation") || method.getParameterCount() != 1) continue;
+                Class<?> parameter = method.getParameterTypes()[0];
+                if (!parameter.isInstance(state)) continue;
+                try {
+                    texture = (ResourceLocation) method.invoke(renderer, state);
+                    break;
+                } catch (ReflectiveOperationException ignored) {
+                }
+            }
+        }
+        if (texture == null) {
+            texture = entity.getType().builtInRegistryHolder().unwrapKey()
+                    .map(key -> ResourceLocation.fromNamespaceAndPath(key.location().getNamespace(), "textures/entity/" + key.location().getPath() + ".png"))
+                    .orElse(ResourceLocation.withDefaultNamespace("textures/entity/missing.png"));
+        }
+        String rawPath = texture.getPath();
+        if (!rawPath.startsWith("textures/")) {
+            rawPath = "textures/" + rawPath;
+        }
+        String iconPath = rawPath.contains("/entity/")
+                ? rawPath.replace("/entity/", "/entity_icon/")
+                : "textures/entity_icon/" + rawPath.substring("textures/".length());
+        return ResourceLocation.fromNamespaceAndPath(texture.getNamespace(), iconPath);
     }
 }

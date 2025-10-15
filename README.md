@@ -27,7 +27,7 @@ https://github.com/skyecodes/IBE-Editor
 
 ## Installation & requirements
 
-* **Minecraft:** currently 1.21.1 only (more versions planned)
+* **Minecraft:** currently 1.21.4 only (more versions planned)
 * **Loaders:** NeoForge or Fabric
 * **Fabric users:** also install [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 * **Java:** 21 recommended

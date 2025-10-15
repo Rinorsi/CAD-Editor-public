@@ -13,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 
 import java.util.List;
-
 public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
     private TextEntryModel itemNameEntry;
     private TextEntryModel customNameEntry;
@@ -61,13 +60,14 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
     @Override
     public void apply() {
         super.apply();
+        // Ensure display-related components are always synchronised, even if the underlying entry detected no change.
         setItemNameOverride(itemNameEntry.getValue());
         setCustomName(customNameEntry.getValue());
         ItemStack stack = getStack();
         List<Component> loreLines = getLoreEntries().stream()
                 .map(TextEntryModel::getValue)
                 .map(this::normalizeLoreLine)
-                .filter(v -> v != null)
+                .filter(value -> value != null)
                 .map(Component.class::cast)
                 .toList();
         if (!loreLines.isEmpty()) {
@@ -86,19 +86,19 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
         if (component != null) {
             return component.copy();
         }
-        return Component.translatable(getStack().getDescriptionId()).copy();
+        return Component.translatable(getStack().getItem().getDescriptionId()).copy();
     }
 
     private void setItemNameOverride(MutableComponent value) {
-        ItemStack stack = getStack();
         if (isBlank(value)) {
-            stack.remove(DataComponents.ITEM_NAME);
+            getStack().remove(DataComponents.ITEM_NAME);
             return;
         }
         MutableComponent copy = value.copy();
         if (!copy.getSiblings().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
-            copy = copy.withStyle(style -> style.withItalic(false));
+            copy.withStyle(style -> style.withItalic(false));
         }
+        ItemStack stack = getStack();
         stack.set(DataComponents.ITEM_NAME, copy);
     }
 
@@ -115,7 +115,7 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
         if (!value.getString().isEmpty()) {
             MutableComponent copy = value.copy();
             if (!copy.getSiblings().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty()) {
-                copy = copy.withStyle(style -> style.withItalic(false));
+                copy.withStyle(style -> style.withItalic(false));
             }
             getStack().set(DataComponents.CUSTOM_NAME, copy);
         } else {
@@ -150,7 +150,7 @@ public class ItemDisplayCategoryModel extends ItemEditorCategoryModel {
             return null;
         }
         if (!copy.getString().isEmpty() && copy.getContents() instanceof PlainTextContents lc && lc.text().isEmpty() && !copy.getSiblings().isEmpty()) {
-            copy = copy.withStyle(style -> style.withItalic(false).withColor(ChatFormatting.WHITE));
+            copy.withStyle(style -> style.withItalic(false).withColor(ChatFormatting.WHITE));
         }
         return copy;
     }

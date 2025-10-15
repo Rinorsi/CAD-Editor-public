@@ -13,7 +13,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemContainerSlotEntryController extends EntryController<ItemContainerSlotEntryModel, ItemContainerSlotEntryView> {
@@ -77,14 +76,13 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
             }
             try {
                 ResourceLocation id = ResourceLocation.parse(selection);
-                    Item item = BuiltInRegistries.ITEM.get(id);
-                    if (item != null) {
+                    BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                         model.setItemStack(new ItemStack(item));
                         updateItemName();
                         if (afterSelection != null) {
                             afterSelection.run();
                         }
-                    }
+                    });
             } catch (Exception ignored) {
             }
         });

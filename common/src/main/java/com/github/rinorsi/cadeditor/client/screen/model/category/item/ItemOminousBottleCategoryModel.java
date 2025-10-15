@@ -5,6 +5,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.OminousBottleAmplifier;
 
 public class ItemOminousBottleCategoryModel extends ItemEditorCategoryModel {
     private static final int MIN_AMPLIFIER = 0;
@@ -20,9 +21,8 @@ public class ItemOminousBottleCategoryModel extends ItemEditorCategoryModel {
     @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
-        amplifier = stack.get(DataComponents.OMINOUS_BOTTLE_AMPLIFIER) != null
-                ? stack.get(DataComponents.OMINOUS_BOTTLE_AMPLIFIER)
-                : MIN_AMPLIFIER;
+        OminousBottleAmplifier component = stack.get(DataComponents.OMINOUS_BOTTLE_AMPLIFIER);
+        amplifier = component != null ? component.value() : MIN_AMPLIFIER;
         amplifierEntry = new IntegerEntryModel(this, ModTexts.OMINOUS_BOTTLE_AMPLIFIER, amplifier,
                 value -> amplifier = value == null ? MIN_AMPLIFIER : value,
                 value -> value != null && value >= MIN_AMPLIFIER && value <= MAX_AMPLIFIER);
@@ -39,7 +39,7 @@ public class ItemOminousBottleCategoryModel extends ItemEditorCategoryModel {
         if (sanitized <= MIN_AMPLIFIER) {
             stack.remove(DataComponents.OMINOUS_BOTTLE_AMPLIFIER);
         } else {
-            stack.set(DataComponents.OMINOUS_BOTTLE_AMPLIFIER, sanitized);
+            stack.set(DataComponents.OMINOUS_BOTTLE_AMPLIFIER, new OminousBottleAmplifier(sanitized));
         }
     }
 }
