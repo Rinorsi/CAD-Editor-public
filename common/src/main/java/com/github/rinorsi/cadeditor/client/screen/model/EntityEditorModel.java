@@ -22,7 +22,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.OwnableEntity;
@@ -67,7 +67,7 @@ public class EntityEditorModel extends StandardEditorModel {
         if (entity instanceof Mob) {
             getCategories().add(new EntitySpawnSettingsCategoryModel(this));
         }
-        if (entity instanceof Villager) {
+        if (entity instanceof AbstractVillager) {
             getCategories().add(new EntityVillagerDataCategoryModel(this));
             getCategories().add(new EntityVillagerTradeCategoryModel(this));
         }
