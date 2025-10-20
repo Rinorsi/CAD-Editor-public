@@ -47,6 +47,11 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
     }
 
     @Override
+    public int getEntryHeight() {
+        return 50;
+    }
+
+    @Override
     public void apply() {
         super.apply();
         ListTag list = new ListTag();
