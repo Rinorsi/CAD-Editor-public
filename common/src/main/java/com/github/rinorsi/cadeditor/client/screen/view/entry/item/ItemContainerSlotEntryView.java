@@ -19,6 +19,7 @@ public class ItemContainerSlotEntryView extends EntryView {
     private TexturedButton openEditorButton;
     private TexturedButton openSnbtEditorButton;
     private TexturedButton clearButton;
+    private TexturedButton loadVaultButton;
 
     @Override
     protected Node createContent() {
@@ -38,6 +39,7 @@ public class ItemContainerSlotEntryView extends EntryView {
         super.build();
         HBox buttonBox = getButtonBox();
         buttonBox.getChildren().add(chooseItemButton = texturedButton(ModTextures.SEARCH, 16, 16, false).tooltip(ModTexts.CHOOSE_ITEM));
+        buttonBox.getChildren().add(loadVaultButton = texturedButton(ModTextures.PASTE, 16, 16, false).tooltip(ModTexts.LOAD_VAULT));
         buttonBox.getChildren().add(openEditorButton = texturedButton(ModTextures.EDITOR, 16, 16, false).tooltip(ModTexts.OPEN_EDITOR));
         buttonBox.getChildren().add(openSnbtEditorButton = texturedButton(ModTextures.SNBT_EDITOR, 16, 16, false).tooltip(ModTexts.OPEN_SNBT_EDITOR));
         buttonBox.getChildren().add(clearButton = texturedButton(ModTextures.REMOVE, 16, 16, false).tooltip(ModTexts.REMOVE));
@@ -69,5 +71,9 @@ public class ItemContainerSlotEntryView extends EntryView {
 
     public TexturedButton getClearButton() {
         return clearButton;
+    }
+
+    public TexturedButton getLoadVaultButton() {
+        return loadVaultButton;
     }
 }

@@ -54,6 +54,10 @@ public final class ClientCache {
     private static List<SpriteListSelectionElementModel> effectSelectionItems;
     private static List<String> entitySuggestions;
     private static List<EntityListSelectionElementModel> entitySelectionItems;
+    private static List<String> villagerProfessionSuggestions;
+    private static List<ListSelectionElementModel> villagerProfessionSelectionItems;
+    private static List<String> villagerTypeSuggestions;
+    private static List<ListSelectionElementModel> villagerTypeSelectionItems;
     private static List<String> trimPatternSuggestions;
     private static List<TrimPatternSelectionElementModel> trimPatternSelectionItems;
     private static List<String> trimMaterialSuggestions;
@@ -82,6 +86,10 @@ public final class ClientCache {
         effectSelectionItems = null;
         entitySuggestions = null;
         entitySelectionItems = null;
+        villagerProfessionSuggestions = null;
+        villagerProfessionSelectionItems = null;
+        villagerTypeSuggestions = null;
+        villagerTypeSelectionItems = null;
         trimPatternSuggestions = null;
         trimPatternSelectionItems = null;
         trimMaterialSuggestions = null;
@@ -261,6 +269,22 @@ public final class ClientCache {
         return entitySelectionItems == null ? entitySelectionItems = buildEntitySelectionItems() : entitySelectionItems;
     }
 
+    public static List<String> getVillagerProfessionSuggestions() {
+        return villagerProfessionSuggestions == null ? villagerProfessionSuggestions = buildSuggestions(BuiltInRegistries.VILLAGER_PROFESSION) : villagerProfessionSuggestions;
+    }
+
+    public static List<ListSelectionElementModel> getVillagerProfessionSelectionItems() {
+        return villagerProfessionSelectionItems == null ? villagerProfessionSelectionItems = buildVillagerProfessionSelectionItems() : villagerProfessionSelectionItems;
+    }
+
+    public static List<String> getVillagerTypeSuggestions() {
+        return villagerTypeSuggestions == null ? villagerTypeSuggestions = buildSuggestions(BuiltInRegistries.VILLAGER_TYPE) : villagerTypeSuggestions;
+    }
+
+    public static List<ListSelectionElementModel> getVillagerTypeSelectionItems() {
+        return villagerTypeSelectionItems == null ? villagerTypeSelectionItems = buildVillagerTypeSelectionItems() : villagerTypeSelectionItems;
+    }
+
     public static List<String> getTrimPatternSuggestions() {
         if (trimPatternSuggestions == null) {
             trimPatternSuggestions = getTrimPatternSelectionItems().stream()
@@ -425,6 +449,26 @@ public final class ClientCache {
         return BuiltInRegistries.ENTITY_TYPE.entrySet().stream()
                 .map(e -> new EntityListSelectionElementModel(e.getValue(), e.getKey().location()))
                 .sorted().toList();
+    }
+
+    private static List<ListSelectionElementModel> buildVillagerProfessionSelectionItems() {
+        return BuiltInRegistries.VILLAGER_PROFESSION.entrySet().stream()
+                .map(e -> new ListSelectionElementModel(villagerProfessionTranslation(e.getKey().location()), e.getKey().location()))
+                .sorted().toList();
+    }
+
+    private static List<ListSelectionElementModel> buildVillagerTypeSelectionItems() {
+        return BuiltInRegistries.VILLAGER_TYPE.entrySet().stream()
+                .map(e -> new ListSelectionElementModel(villagerTypeTranslation(e.getKey().location()), e.getKey().location()))
+                .sorted().toList();
+    }
+
+    private static String villagerProfessionTranslation(ResourceLocation id) {
+        return "villager.profession." + id.getPath();
+    }
+
+    private static String villagerTypeTranslation(ResourceLocation id) {
+        return "entity.minecraft.villager." + id.getPath();
     }
 
     private static List<EnchantmentListSelectionElementModel> buildEnchantmentSelectionItems() {

@@ -1,20 +1,30 @@
 package com.github.rinorsi.cadeditor.client.screen.controller.entry.item;
 
 import com.github.rinorsi.cadeditor.client.ClientCache;
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.ModScreenHandler;
+import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.client.context.ItemEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.EntryController;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.ItemContainerSlotEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultItemListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.ItemContainerSlotEntryView;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class ItemContainerSlotEntryController extends EntryController<ItemContainerSlotEntryModel, ItemContainerSlotEntryView> {
     public ItemContainerSlotEntryController(ItemContainerSlotEntryModel model, ItemContainerSlotEntryView view) {
@@ -36,6 +46,7 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
         updateItemName();
 
         view.getChooseItemButton().onAction(() -> openItemSelection(null));
+        view.getLoadVaultButton().onAction(this::openVaultSelection);
         view.getOpenEditorButton().onAction(() -> openEditor(EditorType.STANDARD));
         view.getOpenSnbtEditorButton().onAction(() -> openEditor(EditorType.SNBT));
         view.getClearButton().onAction(() -> {
@@ -77,14 +88,14 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
             }
             try {
                 ResourceLocation id = ResourceLocation.parse(selection);
-                    Item item = BuiltInRegistries.ITEM.get(id);
-                    if (item != null) {
-                        model.setItemStack(new ItemStack(item));
-                        updateItemName();
-                        if (afterSelection != null) {
-                            afterSelection.run();
-                        }
+                Item item = BuiltInRegistries.ITEM.get(id);
+                if (item != null) {
+                    model.setItemStack(new ItemStack(item));
+                    updateItemName();
+                    if (afterSelection != null) {
+                        afterSelection.run();
                     }
+                }
             } catch (Exception ignored) {
             }
         });
@@ -110,5 +121,33 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
             return;
         }
         openItemSelection(onReady);
+    }
+
+    private void openVaultSelection() {
+        List<CompoundTag> storedItems = Vault.getInstance().getItems();
+        if (storedItems.isEmpty()) {
+            return;
+        }
+        List<VaultItemListSelectionElementModel> elements = new ArrayList<>();
+        Map<String, ItemStack> stacksById = new LinkedHashMap<>();
+        for (int i = 0; i < storedItems.size(); i++) {
+            ItemStack stack = ItemStack.parseOptional(ClientUtil.registryAccess(), storedItems.get(i));
+            if (stack.isEmpty()) {
+                continue;
+            }
+            ResourceLocation id = ResourceLocation.withDefaultNamespace("inventory_vault_item_" + i);
+            elements.add(new VaultItemListSelectionElementModel(id, stack));
+            stacksById.put(id.toString(), stack.copy());
+        }
+        if (elements.isEmpty()) {
+            return;
+        }
+        ModScreenHandler.openListSelectionScreen(ModTexts.VAULT, "vault_inventory_slot", elements, selected -> {
+            ItemStack chosen = stacksById.get(selected);
+            if (chosen != null) {
+                model.setItemStack(chosen.copy());
+                updateItemName();
+            }
+        });
     }
 }

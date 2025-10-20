@@ -34,7 +34,7 @@ public abstract class CategoryModel implements Model {
 
     @Override
     public void initalize() {
-                if (initialized) {
+        if (initialized) {
             getEntries().clear();
         } else {
             initialized = true;
@@ -142,7 +142,7 @@ public abstract class CategoryModel implements Model {
     }
 
     public int getEntryHeight() {
-        return 25;
+        return 24;
     }
 
     public void apply() {
