@@ -4,6 +4,7 @@ import com.github.franckyi.guapi.api.mvc.Model;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,17 @@ public class ListSelectionElementModel implements Model, Comparable<ListSelectio
     }
 
     public Component getDisplayName() {
-        return Component.translatable(getName()).withStyle(ChatFormatting.BOLD);
+        MutableComponent component = Component.translatable(getName()).withStyle(ChatFormatting.BOLD);
+        if (name.startsWith("cadeditor.gui.rarity.")) {
+            ChatFormatting color = switch (id.getPath()) {
+                case "uncommon" -> ChatFormatting.YELLOW;
+                case "rare" -> ChatFormatting.AQUA;
+                case "epic" -> ChatFormatting.LIGHT_PURPLE;
+                default -> ChatFormatting.WHITE;
+            };
+            component = component.copy().withStyle(color);
+        }
+        return component;
     }
 
     public ResourceLocation getId() {
