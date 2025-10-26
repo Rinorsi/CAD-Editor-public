@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client;
 import com.github.franckyi.guapi.api.util.DebugMode;
 import com.github.rinorsi.cadeditor.PlatformUtil;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
+import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPreset;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -29,6 +30,7 @@ public final class ClientConfiguration {
     private DebugMode guapiDebugMode;
     private int selectionScreenMaxItems;
     private String lastSeenUpdateLogVersion;
+    private String syntaxHighlightingPreset;
 
     private ClientConfiguration() {
         version = 0;
@@ -37,6 +39,7 @@ public final class ClientConfiguration {
         guapiDebugMode = DebugMode.NONE;
         selectionScreenMaxItems = 100;
         lastSeenUpdateLogVersion = "";
+        syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
     }
 
     public int getEditorScale() {
@@ -94,6 +97,18 @@ public final class ClientConfiguration {
         String sanitized = lastSeenUpdateLogVersion == null ? "" : lastSeenUpdateLogVersion;
         if (!sanitized.equals(this.lastSeenUpdateLogVersion)) {
             this.lastSeenUpdateLogVersion = sanitized;
+            changed = true;
+        }
+    }
+
+    public SyntaxHighlightingPreset getSyntaxHighlightingPreset() {
+        return SyntaxHighlightingPreset.byId(syntaxHighlightingPreset);
+    }
+
+    public void setSyntaxHighlightingPreset(SyntaxHighlightingPreset preset) {
+        SyntaxHighlightingPreset resolved = preset == null ? SyntaxHighlightingPreset.LEGACY : preset;
+        if (!resolved.id().equals(this.syntaxHighlightingPreset)) {
+            this.syntaxHighlightingPreset = resolved.id();
             changed = true;
         }
     }
@@ -156,6 +171,9 @@ public final class ClientConfiguration {
         }
         if (guapiDebugMode == null) {
             guapiDebugMode = DebugMode.NONE;
+        }
+        if (syntaxHighlightingPreset == null || syntaxHighlightingPreset.isBlank()) {
+            syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
         }
     }
 }

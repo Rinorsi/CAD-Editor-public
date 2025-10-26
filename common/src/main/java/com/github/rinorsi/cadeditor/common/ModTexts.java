@@ -161,6 +161,7 @@ public final class ModTexts {
     public static final MutableComponent TICKS = translated("cadeditor.gui.ticks");
     ;
     public static final MutableComponent THEME = translated("cadeditor.gui.theme");
+    public static final MutableComponent SYNTAX_HIGHLIGHTING_PRESET = translated("cadeditor.gui.syntax_highlighting_preset");
     public static final MutableComponent UNBREAKABLE = translated("cadeditor.gui.unbreakable");
     public static final MutableComponent UNDERLINED = translated("cadeditor.gui.underline");
     public static final MutableComponent WHITE = translated("cadeditor.gui.white").withStyle(ChatFormatting.WHITE);
@@ -171,6 +172,9 @@ public final class ModTexts {
     public static final MutableComponent SELECTION_SCREEN_MAX_ITEMS = translated("cadeditor.gui.selection_screen_max_items");
     public static final MutableComponent LEVEL = translated("cadeditor.gui.level");
     public static final MutableComponent COMMON = translated("cadeditor.gui.common");
+    public static final MutableComponent SNBT_PREVIEW = translated("cadeditor.gui.snbt_preview");
+    public static final MutableComponent SNBT_PREVIEW_INVALID = translated("cadeditor.gui.snbt_preview_invalid").withStyle(ChatFormatting.RED);
+    public static final MutableComponent SNBT_PREVIEW_TOGGLE = translated("cadeditor.gui.snbt_preview_toggle");
     public static final MutableComponent PERMISSION_LEVEL = translated("cadeditor.gui.permission_level");
     public static final MutableComponent CREATIVE_ONLY = translated("cadeditor.gui.creative_only");
     public static final MutableComponent BLOCK_STATE = translated("cadeditor.gui.block_state");
