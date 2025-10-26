@@ -1,9 +1,10 @@
 package com.github.rinorsi.cadeditor.mixin;
 
+import net.minecraft.client.gui.components.MultilineTextField;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(targets = "net.minecraft.client.gui.components.MultilineTextField$StringView")
+@Mixin(MultilineTextField.StringView.class)
 public interface MultilineTextFieldStringViewAccessor {
     @Accessor("beginIndex")
     int cadeditor$getBeginIndex();
