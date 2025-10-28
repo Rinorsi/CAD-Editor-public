@@ -1,14 +1,25 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.entity;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
+import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
+import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Generic category for editing ActiveEffects of any living entity.
@@ -37,13 +48,18 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
     }
 
     @Override
+    public EntryModel createNewListEntry() {
+        return createEffectEntry(new CompoundTag());
+    }
+
+    @Override
     protected boolean canAddEntryInList() {
         return true;
     }
 
     @Override
-    public EntryModel createNewListEntry() {
-        return createEffectEntry(new CompoundTag());
+    public void addEntryInList() {
+        openEffectSelection();
     }
 
     @Override
@@ -71,12 +87,13 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         } else {
             data.put(EFFECTS_TAG, list);
         }
+        getContext().setTag(data);
     }
 
     private PotionEffectEntryModel createEffectEntry(CompoundTag tag) {
         String id = "";
         int amplifier = 0;
-        int duration = 20;
+        int duration = 200;
         boolean ambient = false;
         boolean showParticles = true;
         boolean showIcon = true;
@@ -104,7 +121,63 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
             }
         }
 
-        return new PotionEffectEntryModel(this, id, amplifier, duration, ambient, showParticles, showIcon, updated -> {});
+        return new PotionEffectEntryModel(this, id, Math.max(0, amplifier), Math.max(1, duration), ambient, showParticles, showIcon, updated -> {});
+    }
+
+    private void openEffectSelection() {
+        Set<ResourceLocation> current = collectEffectIds();
+        ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
+                "", ClientCache.getEffectSelectionItems(),
+                value -> {}, true,
+                this::applySelectedEffects,
+                current);
+    }
+
+    private void applySelectedEffects(List<ResourceLocation> selected) {
+        Map<ResourceLocation, PotionEffectEntryModel> existing = new LinkedHashMap<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    existing.putIfAbsent(id, effect);
+                }
+            }
+        }
+        List<PotionEffectEntryModel> desired = new ArrayList<>();
+        if (selected != null) {
+            for (ResourceLocation id : selected) {
+                PotionEffectEntryModel entry = existing.remove(id);
+                if (entry == null) {
+                    entry = createEffectEntry(new CompoundTag());
+                    entry.setValue(id.toString());
+                }
+                desired.add(entry);
+            }
+        }
+        replaceEffectEntries(desired);
+    }
+
+    private void replaceEffectEntries(List<PotionEffectEntryModel> entries) {
+        int start = getEntryListStart();
+        int endExclusive = getEntries().size() - (canAddEntryInList() ? 1 : 0);
+        for (int i = endExclusive - 1; i >= start; i--) {
+            getEntries().remove(i);
+        }
+        getEntries().addAll(start, entries);
+        updateEntryListIndexes();
+    }
+
+    private Set<ResourceLocation> collectEffectIds() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+        }
+        return ids;
     }
 
     private CompoundTag ensureEntityTag() {

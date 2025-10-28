@@ -7,6 +7,7 @@ import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPal
 import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPreset;
 import com.github.rinorsi.cadeditor.mixin.MultiLineEditBoxMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldMixin;
+import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldStringViewAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -15,8 +16,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.network.chat.Component;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.guapi.base.theme.vanilla.delegate.VanillaTextAreaSkinDelegate<SyntaxHighlightingTextArea> {
@@ -26,30 +25,12 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_COLOR = -16776961;
+    private static final int TOKEN_ADVANCE_PADDING = 2;
 
     private final SyntaxHighlightingTextArea node;
     private final MultilineTextField textField;
     private final Font font;
     private long focusedTimestamp = Util.getMillis();
-
-    private static final Method STRING_VIEW_BEGIN;
-    private static final Method STRING_VIEW_END;
-
-    static {
-        Method begin;
-        Method end;
-        try {
-            Class<?> stringViewClass = Class.forName("net.minecraft.client.gui.components.MultilineTextField$StringView");
-            begin = stringViewClass.getDeclaredMethod("beginIndex");
-            end = stringViewClass.getDeclaredMethod("endIndex");
-            begin.setAccessible(true);
-            end.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
-            throw new IllegalStateException("无法访问 MultilineTextField.StringView", e);
-        }
-        STRING_VIEW_BEGIN = begin;
-        STRING_VIEW_END = end;
-    }
 
     @SuppressWarnings("this-escape")
     public SyntaxHighlightingTextAreaSkinDelegate(SyntaxHighlightingTextArea node) {
@@ -146,19 +127,11 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     }
 
     private static int beginIndex(Object view) {
-        try {
-            return (int) STRING_VIEW_BEGIN.invoke(view);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new IllegalStateException("无法读取行起始位置", e);
-        }
+        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$beginIndex();
     }
 
     private static int endIndex(Object view) {
-        try {
-            return (int) STRING_VIEW_END.invoke(view);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new IllegalStateException("无法读取行结束位置", e);
-        }
+        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
     }
 
     private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
@@ -196,7 +169,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
             return x;
         }
         int renderedX = graphics.drawString(font, text, x, y, TEXT_COLOR);
-        return Math.max(x, renderedX - 3);
+        return clampCursorPosition(x, renderedX);
     }
 
     private int drawColored(GuiGraphics graphics, String text, int x, int y, ChatFormatting colour) {
@@ -206,7 +179,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         Integer rgb = colour.getColor();
         int colourValue = rgb != null ? rgb : TEXT_COLOR;
         int renderedX = graphics.drawString(font, text, x, y, colourValue);
-        return Math.max(x, renderedX - 3);
+        return clampCursorPosition(x, renderedX);
     }
 
     @Override
@@ -215,5 +188,17 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         if (focused) {
             focusedTimestamp = Util.getMillis();
         }
+    }
+
+    private int clampCursorPosition(int start, int renderedEnd) {
+        int adjusted = renderedEnd - 3 + TOKEN_ADVANCE_PADDING;
+        int maxX = getX() + getWidth() - innerPadding();
+        if (adjusted > maxX) {
+            adjusted = maxX;
+        }
+        if (adjusted < start) {
+            adjusted = start;
+        }
+        return adjusted;
     }
 }

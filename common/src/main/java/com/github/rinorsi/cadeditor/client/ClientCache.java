@@ -51,7 +51,7 @@ public final class ClientCache {
     private static List<String> potionSuggestions;
     private static List<ItemListSelectionElementModel> potionSelectionItems;
     private static List<String> effectSuggestions;
-    private static List<SpriteListSelectionElementModel> effectSelectionItems;
+    private static List<SelectableSpriteListSelectionElementModel> effectSelectionItems;
     private static List<String> entitySuggestions;
     private static List<EntityListSelectionElementModel> entitySelectionItems;
     private static List<String> villagerProfessionSuggestions;
@@ -257,7 +257,7 @@ public final class ClientCache {
         return effectSuggestions == null ? effectSuggestions = buildSuggestions(BuiltInRegistries.MOB_EFFECT) : effectSuggestions;
     }
 
-    public static List<SpriteListSelectionElementModel> getEffectSelectionItems() {
+    public static List<SelectableSpriteListSelectionElementModel> getEffectSelectionItems() {
         return effectSelectionItems == null ? effectSelectionItems = buildEffectSelectionItems() : effectSelectionItems;
     }
 
@@ -366,7 +366,7 @@ public final class ClientCache {
         return lootTableSuggestions;
     }
 
-    public static Optional<SpriteListSelectionElementModel> findEffectSelectionItem(ResourceLocation id) {
+    public static Optional<SelectableSpriteListSelectionElementModel> findEffectSelectionItem(ResourceLocation id) {
         if (id == null) {
             return Optional.empty();
         }
@@ -632,10 +632,10 @@ public final class ClientCache {
                 .sorted().toList();
     }
 
-    private static List<SpriteListSelectionElementModel> buildEffectSelectionItems() {
+    private static List<SelectableSpriteListSelectionElementModel> buildEffectSelectionItems() {
         return BuiltInRegistries.MOB_EFFECT.entrySet().stream()
                 .map(e -> BuiltInRegistries.MOB_EFFECT.getHolder(e.getKey())
-                        .map(holder -> new SpriteListSelectionElementModel(holder.value().getDescriptionId(), e.getKey().location(), () -> Minecraft.getInstance().getMobEffectTextures().get(holder)))
+                        .map(holder -> new SelectableSpriteListSelectionElementModel(holder.value().getDescriptionId(), e.getKey().location(), () -> Minecraft.getInstance().getMobEffectTextures().get(holder)))
                         .orElse(null))
                 .filter(Objects::nonNull)
                 .sorted().toList();

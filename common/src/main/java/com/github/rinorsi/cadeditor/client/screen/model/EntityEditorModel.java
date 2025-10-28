@@ -3,21 +3,21 @@ package com.github.rinorsi.cadeditor.client.screen.model;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityAttributesCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityEquipmentCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityGeneralCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMountCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntitySpawnSettingsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityVillagerDataCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityVillagerTradeCategoryModel;
-import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityStatusEffectsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityTamingCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerAbilitiesCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerEnderChestCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerInventoryCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerStatsCategoryModel;
-import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerStatusEffectsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.player.EntityPlayerPositionCategoryModel;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -53,10 +53,8 @@ public class EntityEditorModel extends StandardEditorModel {
 
         Entity entity = getContext().getEntity();
         if (entity instanceof LivingEntity) {
+            getCategories().add(new EntityAttributesCategoryModel(this));
             getCategories().add(new EntityEquipmentCategoryModel(this));
-            if (!(entity instanceof Player)) {
-                getCategories().add(new EntityStatusEffectsCategoryModel(this));
-            }
             if (isTamable(entity)) {
                 getCategories().add(new EntityTamingCategoryModel(this));
             }
@@ -77,7 +75,6 @@ public class EntityEditorModel extends StandardEditorModel {
             getCategories().add(new EntityPlayerStatsCategoryModel(this));
             getCategories().add(new EntityPlayerAbilitiesCategoryModel(this));
             getCategories().add(new EntityPlayerPositionCategoryModel(this));
-            getCategories().add(new EntityPlayerStatusEffectsCategoryModel(this));
         }
     }
 
@@ -139,5 +136,67 @@ public class EntityEditorModel extends StandardEditorModel {
                 || tag.contains("OwnerUUID")
                 || tag.contains("OwnerUUIDMost", Tag.TAG_LONG)
                 || tag.contains("OwnerUUIDLeast", Tag.TAG_LONG);
+    }
+
+    public void handleEntityReplaced(CompoundTag newTag) {
+        if (newTag == null) {
+            ClientUtil.showMessage(ModTexts.Messages.errorNoTargetFound(ModTexts.ENTITY));
+            return;
+        }
+        CompoundTag copy = newTag.copy();
+        CompoundTag current = getContext().getTag();
+        if (current != null) {
+            copyListTag(current, copy, "Pos", Tag.TAG_DOUBLE);
+            copyListTag(current, copy, "Rotation", Tag.TAG_FLOAT);
+            copyListTag(current, copy, "Motion", Tag.TAG_DOUBLE);
+            copyIntArrayTag(current, copy, "UUID");
+            copyLongTag(current, copy, "UUIDMost");
+            copyLongTag(current, copy, "UUIDLeast");
+        }
+        if (!getContext().replaceEntity(copy)) {
+            ClientUtil.showMessage(ModTexts.Messages.errorNoTargetFound(ModTexts.ENTITY));
+            return;
+        }
+        Class<?> previousCategory = getSelectedCategory() != null ? getSelectedCategory().getClass() : null;
+        getCategories().clear();
+        setupCategories();
+        getCategories().forEach(category -> category.initalize());
+        if (!getCategories().isEmpty()) {
+            var toSelect = getCategories().get(0);
+            if (previousCategory != null) {
+                for (var category : getCategories()) {
+                    if (category.getClass() == previousCategory) {
+                        toSelect = category;
+                        break;
+                    }
+                }
+            }
+            setSelectedCategory(toSelect);
+        }
+    }
+
+    private static void copyListTag(CompoundTag source, CompoundTag target, String key, int elementType) {
+        if (source.contains(key, Tag.TAG_LIST)) {
+            ListTag list = source.getList(key, elementType);
+            target.put(key, list.copy());
+        } else {
+            target.remove(key);
+        }
+    }
+
+    private static void copyIntArrayTag(CompoundTag source, CompoundTag target, String key) {
+        if (source.contains(key, Tag.TAG_INT_ARRAY)) {
+            target.putIntArray(key, source.getIntArray(key));
+        } else {
+            target.remove(key);
+        }
+    }
+
+    private static void copyLongTag(CompoundTag source, CompoundTag target, String key) {
+        if (source.contains(key, Tag.TAG_LONG)) {
+            target.putLong(key, source.getLong(key));
+        } else {
+            target.remove(key);
+        }
     }
 }

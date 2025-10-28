@@ -54,6 +54,7 @@ public final class ModTexts {
     public static final MutableComponent ENCHANTMENT = translated("cadeditor.gui.enchantment");
     public static final MutableComponent ENCHANTMENTS = translated("cadeditor.gui.enchantments");
     public static final MutableComponent ENTITY = translated("cadeditor.text.entity");
+    public static final MutableComponent ENTITY_ATTRIBUTES = translated("cadeditor.gui.entity_attributes");
     public static final MutableComponent ENTITY_EQUIPMENT = translated("cadeditor.gui.entity_equipment");
     public static final MutableComponent ENTITY_SPAWN = translated("cadeditor.gui.entity_spawn");
     public static final MutableComponent ENTITY_TAMING = translated("cadeditor.gui.entity_taming");
@@ -135,6 +136,8 @@ public final class ModTexts {
     public static final MutableComponent SAVE_EDIT = translated("cadeditor.gui.save_edit").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent SCROLL_FOCUSED = translated("cadeditor.gui.scroll_focused");
     public static final MutableComponent SEARCH = translated("cadeditor.gui.search");
+    public static final MutableComponent LOAD_ALL = translated("cadeditor.gui.load_all");
+    public static final MutableComponent SHOWING_ALL = translated("cadeditor.gui.showing_all").withStyle(ChatFormatting.GRAY);
     public static final MutableComponent SETTINGS = translated("cadeditor.gui.settings");
     public static final MutableComponent SECONDS = translated("cadeditor.gui.seconds");
     public static final MutableComponent UPDATE_LOG = translated("cadeditor.gui.update_log");
@@ -511,9 +514,9 @@ public final class ModTexts {
         public static final MutableComponent COMPOUND = text("Compound").withStyle(ChatFormatting.LIGHT_PURPLE);
         public static final MutableComponent DOUBLE = text("Double").withStyle(ChatFormatting.YELLOW);
         public static final MutableComponent FLOAT = text("Float").withStyle(ChatFormatting.LIGHT_PURPLE);
-        public static final MutableComponent GREEN = text("List").withStyle(ChatFormatting.GREEN);
-        public static final MutableComponent HEX = text("Hex");
-        public static final MutableComponent INT = text("Int").withStyle(ChatFormatting.AQUA);
+    public static final MutableComponent GREEN = text("List").withStyle(ChatFormatting.GREEN);
+    public static final MutableComponent HEX = text("Hex");
+    public static final MutableComponent INT = text("Int").withStyle(ChatFormatting.AQUA);
         public static final MutableComponent INT_ARRAY = text("Int Array").withStyle(ChatFormatting.AQUA);
         public static final MutableComponent LONG = text("Long").withStyle(ChatFormatting.RED);
         public static final MutableComponent LONG_ARRAY = text("Long Array").withStyle(ChatFormatting.RED);

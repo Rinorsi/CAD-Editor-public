@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 public class ListSelectionScreenController extends AbstractController<ListSelectionScreenModel, ListSelectionScreenView> {
     private ListSelectionFilter activeFilter;
+    private boolean showAllItems;
 
     public ListSelectionScreenController(ListSelectionScreenModel model, ListSelectionScreenView view) {
         super(model, view);
@@ -28,6 +29,7 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         view.getHeaderLabel().setLabel(ModTexts.title(ModTexts.choose(model.getTitle())));
         view.getSearchField().textProperty().addListener(this::filter);
         setupFilterButton();
+        setupLoadAllButton();
         if (model.isMultiSelect()) {
             model.getElements().forEach(item -> initializeSelectableItem(item));
         } else {
@@ -88,23 +90,31 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         });
     }
 
+    private void setupLoadAllButton() {
+        view.getLoadAllButton().setLabel(ModTexts.LOAD_ALL);
+        view.getLoadAllButton().onAction(() -> {
+            showAllItems = true;
+            view.getLoadAllButton().setLabel(ModTexts.SHOWING_ALL);
+            view.getLoadAllButton().setDisable(true);
+            filter(view.getSearchField().getText());
+        });
+    }
+
     private void filter(String filter) {
-        view.getListView().getItems().setAll(model.getElements()
+        var stream = model.getElements()
                 .stream()
                 .filter(item -> activeFilter == null || activeFilter.test(item))
-                .filter(item -> item.matches(filter))
-                .limit(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems())
-                .toList());
+                .filter(item -> item.matches(filter));
+        if (!showAllItems) {
+            stream = stream.limit(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems());
+        }
+        view.getListView().getItems().setAll(stream.toList());
         refreshButton();
     }
 
     private void refreshButton() {
         if (model.isMultiSelect()) {
-            boolean anySelected = model.getElements().stream()
-                    .filter(SelectableListSelectionElementModel.class::isInstance)
-                    .map(SelectableListSelectionElementModel.class::cast)
-                    .anyMatch(SelectableListSelectionElementModel::isSelected);
-            view.getDoneButton().setDisable(!anySelected);
+            view.getDoneButton().setDisable(false);
         } else {
             view.getDoneButton().setDisable(view.getListView().getFocusedElement() == null);
         }

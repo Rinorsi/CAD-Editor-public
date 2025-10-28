@@ -4,9 +4,11 @@ import com.github.franckyi.guapi.api.Color;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.Vault;
+import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.StandardEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultEntityListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultItemListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.view.StandardEditorView;
 import com.github.rinorsi.cadeditor.common.EditorType;
@@ -31,8 +33,12 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
         EditorController.super.bind();
         view.addOpenNBTEditorButton(() -> model.changeEditor(EditorType.NBT));
         view.addOpenSNBTEditorButton(() -> model.changeEditor(EditorType.SNBT));
-        if (model.getContext().canSaveToVault() && model instanceof ItemEditorModel itemModel) {
-            view.addLoadVaultButton(() -> openVaultSelection(itemModel));
+        if (model.getContext().canSaveToVault()) {
+            if (model instanceof ItemEditorModel itemModel) {
+                view.addLoadVaultButton(() -> openItemVaultSelection(itemModel));
+            } else if (model instanceof EntityEditorModel entityModel) {
+                view.addLoadVaultButton(() -> openEntityVaultSelection(entityModel));
+            }
         }
         if (model.getContext().getTag() == null) {
             view.getOpenNBTEditorButton().setDisable(true);
@@ -75,7 +81,7 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
         model.getActiveTextEditor().addColorFormatting(hex);
     }
 
-    private void openVaultSelection(ItemEditorModel itemModel) {
+    private void openItemVaultSelection(ItemEditorModel itemModel) {
         List<VaultItemListSelectionElementModel> elements = new ArrayList<>();
         Map<String, ItemStack> stacksById = new LinkedHashMap<>();
         List<CompoundTag> storedItems = Vault.getInstance().getItems();
@@ -97,6 +103,31 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
                 return;
             }
             itemModel.handleStackReplaced(chosen.copy());
+        });
+    }
+
+    private void openEntityVaultSelection(EntityEditorModel entityModel) {
+        List<VaultEntityListSelectionElementModel> elements = new ArrayList<>();
+        Map<String, CompoundTag> entitiesById = new LinkedHashMap<>();
+        List<CompoundTag> storedEntities = Vault.getInstance().getEntities();
+        for (int i = 0; i < storedEntities.size(); i++) {
+            CompoundTag tag = storedEntities.get(i);
+            if (tag == null || tag.isEmpty()) {
+                continue;
+            }
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "editor_vault_entity_" + i);
+            elements.add(new VaultEntityListSelectionElementModel(id, tag));
+            entitiesById.put(id.toString(), tag.copy());
+        }
+        if (elements.isEmpty()) {
+            return;
+        }
+        ModScreenHandler.openListSelectionScreen(ModTexts.VAULT, "vault_entity_editor", elements, selectedId -> {
+            CompoundTag chosen = entitiesById.get(selectedId);
+            if (chosen == null) {
+                return;
+            }
+            entityModel.handleEntityReplaced(chosen.copy());
         });
     }
 
