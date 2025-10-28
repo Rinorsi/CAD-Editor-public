@@ -213,9 +213,33 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     }
 
     protected <EE extends MouseEvent> void handleMouseEvent(ScreenEventType<EE> target, EE event) {
+        double mouseX = event.getMouseX();
+        double mouseY = event.getMouseY();
+        if (mouseX < node.getLeft() || mouseX > node.getRight() || mouseY < node.getTop() || mouseY > node.getBottom()) {
+            return;
+        }
+        int index = 0;
         for (T child : children()) {
+            Node childNode = child.getNode();
+            if (childNode == null) {
+                index++;
+                continue;
+            }
+            double childTop = childNode.getTop();
+            double childBottom = childNode.getBottom();
+            if (childTop < node.getTop()) {
+                childTop = node.getTop();
+            }
+            if (childBottom > node.getBottom()) {
+                childBottom = node.getBottom();
+            }
+            if (mouseY < childTop || mouseY >= childBottom) {
+                index++;
+                continue;
+            }
             child.getNode().handleEvent(target, event);
             if (event.getTarget() != null) return;
+            index++;
         }
     }
 

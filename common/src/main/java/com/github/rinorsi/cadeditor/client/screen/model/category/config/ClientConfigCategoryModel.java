@@ -8,11 +8,13 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.ActionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EnumEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
+import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPreset;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 
 public class ClientConfigCategoryModel extends ConfigCategoryModel {
     private StringEntryModel guapiThemeEntry;
     private EnumEntryModel<DebugMode> guapiDebugModeEntry;
+    private EnumEntryModel<SyntaxHighlightingPreset> syntaxHighlightingPresetEntry;
     private IntegerEntryModel selectionScreenMaxItemsEntry;
 
     public ClientConfigCategoryModel(ConfigEditorScreenModel editor) {
@@ -25,6 +27,9 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
                 guapiThemeEntry = new StringEntryModel(this, ModTexts.THEME, ClientConfiguration.INSTANCE.getGuapiTheme(), ClientConfiguration.INSTANCE::setGuapiTheme).withWeight(2),
                 guapiDebugModeEntry = new EnumEntryModel<>(this, ModTexts.DEBUG_MODE, DebugMode.values(), ClientConfiguration.INSTANCE.getGuapiDebugMode(), ClientConfiguration.INSTANCE::setGuapiDebugMode)
                         .withTextFactory(DebugMode::toComponent)
+                        .withWeight(2),
+                syntaxHighlightingPresetEntry = new EnumEntryModel<>(this, ModTexts.SYNTAX_HIGHLIGHTING_PRESET, SyntaxHighlightingPreset.values(), ClientConfiguration.INSTANCE.getSyntaxHighlightingPreset(), ClientConfiguration.INSTANCE::setSyntaxHighlightingPreset)
+                        .withTextFactory(SyntaxHighlightingPreset::toComponent)
                         .withWeight(2),
                 selectionScreenMaxItemsEntry = new IntegerEntryModel(this, ModTexts.SELECTION_SCREEN_MAX_ITEMS, ClientConfiguration.INSTANCE.getSelectionScreenMaxItems(), ClientConfiguration.INSTANCE::setSelectionScreenMaxItems).withWeight(2),
                 new ActionEntryModel(this, ModTexts.RELOAD_CONFIG, this::reload)
@@ -39,6 +44,7 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
     public void syncEntries() {
         guapiThemeEntry.setValue(ClientConfiguration.INSTANCE.getGuapiTheme());
         guapiDebugModeEntry.setValue(ClientConfiguration.INSTANCE.getGuapiDebugMode());
+        syntaxHighlightingPresetEntry.setValue(ClientConfiguration.INSTANCE.getSyntaxHighlightingPreset());
         selectionScreenMaxItemsEntry.setValue(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems());
     }
 

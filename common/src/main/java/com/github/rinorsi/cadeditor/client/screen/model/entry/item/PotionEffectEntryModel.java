@@ -149,24 +149,66 @@ public class PotionEffectEntryModel extends SelectionEntryModel {
 
     public CompoundTag toCompoundTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putString("id", getValue());
-        tag.putInt("amplifier", getAmplifier());
-        tag.putInt("duration", getDuration());
-        tag.putBoolean("ambient", isAmbient());
-        tag.putBoolean("show_particles", isShowParticles());
-        tag.putBoolean("show_icon", isShowIcon());
+        String id = getValue();
+        if (id != null && !id.isBlank()) {
+            tag.putString("id", id);
+            tag.putString("Id", id);
+            tag.putString("effect", id);
+        }
+        int amplifier = getAmplifier();
+        int duration = Math.max(1, getDuration());
+        boolean ambient = isAmbient();
+        boolean showParticles = isShowParticles();
+        boolean showIcon = isShowIcon();
+
+        tag.putInt("amplifier", amplifier);
+        tag.putInt("duration", duration);
+        tag.putBoolean("ambient", ambient);
+        tag.putBoolean("show_particles", showParticles);
+        tag.putBoolean("show_icon", showIcon);
+
+        tag.putByte("Amplifier", (byte) amplifier);
+        tag.putInt("Duration", duration);
+        tag.putBoolean("Ambient", ambient);
+        tag.putBoolean("ShowParticles", showParticles);
+        tag.putBoolean("ShowIcon", showIcon);
         return tag;
     }
 
     private static CompoundTag normalizeTag(CompoundTag tag) {
         CompoundTag normalized = new CompoundTag();
-        normalized.putString("id", tag.getString("id"));
-        normalized.putInt("amplifier", tag.getInt("amplifier"));
-        normalized.putInt("duration", tag.contains("duration", Tag.TAG_INT) ? tag.getInt("duration") : 1);
-        normalized.putBoolean("ambient", tag.getBoolean("ambient"));
-        boolean showParticles = !tag.contains("show_particles", Tag.TAG_BYTE) || tag.getBoolean("show_particles");
+        String id = "";
+        if (tag.contains("id", Tag.TAG_STRING)) {
+            id = tag.getString("id");
+        } else if (tag.contains("Id", Tag.TAG_STRING)) {
+            id = tag.getString("Id");
+        } else if (tag.contains("effect", Tag.TAG_STRING)) {
+            id = tag.getString("effect");
+        }
+        normalized.putString("id", id);
+        int amplifier = tag.contains("amplifier", Tag.TAG_INT) ? tag.getInt("amplifier") : tag.getInt("Amplifier");
+        int duration = tag.contains("duration", Tag.TAG_INT) ? tag.getInt("duration") : tag.getInt("Duration");
+        boolean ambient = tag.contains("ambient", Tag.TAG_ANY_NUMERIC) ? tag.getBoolean("ambient") : tag.getBoolean("Ambient");
+        boolean showParticles;
+        if (tag.contains("show_particles", Tag.TAG_ANY_NUMERIC)) {
+            showParticles = tag.getBoolean("show_particles");
+        } else if (tag.contains("ShowParticles", Tag.TAG_ANY_NUMERIC)) {
+            showParticles = tag.getBoolean("ShowParticles");
+        } else {
+            showParticles = true;
+        }
+        boolean showIcon;
+        if (tag.contains("show_icon", Tag.TAG_ANY_NUMERIC)) {
+            showIcon = tag.getBoolean("show_icon");
+        } else if (tag.contains("ShowIcon", Tag.TAG_ANY_NUMERIC)) {
+            showIcon = tag.getBoolean("ShowIcon");
+        } else {
+            showIcon = true;
+        }
+        normalized.putInt("amplifier", amplifier);
+        normalized.putInt("duration", Math.max(1, duration));
+        normalized.putBoolean("ambient", ambient);
         normalized.putBoolean("show_particles", showParticles);
-        boolean showIcon = tag.contains("show_icon", Tag.TAG_BYTE) ? tag.getBoolean("show_icon") : true;
         normalized.putBoolean("show_icon", showIcon);
         return normalized;
     }

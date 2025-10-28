@@ -11,6 +11,12 @@ public class AddListEntryEntryController extends EntryController<AddListEntryEnt
     @Override
     public void bind() {
         super.bind();
+        int entryHeight = getModel().getCategory().getEntryHeight();
+        int buttonHeight = Math.min(entryHeight, 32);
+        getView().getRoot().setMinHeight(entryHeight);
+        getView().getRoot().setPrefHeight(entryHeight);
+        getView().getContentContainer().setPrefHeight(buttonHeight);
+        getView().getContentContainer().setMinHeight(buttonHeight);
         getView().getButton().getTooltip().add(getModel().getTooltip());
         getView().getButton().onAction(getModel().getAction());
     }
