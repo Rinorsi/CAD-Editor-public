@@ -9,18 +9,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 public class EntityEditorContext extends EditorContext<EntityEditorContext> {
-    private final Entity entity;
+    private Entity entity;
 
     public EntityEditorContext(CompoundTag tag, Component errorTooltip, boolean canSaveToVault, Consumer<EntityEditorContext> action) {
         super(tag, errorTooltip, canSaveToVault, action);
-        entity = EntityType.create(tag, Minecraft.getInstance().level, EntitySpawnReason.LOAD).orElse(null);
+        entity = createEntity(tag);
         if (entity == null) {
             this.canSaveToVault = false;
         }
@@ -108,5 +108,19 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
         tag.remove("Pos");
         tag.remove("Rotation");
         return tag;
+    }
+
+    private Entity createEntity(CompoundTag tag) {
+        return EntityType.loadEntityRecursive(tag, Minecraft.getInstance().level, EntitySpawnReason.COMMAND, entity -> entity);
+    }
+
+    public boolean replaceEntity(CompoundTag tag) {
+        Entity newEntity = createEntity(tag);
+        if (newEntity == null) {
+            return false;
+        }
+        setTag(tag);
+        entity = newEntity;
+        return true;
     }
 }

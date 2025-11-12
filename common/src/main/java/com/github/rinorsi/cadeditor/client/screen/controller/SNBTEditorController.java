@@ -4,6 +4,7 @@ import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
 import com.github.rinorsi.cadeditor.client.screen.model.SNBTEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.view.SNBTEditorView;
+import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.nbt.SnbtPrinterTagVisitor;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class SNBTEditorController extends AbstractController<SNBTEditorModel, SNBTEditorView> implements EditorController<SNBTEditorModel, SNBTEditorView> {
 
@@ -32,6 +34,16 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
                 return TagParser.parseTag(s) != null;
             } catch (CommandSyntaxException e) {
                 return false;
+            }
+        });
+        view.getPreviewTree().rootItemProperty().bind(model.previewRootProperty());
+        view.getPreviewTree().visibleProperty().bind(model.validProperty());
+        view.getPreviewStatus().visibleProperty().bind(model.validProperty().not());
+        view.getPreviewToggle().disableProperty().bind(model.previewRootProperty().mapToBoolean(Objects::isNull));
+        model.previewRootProperty().addListener(root -> {
+            if (root == null && view.getPreviewToggle().isActive()) {
+                view.getPreviewToggle().setActive(false);
+                view.refreshPreviewPane();
             }
         });
         view.getFormatButton().disableProperty().bind(view.getTextArea().validProperty().not());

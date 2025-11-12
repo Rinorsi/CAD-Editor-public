@@ -56,10 +56,21 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
 
     private void setDamage(int value) {
         ItemStack stack = getParent().getContext().getItemStack();
-        if (!stack.isDamageableItem()) return;
-        int max = stack.getMaxDamage();
-        int clamped = Math.max(0, Math.min(value, Math.max(0, max - 1)));
-        stack.setDamageValue(clamped);
+        if (!stack.isDamageableItem()) {
+            if (value > 0) {
+                stack.set(DataComponents.DAMAGE, value);
+            } else {
+                stack.remove(DataComponents.DAMAGE);
+            }
+        } else {
+            int max = stack.getMaxDamage();
+            int clamped = Math.max(0, Math.min(value, Math.max(0, max - 1)));
+            stack.setDamageValue(clamped);
+            if (clamped == 0) {
+                // Remove the component entirely so the stack matches a pristine item.
+                stack.remove(DataComponents.DAMAGE);
+            }
+        }
     }
 
     private void setUnbreakable(boolean value) {

@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.view.selection;
 
+import com.github.franckyi.guapi.api.node.Button;
 import com.github.franckyi.guapi.api.node.EnumButton;
 import com.github.franckyi.guapi.api.node.ListView;
 import com.github.franckyi.guapi.api.node.Node;
@@ -16,6 +17,7 @@ public class ListSelectionScreenView extends ScreenView {
     private ListView<ListSelectionElementModel> listView;
     private TextField searchField;
     private EnumButton<ListSelectionFilter> filterButton;
+    private Button loadAllButton;
 
     public ListSelectionScreenView() {
         super();
@@ -34,6 +36,7 @@ public class ListSelectionScreenView extends ScreenView {
                     filterButton.setMaxWidth(0);
                     row.add(filterButton);
                     row.add(searchField = textField().placeholder(ModTexts.SEARCH), 1);
+                    row.add(loadAllButton = button(ModTexts.LOAD_ALL));
                     row.spacing(5);
                 }));
                 center.add(listView = listView(ListSelectionElementModel.class, 25)
@@ -56,5 +59,9 @@ public class ListSelectionScreenView extends ScreenView {
 
     public EnumButton<ListSelectionFilter> getFilterButton() {
         return filterButton;
+    }
+
+    public Button getLoadAllButton() {
+        return loadAllButton;
     }
 }

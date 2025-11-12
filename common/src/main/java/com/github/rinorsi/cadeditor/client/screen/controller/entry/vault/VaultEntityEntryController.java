@@ -7,9 +7,8 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultEntityE
 import com.github.rinorsi.cadeditor.client.screen.view.entry.vault.VaultEntityEntryView;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
@@ -43,9 +42,6 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
         var renderer = dispatcher.getRenderer(entity);
         EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, 0.0f);
         ResourceLocation texture = null;
-        if (renderer instanceof LivingEntityRenderer<?, ?, ?> livingRenderer && state instanceof LivingEntityRenderState livingState) {
-            texture = ((LivingEntityRenderer) livingRenderer).getTextureLocation(livingState);
-        }
         if (texture == null) {
             for (var method : renderer.getClass().getMethods()) {
                 if (!method.getName().equals("getTextureLocation") || method.getParameterCount() != 1) continue;
@@ -59,9 +55,12 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
             }
         }
         if (texture == null) {
-            texture = entity.getType().builtInRegistryHolder().unwrapKey()
-                    .map(key -> ResourceLocation.fromNamespaceAndPath(key.location().getNamespace(), "textures/entity/" + key.location().getPath() + ".png"))
-                    .orElse(ResourceLocation.withDefaultNamespace("textures/entity/missing.png"));
+            var typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+            if (typeKey != null) {
+                texture = ResourceLocation.fromNamespaceAndPath(typeKey.getNamespace(), "textures/entity/" + typeKey.getPath() + ".png");
+            } else {
+                texture = ResourceLocation.withDefaultNamespace("textures/entity/missing.png");
+            }
         }
         String rawPath = texture.getPath();
         if (!rawPath.startsWith("textures/")) {

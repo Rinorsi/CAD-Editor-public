@@ -1,6 +1,8 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
+import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
@@ -18,7 +20,11 @@ import net.minecraft.world.item.component.SuspiciousStewEffects;
 import net.minecraft.world.item.component.SuspiciousStewEffects.Entry;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Editor for Suspicious Stew effects (minecraft:suspicious_stew_effects).
@@ -84,6 +90,11 @@ public class ItemSuspiciousStewEffectsCategoryModel extends ItemEditorCategoryMo
     public EntryModel createNewListEntry() { return createEffectEntry(null); }
 
     @Override
+    public void addEntryInList() {
+        openEffectSelection();
+    }
+
+    @Override
     public int getEntryHeight() { return 50; }
 
     @Override
@@ -121,4 +132,59 @@ public class ItemSuspiciousStewEffectsCategoryModel extends ItemEditorCategoryMo
     }
 
     private record EffectData(String id, int duration) {}
+
+    private void openEffectSelection() {
+        Set<ResourceLocation> current = collectEffectIds();
+        ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
+                "", ClientCache.getEffectSelectionItems(),
+                value -> {}, true,
+                this::applySelectedEffects,
+                current);
+    }
+
+    private void applySelectedEffects(List<ResourceLocation> selected) {
+        Map<ResourceLocation, PotionEffectEntryModel> existing = new LinkedHashMap<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    existing.putIfAbsent(id, effect);
+                }
+            }
+        }
+        List<PotionEffectEntryModel> desired = new ArrayList<>();
+        if (selected != null) {
+            for (ResourceLocation id : selected) {
+                PotionEffectEntryModel entry = existing.remove(id);
+                if (entry == null) {
+                    entry = (PotionEffectEntryModel) createEffectEntry(new EffectData(id.toString(), 160));
+                }
+                desired.add(entry);
+            }
+        }
+        replaceEffectEntries(desired);
+    }
+
+    private void replaceEffectEntries(List<PotionEffectEntryModel> entries) {
+        int start = getEntryListStart();
+        int endExclusive = getEntries().size() - (canAddEntryInList() ? 1 : 0);
+        for (int i = endExclusive - 1; i >= start; i--) {
+            getEntries().remove(i);
+        }
+        getEntries().addAll(start, entries);
+        updateEntryListIndexes();
+    }
+
+    private Set<ResourceLocation> collectEffectIds() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+        }
+        return ids;
+    }
 }

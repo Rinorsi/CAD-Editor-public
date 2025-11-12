@@ -122,7 +122,13 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void addBlock(String id) {
-        newBlocks.add(StringTag.valueOf(id));
+        if (id == null) {
+            return;
+        }
+        String trimmed = id.trim();
+        if (!trimmed.isEmpty()) {
+            newBlocks.add(StringTag.valueOf(trimmed));
+        }
     }
 
     private void readComponentBlocks(Tag blocksTag) {

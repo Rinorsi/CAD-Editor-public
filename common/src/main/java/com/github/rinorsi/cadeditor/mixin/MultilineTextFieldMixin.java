@@ -10,6 +10,9 @@ public interface MultilineTextFieldMixin {
     @Accessor("value")
     void setRawValue(String text);
 
+    @Accessor("selectCursor")
+    int getSelectCursor();
+
     @Accessor
     void setWidth(int value);
 

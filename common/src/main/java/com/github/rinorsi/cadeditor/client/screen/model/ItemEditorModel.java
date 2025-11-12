@@ -80,6 +80,12 @@ public class ItemEditorModel extends StandardEditorModel {
     public ItemEditorContext getContext() { return (ItemEditorContext) super.getContext(); }
 
     @Override
+    public void initalize() {
+        super.initalize();
+        getCategories().forEach(category -> category.initalize());
+    }
+
+    @Override
     protected void setupCategories() {
         generalCategory = new ItemGeneralCategoryModel(this);
         getCategories().add(generalCategory);

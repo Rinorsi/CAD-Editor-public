@@ -3,6 +3,8 @@ package com.github.rinorsi.cadeditor.client.screen.mvc;
 import com.github.franckyi.guapi.api.mvc.MVC;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.*;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.EntityEquipmentEntryController;
+import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.VillagerTradeItemsEntryController;
+import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.VillagerTradeValuesEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.item.*;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.item.ToolRuleEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.item.MapDecorationEntryController;
@@ -10,6 +12,8 @@ import com.github.rinorsi.cadeditor.client.screen.controller.entry.vault.VaultEn
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.vault.VaultItemEntryController;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.*;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.EntityEquipmentEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerTradeItemsEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerTradeValuesEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.*;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.ToolRuleEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.MapDecorationEntryModel;
@@ -17,6 +21,8 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultEntityE
 import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultItemEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.*;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.entity.EntityEquipmentEntryView;
+import com.github.rinorsi.cadeditor.client.screen.view.entry.entity.VillagerTradeItemsEntryView;
+import com.github.rinorsi.cadeditor.client.screen.view.entry.entity.VillagerTradeValuesEntryView;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.*;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.ToolRuleEntryView;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.MapDecorationEntryView;
@@ -91,6 +97,11 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((FoodUsingConvertsToEntryModel) model, FoodUsingConvertsToEntryView::new, FoodUsingConvertsToEntryController::new);
             case WRITABLE_BOOK_PAGES ->
                     MVC.createViewAndBind((WritableBookPagesEntryModel) model, WritableBookPagesEntryView::new, WritableBookPagesEntryController::new);
+            case VILLAGER_TRADE_ITEMS ->
+                    MVC.createViewAndBind((VillagerTradeItemsEntryModel) model, VillagerTradeItemsEntryView::new, VillagerTradeItemsEntryController::new);
+            case VILLAGER_TRADE_VALUES ->
+                    MVC.createViewAndBind((VillagerTradeValuesEntryModel) model, VillagerTradeValuesEntryView::new, VillagerTradeValuesEntryController::new);
+            case VILLAGER_TRADE -> throw new IllegalStateException("Villager trade base model should not be instantiated as entry");
         };
     }
 

@@ -22,7 +22,7 @@ file = "META-INF/accesstransformer.cfg"
 [[dependencies.cadeditor]]
 modId = "neoforge"
 mandatory = true
-versionRange = "[21.1,21.4)"
+versionRange = "[21.4,)"
 ordering = "NONE"
 side = "BOTH"
 

@@ -54,9 +54,44 @@ public final class ModTexts {
     public static final MutableComponent ENCHANTMENT = translated("cadeditor.gui.enchantment");
     public static final MutableComponent ENCHANTMENTS = translated("cadeditor.gui.enchantments");
     public static final MutableComponent ENTITY = translated("cadeditor.text.entity");
+    public static final MutableComponent ENTITY_ATTRIBUTES = translated("cadeditor.gui.entity_attributes");
     public static final MutableComponent ENTITY_EQUIPMENT = translated("cadeditor.gui.entity_equipment");
     public static final MutableComponent ENTITY_SPAWN = translated("cadeditor.gui.entity_spawn");
+    public static final MutableComponent ENTITY_TAMING = translated("cadeditor.gui.entity_taming");
+    public static final MutableComponent ENTITY_MOUNT = translated("cadeditor.gui.entity_mount");
+    public static final MutableComponent TAME = translated("cadeditor.gui.tame");
+    public static final MutableComponent OWNER_NAME = translated("cadeditor.gui.owner");
+    public static final MutableComponent OWNER_UUID = translated("cadeditor.gui.owner_uuid");
+    public static final MutableComponent SITTING = translated("cadeditor.gui.sitting");
+    public static final MutableComponent IN_SITTING_POSE = translated("cadeditor.gui.in_sitting_pose");
+    public static final MutableComponent SADDLED = translated("cadeditor.gui.saddled");
+    public static final MutableComponent SADDLE_ITEM = translated("cadeditor.gui.saddle_item");
+    public static final MutableComponent CHESTED_HORSE = translated("cadeditor.gui.chested_horse");
+    public static final MutableComponent PASSENGERS = translated("cadeditor.gui.passengers");
+    public static final MutableComponent LEASH_HOLDER = translated("cadeditor.gui.leash_holder");
+    public static final MutableComponent LEASH_ANCHOR = translated("cadeditor.gui.leash_anchor");
+    public static final MutableComponent LEASH_POS_X = translated("cadeditor.gui.leash_pos_x");
+    public static final MutableComponent LEASH_POS_Y = translated("cadeditor.gui.leash_pos_y");
+    public static final MutableComponent LEASH_POS_Z = translated("cadeditor.gui.leash_pos_z");
+    public static final MutableComponent USE_SELF_UUID = translated("cadeditor.gui.use_self_uuid").withStyle(ChatFormatting.GREEN);
+    public static final MutableComponent MOUNT_TEMPER = translated("cadeditor.gui.mount_temper");
+    public static final MutableComponent MOUNT_STRENGTH = translated("cadeditor.gui.mount_strength");
+    public static final MutableComponent VILLAGER_DATA = translated("cadeditor.gui.villager_data");
+    public static final MutableComponent VILLAGER_PROFESSION = translated("cadeditor.gui.villager_profession");
+    public static final MutableComponent VILLAGER_TYPE = translated("cadeditor.gui.villager_type");
+    public static final MutableComponent VILLAGER_LEVEL = translated("cadeditor.gui.villager_level");
     public static final MutableComponent VILLAGER_TRADES = translated("cadeditor.gui.villager_trades");
+    public static final MutableComponent TRADE_INPUT_PRIMARY = translated("cadeditor.gui.trade_input_primary");
+    public static final MutableComponent TRADE_INPUT_SECONDARY = translated("cadeditor.gui.trade_input_secondary");
+    public static final MutableComponent TRADE_OUTPUT = translated("cadeditor.gui.trade_output");
+    public static final MutableComponent TRADE_MAX_USES = translated("cadeditor.gui.trade_max_uses");
+    public static final MutableComponent TRADE_USES = translated("cadeditor.gui.trade_uses");
+    public static final MutableComponent TRADE_DEMAND = translated("cadeditor.gui.trade_demand");
+    public static final MutableComponent TRADE_SPECIAL_PRICE = translated("cadeditor.gui.trade_special_price");
+    public static final MutableComponent TRADE_PRICE_MULTIPLIER = translated("cadeditor.gui.trade_price_multiplier");
+    public static final MutableComponent TRADE_REWARD_EXP = translated("cadeditor.gui.trade_reward_exp");
+    public static final MutableComponent TRADE_XP = translated("cadeditor.gui.trade_xp");
+    public static final MutableComponent TRADE_ADD = translated("cadeditor.gui.trade_add");
     public static final MutableComponent LOOT_TABLE = translated("cadeditor.gui.loot_table");
     public static final MutableComponent CONTAINER_LOOT = translated("cadeditor.gui.container_loot");
     public static final MutableComponent SEED = translated("cadeditor.gui.seed");
@@ -101,6 +136,8 @@ public final class ModTexts {
     public static final MutableComponent SAVE_EDIT = translated("cadeditor.gui.save_edit").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent SCROLL_FOCUSED = translated("cadeditor.gui.scroll_focused");
     public static final MutableComponent SEARCH = translated("cadeditor.gui.search");
+    public static final MutableComponent LOAD_ALL = translated("cadeditor.gui.load_all");
+    public static final MutableComponent SHOWING_ALL = translated("cadeditor.gui.showing_all").withStyle(ChatFormatting.GRAY);
     public static final MutableComponent SETTINGS = translated("cadeditor.gui.settings");
     public static final MutableComponent SECONDS = translated("cadeditor.gui.seconds");
     public static final MutableComponent UPDATE_LOG = translated("cadeditor.gui.update_log");
@@ -127,6 +164,7 @@ public final class ModTexts {
     public static final MutableComponent TICKS = translated("cadeditor.gui.ticks");
     ;
     public static final MutableComponent THEME = translated("cadeditor.gui.theme");
+    public static final MutableComponent SYNTAX_HIGHLIGHTING_PRESET = translated("cadeditor.gui.syntax_highlighting_preset");
     public static final MutableComponent UNBREAKABLE = translated("cadeditor.gui.unbreakable");
     public static final MutableComponent UNDERLINED = translated("cadeditor.gui.underline");
     public static final MutableComponent WHITE = translated("cadeditor.gui.white").withStyle(ChatFormatting.WHITE);
@@ -137,6 +175,9 @@ public final class ModTexts {
     public static final MutableComponent SELECTION_SCREEN_MAX_ITEMS = translated("cadeditor.gui.selection_screen_max_items");
     public static final MutableComponent LEVEL = translated("cadeditor.gui.level");
     public static final MutableComponent COMMON = translated("cadeditor.gui.common");
+    public static final MutableComponent SNBT_PREVIEW = translated("cadeditor.gui.snbt_preview");
+    public static final MutableComponent SNBT_PREVIEW_INVALID = translated("cadeditor.gui.snbt_preview_invalid").withStyle(ChatFormatting.RED);
+    public static final MutableComponent SNBT_PREVIEW_TOGGLE = translated("cadeditor.gui.snbt_preview_toggle");
     public static final MutableComponent PERMISSION_LEVEL = translated("cadeditor.gui.permission_level");
     public static final MutableComponent CREATIVE_ONLY = translated("cadeditor.gui.creative_only");
     public static final MutableComponent BLOCK_STATE = translated("cadeditor.gui.block_state");
@@ -322,6 +363,10 @@ public final class ModTexts {
         return translated("cadeditor.gui.lore", text(Integer.toString(i)));
     }
 
+    public static MutableComponent trade(int i) {
+        return translated("cadeditor.gui.trade", text(Integer.toString(i)));
+    }
+
     public static MutableComponent gui(String s) {
         return translated("cadeditor.gui." + s);
     }
@@ -469,9 +514,9 @@ public final class ModTexts {
         public static final MutableComponent COMPOUND = text("Compound").withStyle(ChatFormatting.LIGHT_PURPLE);
         public static final MutableComponent DOUBLE = text("Double").withStyle(ChatFormatting.YELLOW);
         public static final MutableComponent FLOAT = text("Float").withStyle(ChatFormatting.LIGHT_PURPLE);
-        public static final MutableComponent GREEN = text("List").withStyle(ChatFormatting.GREEN);
-        public static final MutableComponent HEX = text("Hex");
-        public static final MutableComponent INT = text("Int").withStyle(ChatFormatting.AQUA);
+    public static final MutableComponent GREEN = text("List").withStyle(ChatFormatting.GREEN);
+    public static final MutableComponent HEX = text("Hex");
+    public static final MutableComponent INT = text("Int").withStyle(ChatFormatting.AQUA);
         public static final MutableComponent INT_ARRAY = text("Int Array").withStyle(ChatFormatting.AQUA);
         public static final MutableComponent LONG = text("Long").withStyle(ChatFormatting.RED);
         public static final MutableComponent LONG_ARRAY = text("Long Array").withStyle(ChatFormatting.RED);

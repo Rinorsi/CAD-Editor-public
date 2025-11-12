@@ -1,7 +1,9 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
 import com.github.franckyi.guapi.api.Color;
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
+import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
@@ -23,8 +25,12 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
@@ -80,6 +86,11 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
     @Override
     public EntryModel createNewListEntry() {
         return createPotionEffectEntry(null, false);
+    }
+
+    @Override
+    public void addEntryInList() {
+        openCustomEffectSelection();
     }
 
     @Override
@@ -257,5 +268,69 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         tag.putBoolean("show_particles", e.isVisible());
         tag.putBoolean("show_icon", e.showIcon());
         return tag;
+    }
+
+    private void openCustomEffectSelection() {
+        Set<ResourceLocation> current = collectCustomEffectIds();
+        ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
+                "", ClientCache.getEffectSelectionItems(),
+                value -> {}, true,
+                this::applyCustomSelection,
+                current);
+    }
+
+    private void applyCustomSelection(List<ResourceLocation> selected) {
+        Map<ResourceLocation, PotionEffectEntryModel> existing = new LinkedHashMap<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect && !effect.isBaseEffect()) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    existing.putIfAbsent(id, effect);
+                }
+            }
+        }
+        List<PotionEffectEntryModel> desired = new ArrayList<>();
+        if (selected != null) {
+            for (ResourceLocation id : selected) {
+                PotionEffectEntryModel entry = existing.remove(id);
+                if (entry == null) {
+                    entry = (PotionEffectEntryModel) createPotionEffectEntry(null, false);
+                    entry.setValue(id.toString());
+                }
+                desired.add(entry);
+            }
+        }
+        replaceCustomEffectEntries(desired);
+    }
+
+    private void replaceCustomEffectEntries(List<PotionEffectEntryModel> customEntries) {
+        int insertionIndex = getEntryListStart();
+        while (insertionIndex < getEntries().size()) {
+            EntryModel model = getEntries().get(insertionIndex);
+            if (model instanceof PotionEffectEntryModel effect && effect.isBaseEffect()) {
+                insertionIndex++;
+                continue;
+            }
+            break;
+        }
+        int endExclusive = getEntries().size() - (canAddEntryInList() ? 1 : 0);
+        for (int i = endExclusive - 1; i >= insertionIndex; i--) {
+            getEntries().remove(i);
+        }
+        getEntries().addAll(insertionIndex, customEntries);
+        updateEntryListIndexes();
+    }
+
+    private Set<ResourceLocation> collectCustomEffectIds() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof PotionEffectEntryModel effect && !effect.isBaseEffect()) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+        }
+        return ids;
     }
 }
