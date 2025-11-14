@@ -54,12 +54,20 @@ public class VanillaTextAreaSkinDelegate<N extends TextArea> extends MultiLineEd
     // Mojang somehow broke moving the cursor with the mouse???
     @Override
     public boolean mouseClicked(double d, double e, int i) {
-        if (this.withinContentAreaPoint(d, e) && i == 0) {
+        if (isWithinContentArea(d, e) && i == 0) {
             self.getTextField().setSelecting(Screen.hasShiftDown());
             self.invokeSeekCursorScreen(d, e);
             return true;
         } else {
             return super.mouseClicked(d, e, i);
         }
+    }
+
+    private boolean isWithinContentArea(double mouseX, double mouseY) {
+        int innerLeft = getInnerLeft();
+        int innerTop = getInnerTop();
+        int innerRight = innerLeft + (this.width - this.totalInnerPadding());
+        int innerBottom = innerTop + getInnerHeight();
+        return mouseX >= innerLeft && mouseX < innerRight && mouseY >= innerTop && mouseY < innerBottom;
     }
 }

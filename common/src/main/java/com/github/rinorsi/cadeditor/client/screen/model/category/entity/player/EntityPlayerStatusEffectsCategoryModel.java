@@ -23,9 +23,7 @@ import java.util.Set;
 /**
  * Provides editing for ActiveEffects of a player.
  */
-public class EntityPlayerStatusEffectsCategoryModel extends EntityCategoryModel {
-    private static final String EFFECTS_TAG = "ActiveEffects";
-
+public class EntityPlayerStatusEffectsCategoryModel extends EntityStatusEffectsCategoryModel {
     public EntityPlayerStatusEffectsCategoryModel(EntityEditorModel editor) {
         super(Component.translatable("cadeditor.gui.player_effects"), editor);
     }

@@ -167,7 +167,8 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             }
             contents = new PotionContents(pot,
                     customColor != Color.NONE ? java.util.Optional.of(customColor) : java.util.Optional.empty(),
-                    effects);
+                    effects,
+                    java.util.Optional.empty());
         }
         if (contents != null) {
             stack.set(DataComponents.POTION_CONTENTS, contents);

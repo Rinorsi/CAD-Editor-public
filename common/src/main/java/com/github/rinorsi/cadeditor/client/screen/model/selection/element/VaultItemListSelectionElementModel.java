@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +16,7 @@ public class VaultItemListSelectionElementModel extends ItemListSelectionElement
     }
 
     private VaultItemListSelectionElementModel(ResourceLocation id, ItemStack copy, Component displayName) {
-        super(copy.getDescriptionId(), id, () -> copy.copy());
+        super(resolveBaseId(copy), id, () -> copy.copy());
         this.displayName = displayName;
         this.hoverNameLowercase = displayName.getString().toLowerCase(Locale.ROOT);
     }
@@ -34,5 +35,10 @@ public class VaultItemListSelectionElementModel extends ItemListSelectionElement
             return true;
         }
         return super.matches(s);
+    }
+
+    private static String resolveBaseId(ItemStack stack) {
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return key == null ? "minecraft:air" : key.toString();
     }
 }

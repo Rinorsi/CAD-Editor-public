@@ -23,9 +23,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.armortrim.TrimMaterial;
-import net.minecraft.world.item.armortrim.TrimPattern;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 import java.util.ArrayList;
@@ -180,14 +180,14 @@ public final class ClientCache {
         }
         Item item = target.getItem();
         var definition = value.definition();
-        Optional<HolderLookup.RegistryLookup<Item>> registry = registryAccess().lookup(Registries.ITEM);
+        Optional<? extends HolderLookup.RegistryLookup<Item>> registry = registryAccess().lookup(Registries.ITEM);
         if (definition.primaryItems().map(set -> holderSetContainsItem(set, item, registry)).orElse(false)) {
             return true;
         }
         return holderSetContainsItem(definition.supportedItems(), item, registry);
     }
 
-    private static boolean holderSetContainsItem(HolderSet<Item> holders, Item item, Optional<HolderLookup.RegistryLookup<Item>> registry) {
+    private static boolean holderSetContainsItem(HolderSet<Item> holders, Item item, Optional<? extends HolderLookup.RegistryLookup<Item>> registry) {
         if (holders == null) {
             return false;
         }
@@ -621,15 +621,20 @@ public final class ClientCache {
     }
 
     private static List<ItemListSelectionElementModel> buildPotionSelectionItems() {
-        return BuiltInRegistries.POTION.entrySet().stream()
-                .map(e -> BuiltInRegistries.POTION.getHolder(e.getKey())
-                        .map(holder -> new ItemListSelectionElementModel(
-                                Potion.getName(Optional.of(holder), Items.POTION.getDescriptionId() + ".effect."),
-                                e.getKey().location(),
-                                () -> ColoredItemHelper.createColoredPotionItem(e.getKey().location(), Color.NONE)))
-                        .orElse(null))
-                .filter(Objects::nonNull)
-                .sorted().toList();
+        return registryAccess().lookup(Registries.POTION)
+                .map(lookup -> lookup.listElements()
+                        .map(holder -> {
+                            PotionContents contents = new PotionContents(holder);
+                            String name = contents.getName(Items.POTION.getDescriptionId() + ".effect.").getString();
+                            return new ItemListSelectionElementModel(
+                                    name,
+                                    holder.key().location(),
+                                    () -> ColoredItemHelper.createColoredPotionItem(holder.key().location(), Color.NONE)
+                            );
+                        })
+                        .sorted()
+                        .toList())
+                .orElseGet(List::of);
     }
 
     private static List<SelectableSpriteListSelectionElementModel> buildEffectSelectionItems() {

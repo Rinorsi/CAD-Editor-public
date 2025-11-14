@@ -12,7 +12,6 @@ import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.registries.BuiltInRegistries;
 
@@ -55,10 +54,7 @@ public class FoodUsingConvertsToEntryController extends SelectionEntryController
                     }
                     try {
                         ResourceLocation id = ResourceLocation.parse(selection);
-                        Item item = BuiltInRegistries.ITEM.get(id);
-                        if (item != null) {
-                            model.useStack(new ItemStack(item));
-                        }
+                        BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> model.useStack(new ItemStack(item)));
                     } catch (Exception ignored) {
                     }
                 });
@@ -110,13 +106,12 @@ public class FoodUsingConvertsToEntryController extends SelectionEntryController
                     }
                     try {
                         ResourceLocation id = ResourceLocation.parse(selection);
-                        Item item = BuiltInRegistries.ITEM.get(id);
-                        if (item != null) {
+                        BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                             model.useStack(new ItemStack(item));
                             if (afterSelection != null) {
                                 afterSelection.run();
                             }
-                        }
+                        });
                     } catch (Exception ignored) {
                     }
                 });

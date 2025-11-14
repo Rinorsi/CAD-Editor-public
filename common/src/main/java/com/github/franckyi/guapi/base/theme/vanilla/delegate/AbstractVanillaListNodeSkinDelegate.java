@@ -55,7 +55,7 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return node.getRight() - 6;
     }
 
@@ -66,7 +66,7 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (getEntryAtPosition(mouseX, mouseY) == null && (mouseX < getScrollbarPosition() || mouseX > node.getRight())) {
+        if (getEntryAtPosition(mouseX, mouseY) == null && (mouseX < scrollBarX() || mouseX > node.getRight())) {
             setFocused(null);
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -149,7 +149,7 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     protected void refreshList() {
         clearEntries();
         createList();
-        setScrollAmount(getScrollAmount());
+        setScrollAmount(scrollAmount());
         shouldRefreshList = false;
     }
 

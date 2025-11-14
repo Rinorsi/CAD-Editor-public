@@ -4,7 +4,6 @@ import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
-import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -21,20 +20,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Generic category for editing ActiveEffects of any living entity.
- */
 public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
-    private static final Component TITLE = Component.translatable("cadeditor.gui.player_effects");
     private static final String EFFECTS_TAG = "ActiveEffects";
 
     public EntityStatusEffectsCategoryModel(EntityEditorModel editor) {
-        super(TITLE, editor);
+        super(Component.translatable("cadeditor.gui.player_effects"), editor);
     }
 
     @Override
     protected void setupEntries() {
-        ListTag effects = ensureEntityTag().getList(EFFECTS_TAG, Tag.TAG_COMPOUND);
+        CompoundTag data = getData();
+        if (data == null) {
+            return;
+        }
+        ListTag effects = data.getList(EFFECTS_TAG, Tag.TAG_COMPOUND);
         for (Tag element : effects) {
             if (element instanceof CompoundTag compound) {
                 getEntries().add(createEffectEntry(compound));
@@ -68,6 +67,11 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
     }
 
     @Override
+    public int getEntryHeight() {
+        return 50;
+    }
+
+    @Override
     public void apply() {
         super.apply();
         ListTag list = new ListTag();
@@ -79,9 +83,10 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
             if (id == null || id.isBlank()) {
                 continue;
             }
-            list.add(effect.toCompoundTag());
+            CompoundTag tag = effect.toCompoundTag();
+            list.add(tag);
         }
-        CompoundTag data = ensureEntityTag();
+        CompoundTag data = ensureTag();
         if (list.isEmpty()) {
             data.remove(EFFECTS_TAG);
         } else {
@@ -180,12 +185,11 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         return ids;
     }
 
-    private CompoundTag ensureEntityTag() {
-        EntityEditorContext context = getContext();
-        CompoundTag data = context.getTag();
+    private CompoundTag ensureTag() {
+        CompoundTag data = getData();
         if (data == null) {
             data = new CompoundTag();
-            context.setTag(data);
+            getContext().setTag(data);
         }
         return data;
     }

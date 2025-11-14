@@ -113,11 +113,10 @@ public class VillagerTradeItemsEntryController extends EntryController<VillagerT
             }
             try {
                 ResourceLocation id = ResourceLocation.parse(selection);
-                Item item = BuiltInRegistries.ITEM.get(id);
-                if (item != null) {
+                BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                     property.setValue(new ItemStack(item));
                     afterSelection.run();
-                }
+                });
             } catch (Exception ignored) {
             }
         });

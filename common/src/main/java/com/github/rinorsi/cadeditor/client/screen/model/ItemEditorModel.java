@@ -3,7 +3,6 @@ package com.github.rinorsi.cadeditor.client.screen.model;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.context.ItemEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.*;
-import com.github.rinorsi.cadeditor.client.util.CompatFood;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Holder;
@@ -15,7 +14,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Items;
@@ -32,6 +30,11 @@ import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.UseRemainder;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
+import net.minecraft.world.item.consume_effects.ConsumeEffect;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,6 +47,13 @@ public class ItemEditorModel extends StandardEditorModel {
     private static final String KEY_LEGACY_TAG = "tag";
     private static final String TOMBSTONE_PREFIX = "!";
     private static final String FOOD_COMPONENT_KEY = "minecraft:food";
+    private static final String CONSUMABLE_COMPONENT_KEY = "minecraft:consumable";
+    private static final String USE_REMAINDER_COMPONENT_KEY = "minecraft:use_remainder";
+    private static final Set<String> FOOD_COMPONENT_KEYS = Set.of(
+        FOOD_COMPONENT_KEY,
+        CONSUMABLE_COMPONENT_KEY,
+        USE_REMAINDER_COMPONENT_KEY
+    );
 
     private static final Set<String> DELETE_IF_ABSENT_KEYS = Set.of(
         "minecraft:hide_tooltip",
@@ -56,7 +66,6 @@ public class ItemEditorModel extends StandardEditorModel {
     private static final int MIN_NUTRITION = 0;
     private static final int MAX_DURATION_TICKS = 20 * 60 * 60;
     private static final int MAX_AMPLIFIER = 255;
-    private static final float MIN_EAT_SECONDS = 0.05f;
 
     private final FoodComponentState foodState = new FoodComponentState();
     private boolean desiredFoodEnabled;
@@ -223,31 +232,60 @@ public class ItemEditorModel extends StandardEditorModel {
     public void applyFoodComponent() {
         ItemStack stack = getContext().getItemStack();
         if (desiredFoodEnabled) {
-            writeFoodComponent(stack);
+            writeFoodComponents(stack);
         } else {
             stack.remove(DataComponents.FOOD);
+            stack.remove(DataComponents.CONSUMABLE);
+            stack.remove(DataComponents.USE_REMAINDER);
             foodState.updateOriginalUsingConvertsTo(Optional.empty());
             DebugLog.infoKey("cadeditor.debug.food.removed", describeStackForLogs(stack));
         }
         syncContextSnapshot(stack);
     }
 
-    private void writeFoodComponent(ItemStack stack) {
+    private void writeFoodComponents(ItemStack stack) {
         try {
             FoodProperties properties = buildSafeFoodProperties();
+            List<ConsumeEffect> statusEffects = buildStatusEffects();
+            Consumable consumable = foodState.buildConsumable(statusEffects);
+            Optional<ItemStack> convertsTo = foodState.resolveUsingConvertsTo();
+            Optional<UseRemainder> useRemainder = foodState.buildUseRemainder(convertsTo);
+
             stack.set(DataComponents.FOOD, properties);
-            DebugLog.infoKey("cadeditor.debug.food.applied", describeStackForLogs(stack), properties.nutrition(), properties.saturation(), properties.canAlwaysEat(), properties.eatSeconds(), properties.effects());
+            stack.set(DataComponents.CONSUMABLE, consumable);
+            if (useRemainder.isPresent()) {
+                stack.set(DataComponents.USE_REMAINDER, useRemainder.get());
+            } else {
+                stack.remove(DataComponents.USE_REMAINDER);
+            }
+
+            foodState.updateOriginalUsingConvertsTo(convertsTo);
+            DebugLog.infoKey(
+                    "cadeditor.debug.food.applied",
+                    describeStackForLogs(stack),
+                    properties.nutrition(),
+                    properties.saturation(),
+                    properties.canAlwaysEat(),
+                    consumable.consumeSeconds(),
+                    statusEffects
+            );
         } catch (Throwable t) {
-            LOGGER.error("Building FoodProperties failed, fallback to no-effects. Cause: {}", t.toString());
-            FoodProperties safe = new FoodProperties(
+            LOGGER.error("Building food components failed, falling back to minimal values. Cause: {}", t.toString());
+            FoodProperties safeFood = new FoodProperties(
                     Math.max(MIN_NUTRITION, foodState.getNutrition()),
                     Math.max(0f, foodState.getSaturation()),
-                    foodState.isAlwaysEat(),
-                    Math.max(MIN_EAT_SECONDS, foodState.getEatSeconds()),
-                    foodState.resolveUsingConvertsTo(),
-                    List.of()
+                    foodState.isAlwaysEat()
             );
-            stack.set(DataComponents.FOOD, safe);
+            stack.set(DataComponents.FOOD, safeFood);
+            Consumable.Builder builder = Consumable.builder()
+                    .consumeSeconds(foodState.getConsumeSeconds())
+                    .hasConsumeParticles(foodState.hasConsumeParticles())
+                    .animation(foodState.getAnimation());
+            foodState.getConsumeSound().ifPresent(builder::sound);
+            Consumable fallbackConsumable = builder.build();
+            stack.set(DataComponents.CONSUMABLE, fallbackConsumable);
+            stack.remove(DataComponents.USE_REMAINDER);
+            foodState.updateOriginalUsingConvertsTo(Optional.empty());
         }
     }
 
@@ -255,39 +293,32 @@ public class ItemEditorModel extends StandardEditorModel {
         int nutrition = Math.max(MIN_NUTRITION, foodState.getNutrition());
         if (nutrition != foodState.getNutrition()) foodState.setNutrition(nutrition);
         float saturation = Math.max(0f, foodState.getSaturation());
-        float eatSeconds = Math.max(MIN_EAT_SECONDS, foodState.getEatSeconds());
+        if (saturation != foodState.getSaturation()) foodState.setSaturation(saturation);
 
-        var convertsTo = foodState.resolveUsingConvertsTo();
-        List<FoodProperties.PossibleEffect> effects = sanitizeEffects(foodState.copyEffectsForComponent());
-
-        FoodProperties props = new FoodProperties(
+        return new FoodProperties(
                 nutrition,
                 saturation,
-                foodState.isAlwaysEat(),
-                eatSeconds,
-                convertsTo,
-                effects
+                foodState.isAlwaysEat()
         );
-        foodState.updateOriginalUsingConvertsTo(convertsTo);
-        return props;
     }
 
-    private List<FoodProperties.PossibleEffect> sanitizeEffects(List<FoodProperties.PossibleEffect> raw) {
+    private List<ConsumeEffect> buildStatusEffects() {
+        List<FoodComponentState.FoodEffectData> raw = foodState.copyEffectsForComponent();
         if (raw == null || raw.isEmpty()) return List.of();
-        List<FoodProperties.PossibleEffect> out = new ArrayList<>(raw.size());
-        for (FoodProperties.PossibleEffect pe : raw) {
+        List<ConsumeEffect> out = new ArrayList<>(raw.size());
+        for (FoodComponentState.FoodEffectData data : raw) {
             try {
-                if (pe == null) continue;
+                if (data == null) continue;
 
-                float p = pe.probability();
-                if (!(p > 0f)) continue;
-                if (p > 1f) p = 1f;
+                float probability = data.probability();
+                if (!(probability > 0f)) continue;
+                if (probability > 1f) probability = 1f;
 
-                MobEffectInstance inst = pe.effect();
+                MobEffectInstance inst = data.effect();
                 if (inst == null) continue;
 
-                Holder<MobEffect> effHolder = inst.getEffect();
-                if (effHolder == null) continue;
+                Holder<MobEffect> effectHolder = inst.getEffect();
+                if (effectHolder == null) continue;
 
                 int dur = Math.max(1, Math.min(inst.getDuration(), MAX_DURATION_TICKS));
                 int amp = Math.max(0, Math.min(inst.getAmplifier(), MAX_AMPLIFIER));
@@ -295,12 +326,18 @@ public class ItemEditorModel extends StandardEditorModel {
                 boolean showParticles = inst.isVisible();
                 boolean showIcon = inst.showIcon();
 
-                MobEffectInstance rebuilt =
-                        new MobEffectInstance(effHolder, dur, amp, ambient, showParticles, showIcon);
+                MobEffectInstance rebuilt = new MobEffectInstance(
+                        effectHolder,
+                        dur,
+                        amp,
+                        ambient,
+                        showParticles,
+                        showIcon
+                );
 
-                CompatFood.makePossibleEffect(rebuilt, p).ifPresent(out::add);
+                out.add(new ApplyStatusEffectsConsumeEffect(rebuilt, probability));
             } catch (Throwable t) {
-                LOGGER.warn("Skip invalid food effect {} due to {}", String.valueOf(pe), t.toString());
+                LOGGER.warn("Skip invalid food effect {} due to {}", String.valueOf(data), t.toString());
             }
         }
         return out.isEmpty() ? List.of() : List.copyOf(out);
@@ -370,7 +407,10 @@ public class ItemEditorModel extends StandardEditorModel {
         if (!(saved instanceof CompoundTag compound)) return;
 
         if (!desiredFoodEnabled) {
-            ensureComponentsTag(compound).put(TOMBSTONE_PREFIX + FOOD_COMPONENT_KEY, new CompoundTag());
+            CompoundTag components = ensureComponentsTag(compound);
+            for (String key : FOOD_COMPONENT_KEYS) {
+                components.put(TOMBSTONE_PREFIX + key, new CompoundTag());
+            }
         }
 
         CompoundTag oldRoot = context.getTag();
@@ -378,7 +418,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (legacy != null && !legacy.isEmpty()) compound.put(KEY_LEGACY_TAG, legacy);
         else compound.remove(KEY_LEGACY_TAG);
 
-        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : Set.of(FOOD_COMPONENT_KEY);
+        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : FOOD_COMPONENT_KEYS;
         compound = mergeComponentsPreservingUnknown(oldRoot, compound, doNotCopyBack);
 
         if (desiredFoodEnabled && !hasComponent(compound, FOOD_COMPONENT_KEY)) {
@@ -389,17 +429,23 @@ public class ItemEditorModel extends StandardEditorModel {
         ItemStack parsed = ItemStack.parseOptional(registryAccess, compound);
         if (!parsed.isEmpty()) {
             if (desiredFoodEnabled && parsed.get(DataComponents.FOOD) == null) {
-                writeFoodComponent(parsed);
+                writeFoodComponents(parsed);
             } else if (!desiredFoodEnabled && parsed.get(DataComponents.FOOD) != null) {
                 parsed.remove(DataComponents.FOOD);
+                parsed.remove(DataComponents.CONSUMABLE);
+                parsed.remove(DataComponents.USE_REMAINDER);
             }
             context.setItemStack(parsed);
             foodState.loadFrom(parsed.copy());
             foodState.setEnabled(desiredFoodEnabled);
         } else {
             ItemStack fallback = stack.copy();
-            if (desiredFoodEnabled && fallback.get(DataComponents.FOOD) == null) writeFoodComponent(fallback);
-            else if (!desiredFoodEnabled && fallback.get(DataComponents.FOOD) != null) fallback.remove(DataComponents.FOOD);
+            if (desiredFoodEnabled && fallback.get(DataComponents.FOOD) == null) writeFoodComponents(fallback);
+            else if (!desiredFoodEnabled && fallback.get(DataComponents.FOOD) != null) {
+                fallback.remove(DataComponents.FOOD);
+                fallback.remove(DataComponents.CONSUMABLE);
+                fallback.remove(DataComponents.USE_REMAINDER);
+            }
             context.setItemStack(fallback);
             foodState.loadFrom(fallback);
             foodState.setEnabled(desiredFoodEnabled);
@@ -410,50 +456,50 @@ public class ItemEditorModel extends StandardEditorModel {
         CompoundTag food = new CompoundTag();
         int nutrition = Math.max(MIN_NUTRITION, foodState.getNutrition());
         if (nutrition != foodState.getNutrition()) foodState.setNutrition(nutrition);
+        float saturation = Math.max(0f, foodState.getSaturation());
+        if (saturation != foodState.getSaturation()) foodState.setSaturation(saturation);
         food.putInt("nutrition", nutrition);
-        food.putFloat("saturation", Math.max(0f, foodState.getSaturation()));
+        food.putFloat("saturation", saturation);
         if (foodState.isAlwaysEat()) food.putBoolean("can_always_eat", true);
-        float eatSeconds = Math.max(MIN_EAT_SECONDS, foodState.getEatSeconds());
-        if (eatSeconds != 1.6f) food.putFloat("eat_seconds", eatSeconds);
         return food;
     }
 
     private static CompoundTag mergeComponentsPreservingUnknown(
             CompoundTag oldRoot, CompoundTag newRoot, Set<String> keysNotToCopy) {
-    CompoundTag merged = newRoot.copy();
+        CompoundTag merged = newRoot.copy();
 
-    if (!merged.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-        if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-            merged.put(KEY_COMPONENTS, oldRoot.getCompound(KEY_COMPONENTS).copy());
+        if (!merged.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
+            if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
+                merged.put(KEY_COMPONENTS, oldRoot.getCompound(KEY_COMPONENTS).copy());
+            }
+            return merged;
         }
-        return merged;
-    }
 
-    CompoundTag newComps = merged.getCompound(KEY_COMPONENTS);
+        CompoundTag newComps = merged.getCompound(KEY_COMPONENTS);
 
-    if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-        CompoundTag oldComps = oldRoot.getCompound(KEY_COMPONENTS);
+        if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
+            CompoundTag oldComps = oldRoot.getCompound(KEY_COMPONENTS);
 
-        for (String oldKey : oldComps.getAllKeys()) {
-            if (oldKey.startsWith(TOMBSTONE_PREFIX)) continue;
-            if (keysNotToCopy != null && keysNotToCopy.contains(oldKey)) continue;
+            for (String oldKey : oldComps.getAllKeys()) {
+                if (oldKey.startsWith(TOMBSTONE_PREFIX)) continue;
+                if (keysNotToCopy != null && keysNotToCopy.contains(oldKey)) continue;
 
-            boolean explicitlyRemoved = newComps.contains(TOMBSTONE_PREFIX + oldKey);
-            boolean explicitlySet     = newComps.contains(oldKey);
-            if (explicitlyRemoved || explicitlySet) continue;
+                boolean explicitlyRemoved = newComps.contains(TOMBSTONE_PREFIX + oldKey);
+                boolean explicitlySet = newComps.contains(oldKey);
+                if (explicitlyRemoved || explicitlySet) continue;
 
-            Tag oldVal = oldComps.get(oldKey);
-            boolean isUnitLike = (oldVal instanceof CompoundTag c) && c.isEmpty();
+                Tag oldVal = oldComps.get(oldKey);
+                boolean isUnitLike = (oldVal instanceof CompoundTag c) && c.isEmpty();
 
-            boolean respectDeletion = isUnitLike || DELETE_IF_ABSENT_KEYS.contains(oldKey);
-            if (!respectDeletion) {
-                newComps.put(oldKey, oldVal.copy());
+                boolean respectDeletion = isUnitLike || DELETE_IF_ABSENT_KEYS.contains(oldKey);
+                if (!respectDeletion) {
+                    newComps.put(oldKey, oldVal.copy());
+                }
             }
         }
-    }
 
-    return merged;
-}
+        return merged;
+    }
 
     protected HolderLookup.Provider getRegistryAccess() { return ClientUtil.registryAccess(); }
 
@@ -467,7 +513,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (stack.isEmpty()) return "<empty>";
         var saved = stack.save(getRegistryAccess(), new CompoundTag());
         if (!(saved instanceof CompoundTag compound)) return "<empty>";
-        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : Set.of(FOOD_COMPONENT_KEY);
+        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : FOOD_COMPONENT_KEYS;
         CompoundTag merged = mergeComponentsPreservingUnknown(getContext().getTag(), compound.copy(), doNotCopyBack);
         return merged.toString();
     }
