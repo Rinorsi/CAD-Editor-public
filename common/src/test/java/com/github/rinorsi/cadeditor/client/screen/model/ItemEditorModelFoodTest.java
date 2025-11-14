@@ -24,7 +24,6 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -61,11 +60,7 @@ class ItemEditorModelFoodTest {
                 updated.get(DataComponents.FOOD),
                 "Expected food component on context stack"
         );
-        var consumableComponent = Objects.requireNonNull(
-                updated.get(DataComponents.CONSUMABLE),
-                "Expected consumable component on context stack"
-        );
-        Assertions.assertEquals(1.6f, consumableComponent.consumeSeconds(), 1e-6f);
+        Assertions.assertEquals(1.6f, foodComponent.eatSeconds(), 1e-6f);
 
         CompoundTag tag = context.getTag();
         Assertions.assertNotNull(tag, "Context tag should be initialized");
@@ -152,10 +147,16 @@ class ItemEditorModelFoodTest {
         Assertions.assertTrue(components.contains("!minecraft:lore", Tag.TAG_COMPOUND));
         Assertions.assertTrue(components.contains("!minecraft:rarity", Tag.TAG_COMPOUND));
         Assertions.assertTrue(components.contains("!minecraft:repair_cost", Tag.TAG_COMPOUND));
-        var remainder = updated.get(DataComponents.USE_REMAINDER);
-        Assertions.assertNotNull(remainder, "Expected use remainder component");
-        ItemStack remainderStack = remainder.convertInto().copy();
-        Assertions.assertEquals(getItem("minecraft:diamond_sword"), remainderStack.getItem());
+        CompoundTag food = components.getCompound("minecraft:food");
+        CompoundTag convert = food.getCompound("using_converts_to");
+
+        Assertions.assertEquals("minecraft:diamond_sword", convert.getString("id"));
+        if (convert.contains("components", Tag.TAG_COMPOUND)) {
+            CompoundTag convertComponents = convert.getCompound("components");
+            Assertions.assertFalse(convertComponents.contains("minecraft:lore", Tag.TAG_COMPOUND));
+            Assertions.assertFalse(convertComponents.contains("minecraft:rarity", Tag.TAG_COMPOUND));
+            Assertions.assertFalse(convertComponents.contains("minecraft:repair_cost", Tag.TAG_COMPOUND));
+        }
     }
 
     @Test
@@ -176,24 +177,28 @@ class ItemEditorModelFoodTest {
 
         CompoundTag tag = context.getTag();
         Assertions.assertNotNull(tag, "Context tag should be initialized");
-        ItemStack updated = context.getItemStack();
-        var remainder = updated.get(DataComponents.USE_REMAINDER);
-        Assertions.assertNotNull(remainder, "Expected use remainder component");
-        ItemStack remainderStack = remainder.convertInto().copy();
-        Assertions.assertEquals(getItem("minecraft:diamond_sword"), remainderStack.getItem());
-        Assertions.assertNotNull(remainderStack.get(DataComponents.ATTRIBUTE_MODIFIERS));
-        Assertions.assertNotNull(remainderStack.get(DataComponents.CUSTOM_NAME));
+        CompoundTag components = tag.getCompound("components");
+        CompoundTag food = components.getCompound("minecraft:food");
+        Assertions.assertEquals("minecraft:diamond_sword", food.getCompound("using_converts_to").getString("id"));
+
+        CompoundTag convert = food.getCompound("using_converts_to");
+        Assertions.assertTrue(convert.contains("components", Tag.TAG_COMPOUND));
+        CompoundTag convertComponents = convert.getCompound("components");
+        Assertions.assertTrue(convertComponents.contains("minecraft:attribute_modifiers", Tag.TAG_COMPOUND));
+        Assertions.assertNotNull(convertComponents.get("minecraft:custom_name"));
     }
 
     private static Item getItem(String id) {
         ResourceLocation location = ResourceLocation.parse(id);
-        return BuiltInRegistries.ITEM.getOptional(location)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown item id: " + id));
+        return BuiltInRegistries.ITEM.get(location);
     }
 
     private static ItemAttributeModifiers createSwordModifiers() {
-        Holder<Attribute> damageAttr = Attributes.ATTACK_DAMAGE;
-        Holder<Attribute> speedAttr = Attributes.ATTACK_SPEED;
+        var attributeLookup = REGISTRY_ACCESS.lookupOrThrow(Registries.ATTRIBUTE);
+        Holder<Attribute> damageAttr = attributeLookup.get(ResourceKey.create(
+                Registries.ATTRIBUTE, ResourceLocation.withDefaultNamespace("generic.attack_damage"))).orElseThrow();
+        Holder<Attribute> speedAttr = attributeLookup.get(ResourceKey.create(
+                Registries.ATTRIBUTE, ResourceLocation.withDefaultNamespace("generic.attack_speed"))).orElseThrow();
 
         ItemAttributeModifiers modifiers = ItemAttributeModifiers.EMPTY;
         modifiers = modifiers.withModifierAdded(

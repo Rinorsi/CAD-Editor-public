@@ -31,17 +31,14 @@ public final class ColoredItemHelper {
             ResourceKey<Potion> key = ResourceKey.create(Registries.POTION, rl);
             Holder<Potion> holder = lookup.get(key).orElse(null);
             PotionContents contents;
-            java.util.List<net.minecraft.world.effect.MobEffectInstance> effects = java.util.List.of();
             if (holder != null) {
                 contents = new PotionContents(java.util.Optional.of(holder),
                         color != Color.NONE ? java.util.Optional.of(color) : java.util.Optional.empty(),
-                        effects,
-                        java.util.Optional.empty());
+                        java.util.List.of());
             } else {
                 contents = new PotionContents(java.util.Optional.empty(),
                         color != Color.NONE ? java.util.Optional.of(color) : java.util.Optional.empty(),
-                        effects,
-                        java.util.Optional.empty());
+                        java.util.List.of());
             }
             stack.set(DataComponents.POTION_CONTENTS, contents);
             return stack;

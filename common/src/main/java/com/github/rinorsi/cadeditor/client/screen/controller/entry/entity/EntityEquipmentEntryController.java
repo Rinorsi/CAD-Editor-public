@@ -16,6 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
@@ -150,13 +151,14 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
             }
             try {
                 ResourceLocation id = ResourceLocation.parse(selection);
-                BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
+                Item item = BuiltInRegistries.ITEM.get(id);
+                if (item != null) {
                     model.setItemStack(new ItemStack(item));
                     placeholder = false;
                     if (afterSelection != null) {
                         afterSelection.run();
                     }
-                });
+                }
             } catch (Exception ignored) {
             }
         });

@@ -20,7 +20,7 @@ public class ItemFoodPropertiesCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("nutrition"), state.getNutrition(), state::setNutrition));
         getEntries().add(new FloatEntryModel(this, ModTexts.gui("saturation"), state.getSaturation(), state::setSaturation));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("always_eat"), state.isAlwaysEat(), state::setAlwaysEat));
-        getEntries().add(new FloatEntryModel(this, ModTexts.gui("eat_seconds"), state.getConsumeSeconds(), state::setConsumeSeconds));
+        getEntries().add(new FloatEntryModel(this, ModTexts.gui("eat_seconds"), state.getEatSeconds(), state::setEatSeconds));
         getEntries().add(FoodUsingConvertsToEntryModel.create(this, state));
 
     }

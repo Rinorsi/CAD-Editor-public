@@ -1,6 +1,5 @@
 package com.github.rinorsi.cadeditor.neoforge.loot;
 
-import com.github.rinorsi.cadeditor.common.ModConstants;
 import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -10,7 +9,7 @@ import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.jetbrains.annotations.NotNull;
@@ -20,8 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 public final class ForgeLootTableTracker {
-    private static final ResourceLocation LISTENER_ID = ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "loot_table_index_tracker");
-
     private ForgeLootTableTracker() {}
 
     public static void register() {
@@ -38,7 +35,7 @@ public final class ForgeLootTableTracker {
         LootTableIndex.updateAll(Collections.emptyList());
     }
 
-    private static void onAddReloadListener(AddServerReloadListenersEvent event) {
+    private static void onAddReloadListener(AddReloadListenerEvent event) {
         final ReloadableServerResources resources = event.getServerResources();
         PreparableReloadListener listener = new SimplePreparableReloadListener<Void>() {
             @Override
@@ -54,7 +51,7 @@ public final class ForgeLootTableTracker {
                 updateIndex(resources);
             }
         };
-        event.addListener(LISTENER_ID, listener);
+        event.addListener(listener);
     }
 
     private static void updateIndex(MinecraftServer server) {

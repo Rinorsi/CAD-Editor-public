@@ -126,14 +126,6 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         }
     }
 
-    private static int beginIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$beginIndex();
-    }
-
-    private static int endIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
-    }
-
     private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
         int cursor = x;
         int index = start;
@@ -201,4 +193,13 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         }
         return adjusted;
     }
+
+    private static int beginIndex(Object view) {
+        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$beginIndex();
+    }
+
+    private static int endIndex(Object view) {
+        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
+    }
+
 }

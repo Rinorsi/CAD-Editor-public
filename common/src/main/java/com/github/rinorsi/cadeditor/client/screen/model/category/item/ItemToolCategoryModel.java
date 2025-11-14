@@ -11,6 +11,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
@@ -30,11 +31,12 @@ public class ItemToolCategoryModel extends ItemEditorCategoryModel {
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
         Tool tool = stack.get(DataComponents.TOOL);
-        Tool baseTool = stack.getItem().components().get(DataComponents.TOOL);
-        Tool effective = tool != null ? tool : baseTool;
-        if (effective != null) {
-            defaultMiningSpeed = effective.defaultMiningSpeed();
-            damagePerBlock = effective.damagePerBlock();
+        if (tool != null) {
+            defaultMiningSpeed = tool.defaultMiningSpeed();
+            damagePerBlock = tool.damagePerBlock();
+        } else if (stack.getItem() instanceof DiggerItem digger) {
+            defaultMiningSpeed = digger.getTier().getSpeed();
+            damagePerBlock = digger.getTier().getUses() > 0 ? 1 : 0;
         } else {
             defaultMiningSpeed = 1f;
             damagePerBlock = 0;

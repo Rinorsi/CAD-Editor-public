@@ -2,7 +2,6 @@ package com.github.rinorsi.cadeditor.mixin;
 
 import com.github.franckyi.guapi.api.node.ListNode;
 import com.github.franckyi.guapi.base.theme.vanilla.delegate.AbstractVanillaListNodeSkinDelegate;
-import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
@@ -20,12 +19,20 @@ public abstract class AbstractSelectionListMixin<E> {
     protected int headerHeight;
 
     @Shadow
+    public abstract double getScrollAmount();
+
+    @Shadow
     @Final
     protected int itemHeight;
 
-    @Shadow protected abstract int scrollBarX();
-    @Shadow protected abstract int getItemCount();
-    @Shadow public abstract List<E> children();
+    @Shadow
+    protected abstract int getScrollbarPosition();
+
+    @Shadow
+    protected abstract int getItemCount();
+
+    @Shadow
+    public abstract List<E> children();
 
     @Inject(method = "getEntryAtPosition", at = @At("HEAD"), cancellable = true)
     private void getEntryAtPositionFix(double x, double y, CallbackInfoReturnable<E> cir) {
@@ -33,11 +40,10 @@ public abstract class AbstractSelectionListMixin<E> {
             return;
         }
         ListNode<?> node = AbstractVanillaListNodeSkinDelegate.class.cast(this).getNode();
-        double scrollAmount = ((AbstractScrollArea) (Object) this).scrollAmount();
         int k = node.getLeft();
         int l = node.getRight();
-        int m = Mth.floor(y - (double) node.getY()) - this.headerHeight + (int) scrollAmount - 4;
+        int m = Mth.floor(y - (double) node.getY()) - this.headerHeight + (int) getScrollAmount() - 4;
         int n = m / itemHeight;
-        cir.setReturnValue(x < (double) scrollBarX() && x >= (double) k && x <= (double) l && n >= 0 && m >= 0 && n < getItemCount() ? children().get(n) : null);
+        cir.setReturnValue(x < (double) getScrollbarPosition() && x >= (double) k && x <= (double) l && n >= 0 && m >= 0 && n < getItemCount() ? children().get(n) : null);
     }
 }

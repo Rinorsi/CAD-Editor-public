@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -60,13 +59,13 @@ public final class RenderHelper {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        guiGraphics.blit(RenderType::guiTextured, id, x, y, (float) imageX, (float) imageY, width, height, imageWidth, imageHeight);
+        guiGraphics.blit(id, x, y, 0, imageX, imageY, width, height, imageWidth, imageHeight);
     }
 
     public static void drawSprite(GuiGraphics guiGraphics, TextureAtlasSprite sprite, int x, int y, int imageWidth, int imageHeight) {
         RenderSystem.setShaderTexture(0, sprite.atlasLocation());
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blitSprite(RenderType::guiTextured, sprite, x, y, imageWidth, imageHeight);
+        guiGraphics.blit(x, y, 0, imageWidth, imageHeight, sprite);
     }
 
     public static void drawTooltip(GuiGraphics guiGraphics, List<Component> text, int x, int y) {

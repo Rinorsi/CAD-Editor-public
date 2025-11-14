@@ -85,7 +85,7 @@ public class VanillaTreeViewSkinDelegate<E extends TreeView.TreeItem<E>> extends
         @Override
         public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             int incr = increment * getList().node.getChildrenIncrement();
-            entryWidth = getList().maxScrollAmount() == 0 ? entryWidth + 6 : entryWidth;
+            entryWidth = getList().getMaxScroll() == 0 ? entryWidth + 6 : entryWidth;
             getNode().setX(x + incr);
             getNode().setY(y);
             getNode().setParentPrefWidth(entryWidth - incr);

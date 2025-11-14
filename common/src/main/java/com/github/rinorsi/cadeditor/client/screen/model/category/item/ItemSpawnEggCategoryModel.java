@@ -1,6 +1,5 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
-import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntityEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -26,7 +25,7 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
     protected void setupEntries() {
         var stack = getParent().getContext().getItemStack();
         EntityEntryModel entityEntry = new EntityEntryModel(this,
-                EntityType.by(spawnData).orElse(item.getType(ClientUtil.registryAccess(), stack)),
+                EntityType.by(spawnData).orElse(item.getType(stack)),
                 spawnData,
                 this::setEntity);
         getEntries().add(entityEntry.withWeight(0));

@@ -1,129 +1,64 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
-import com.github.rinorsi.cadeditor.client.debug.DebugLog;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
-import net.minecraft.world.item.component.Consumable;
-import net.minecraft.world.item.component.UseRemainder;
-import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
-import net.minecraft.world.item.consume_effects.ConsumeEffect;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class FoodComponentState {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final float DEFAULT_CONSUME_SECONDS = 1.6f;
-    private static final ItemUseAnimation DEFAULT_ANIMATION = ItemUseAnimation.EAT;
-
     private boolean enabled;
     private boolean hasEverBeenEnabled;
     private int nutrition = 4;
     private float saturation = 0.3f;
     private boolean alwaysEat;
-    private float consumeSeconds = DEFAULT_CONSUME_SECONDS;
-    private boolean hasConsumeParticles;
-    private ItemUseAnimation animation = DEFAULT_ANIMATION;
-    private Optional<Holder<SoundEvent>> consumeSound = Optional.empty();
+    private float eatSeconds = 1.6f;
     private String usingConvertsToId = "";
     private Optional<ItemStack> originalUsingConvertsTo = Optional.empty();
     private Optional<ItemStack> customUsingConvertsTo = Optional.empty();
-    private List<FoodEffectData> effects = new ArrayList<>();
-    private List<ConsumeEffect> preservedOtherEffects = new ArrayList<>();
+    private List<FoodProperties.PossibleEffect> effects = new ArrayList<>();
 
     public void loadFrom(ItemStack stack) {
-        FoodProperties food = stack.get(DataComponents.FOOD);
-        Consumable consumable = stack.get(DataComponents.CONSUMABLE);
-        UseRemainder remainder = stack.get(DataComponents.USE_REMAINDER);
-
-        if (food != null || consumable != null) {
+        FoodProperties properties = stack.get(DataComponents.FOOD);
+        if (properties != null) {
             hasEverBeenEnabled = true;
             setEnabled(true);
+            nutrition = properties.nutrition();
+            saturation = properties.saturation();
+            alwaysEat = properties.canAlwaysEat();
+            eatSeconds = properties.eatSeconds();
+            originalUsingConvertsTo = properties.usingConvertsTo().map(this::prepareConvertStack);
+            customUsingConvertsTo = originalUsingConvertsTo.map(ItemStack::copy);
+            usingConvertsToId = originalUsingConvertsTo
+                    .map(ItemStack::getItem)
+                    .map(item -> BuiltInRegistries.ITEM.getKey(item).toString())
+                    .orElse("");
+            effects = new ArrayList<>(properties.effects());
+            DebugLog.infoKey("cadeditor.debug.food.loaded", describeStack(stack), usingConvertsToId, originalUsingConvertsTo.map(this::describeStack).orElse("<empty>"));
         } else {
-            resetToDefaults();
+            hasEverBeenEnabled = false;
             setEnabled(false);
-            DebugLog.infoKey("cadeditor.debug.food.missing", describeStack(stack));
-            return;
-        }
-
-        if (food != null) {
-            nutrition = food.nutrition();
-            saturation = food.saturation();
-            alwaysEat = food.canAlwaysEat();
-        } else {
             nutrition = 4;
             saturation = 0.3f;
             alwaysEat = false;
-        }
-
-        if (consumable != null) {
-            consumeSeconds = consumable.consumeSeconds();
-            hasConsumeParticles = consumable.hasConsumeParticles();
-            animation = consumable.animation();
-            consumeSound = Optional.ofNullable(consumable.sound());
-            preservedOtherEffects = consumable.onConsumeEffects().stream()
-                    .filter(effect -> !(effect instanceof ApplyStatusEffectsConsumeEffect))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            effects = consumable.onConsumeEffects().stream()
-                    .filter(ApplyStatusEffectsConsumeEffect.class::isInstance)
-                    .map(ApplyStatusEffectsConsumeEffect.class::cast)
-                    .flatMap(apply -> apply.effects().stream()
-                            .map(eff -> new FoodEffectData(new MobEffectInstance(eff), apply.probability())))
-                    .collect(Collectors.toCollection(ArrayList::new));
-        } else {
-            consumeSeconds = DEFAULT_CONSUME_SECONDS;
-            hasConsumeParticles = false;
-            animation = DEFAULT_ANIMATION;
-            consumeSound = Optional.empty();
-            preservedOtherEffects = new ArrayList<>();
-            effects = new ArrayList<>();
-        }
-
-        if (remainder != null) {
-            ItemStack convert = prepareConvertStack(remainder.convertInto());
-            originalUsingConvertsTo = Optional.of(convert);
-            customUsingConvertsTo = originalUsingConvertsTo.map(ItemStack::copy);
-            usingConvertsToId = BuiltInRegistries.ITEM.getKey(convert.getItem()).toString();
-        } else {
+            eatSeconds = 1.6f;
             originalUsingConvertsTo = Optional.empty();
-            customUsingConvertsTo = Optional.empty();
             usingConvertsToId = "";
+            customUsingConvertsTo = Optional.empty();
+            effects = new ArrayList<>();
+            DebugLog.infoKey("cadeditor.debug.food.missing", describeStack(stack));
         }
-
-        DebugLog.infoKey("cadeditor.debug.food.loaded",
-                describeStack(stack),
-                usingConvertsToId,
-                originalUsingConvertsTo.map(this::describeStack).orElse("<empty>"));
-    }
-
-    private void resetToDefaults() {
-        hasEverBeenEnabled = false;
-        nutrition = 4;
-        saturation = 0.3f;
-        alwaysEat = false;
-        consumeSeconds = DEFAULT_CONSUME_SECONDS;
-        hasConsumeParticles = false;
-        animation = DEFAULT_ANIMATION;
-        consumeSound = Optional.empty();
-        usingConvertsToId = "";
-        originalUsingConvertsTo = Optional.empty();
-        customUsingConvertsTo = Optional.empty();
-        effects = new ArrayList<>();
-        preservedOtherEffects = new ArrayList<>();
     }
 
     public boolean isEnabled() {
@@ -161,52 +96,26 @@ public class FoodComponentState {
         this.alwaysEat = alwaysEat;
     }
 
-    public float getConsumeSeconds() {
-        return consumeSeconds;
+    public float getEatSeconds() {
+        return eatSeconds;
     }
 
-    public void setConsumeSeconds(float seconds) {
-        consumeSeconds = Math.max(0.05f, seconds);
-    }
-
-    public boolean hasConsumeParticles() {
-        return hasConsumeParticles;
-    }
-
-    public void setHasConsumeParticles(boolean value) {
-        hasConsumeParticles = value;
-    }
-
-    public ItemUseAnimation getAnimation() {
-        return animation;
-    }
-
-    public void setAnimation(ItemUseAnimation animation) {
-        this.animation = animation == null ? DEFAULT_ANIMATION : animation;
-    }
-
-    public Optional<Holder<SoundEvent>> getConsumeSound() {
-        return consumeSound;
-    }
-
-    public void setConsumeSound(Optional<Holder<SoundEvent>> sound) {
-        consumeSound = sound == null ? Optional.empty() : sound;
-
-
+    public void setEatSeconds(float eatSeconds) {
+        this.eatSeconds = Math.max(0.1f, eatSeconds);
     }
 
     public String getUsingConvertsToId() {
         return usingConvertsToId;
     }
 
-    public void setUsingConvertsToId(String id) {
-        usingConvertsToId = id == null ? "" : id.trim();
-        if (usingConvertsToId.isBlank()) {
+    public void setUsingConvertsToId(String usingConvertsToId) {
+        this.usingConvertsToId = usingConvertsToId == null ? "" : usingConvertsToId.trim();
+        if (this.usingConvertsToId.isBlank()) {
             customUsingConvertsTo = Optional.empty();
             originalUsingConvertsTo = Optional.empty();
         } else {
-            customUsingConvertsTo = filterStackById(customUsingConvertsTo, usingConvertsToId);
-            originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, usingConvertsToId);
+            customUsingConvertsTo = filterStackById(customUsingConvertsTo, this.usingConvertsToId);
+            originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, this.usingConvertsToId);
         }
     }
 
@@ -217,29 +126,19 @@ public class FoodComponentState {
         setNutrition(0);
         setSaturation(0f);
         setAlwaysEat(true);
-        setConsumeSeconds(DEFAULT_CONSUME_SECONDS);
-        setUsingConvertsToId("");
+        setEatSeconds(1.6f);
+        usingConvertsToId = "";
         originalUsingConvertsTo = Optional.empty();
         customUsingConvertsTo = Optional.empty();
-        effects = new ArrayList<>();
-        preservedOtherEffects = new ArrayList<>();
-
         DebugLog.infoKey("cadeditor.debug.food.prepared", describeStack(stack));
     }
 
-    public List<FoodEffectData> getEffects() {
-        return effects.stream().map(FoodEffectData::copy).collect(Collectors.toUnmodifiableList());
+    public List<FoodProperties.PossibleEffect> getEffects() {
+        return List.copyOf(effects);
     }
 
-    public void setEffects(List<FoodEffectData> newEffects) {
-        if (newEffects == null || newEffects.isEmpty()) {
-            effects = new ArrayList<>();
-        } else {
-            effects = newEffects.stream()
-                    .filter(Objects::nonNull)
-                    .map(FoodEffectData::copy)
-                    .collect(Collectors.toCollection(ArrayList::new));
-        }
+    public void setEffects(List<FoodProperties.PossibleEffect> newEffects) {
+        effects = new ArrayList<>(newEffects);
     }
 
     public Optional<ItemStack> resolveUsingConvertsTo() {
@@ -280,12 +179,11 @@ public class FoodComponentState {
         return Optional.of(prepared);
     }
 
-    public List<FoodEffectData> copyEffectsForComponent() {
-        return effects.stream().map(FoodEffectData::copy).collect(Collectors.toUnmodifiableList());
-    }
-
-    public List<ConsumeEffect> getPreservedOtherEffects() {
-        return List.copyOf(preservedOtherEffects);
+    public List<FoodProperties.PossibleEffect> copyEffectsForComponent() {
+        if (effects.isEmpty()) {
+            return List.of();
+        }
+        return List.copyOf(effects);
     }
 
     public void updateOriginalUsingConvertsTo(Optional<ItemStack> stack) {
@@ -317,19 +215,22 @@ public class FoodComponentState {
         ItemStack sanitized = prepareConvertStack(stack);
         customUsingConvertsTo = Optional.of(sanitized);
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(sanitized.getItem());
-        usingConvertsToId = id != null ? id.toString() : "";
+        if (id != null) {
+            usingConvertsToId = id.toString();
+        } else {
+            usingConvertsToId = "";
+        }
         originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, usingConvertsToId);
     }
 
     private ItemStack prepareConvertStack(ItemStack source) {
-        if (source == null || source.isEmpty()) {
+        if (source.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
         ItemStack sanitized = source.copy();
         sanitized.setCount(1);
         sanitized.remove(DataComponents.FOOD);
-        sanitized.remove(DataComponents.CONSUMABLE);
-        sanitized.remove(DataComponents.USE_REMAINDER);
         DebugLog.infoKey("cadeditor.debug.food.convert_sanitize", describeStack(sanitized));
         return sanitized;
     }
@@ -355,47 +256,6 @@ public class FoodComponentState {
         if (stack.get(DataComponents.FOOD) != null) {
             builder.append(" [has food]");
         }
-        if (stack.get(DataComponents.CONSUMABLE) != null) {
-            builder.append(" [has consumable]");
-        }
         return builder.toString();
     }
-
-    public FoodProperties buildFoodProperties() {
-        return new FoodProperties(nutrition, saturation, alwaysEat);
-    }
-
-    public Consumable buildConsumable(List<ConsumeEffect> statusEffects) {
-        Consumable.Builder builder = Consumable.builder()
-                .consumeSeconds(Math.max(0.05f, consumeSeconds))
-                .hasConsumeParticles(hasConsumeParticles)
-                .animation(animation);
-
-        consumeSound.ifPresent(builder::sound);
-
-        for (ConsumeEffect effect : preservedOtherEffects) {
-            builder.onConsume(effect);
-        }
-        for (ConsumeEffect effect : statusEffects) {
-            builder.onConsume(effect);
-        }
-        return builder.build();
-    }
-
-    public Optional<UseRemainder> buildUseRemainder(Optional<ItemStack> convertStack) {
-        return convertStack.map(UseRemainder::new);
-    }
-
-    public record FoodEffectData(MobEffectInstance effect, float probability) {
-        public FoodEffectData {
-            Objects.requireNonNull(effect, "effect");
-            probability = Float.isFinite(probability) ? probability : 0f;
-        }
-
-        public FoodEffectData copy() {
-            return new FoodEffectData(new MobEffectInstance(effect), probability);
-        }
-    }
 }
-
-

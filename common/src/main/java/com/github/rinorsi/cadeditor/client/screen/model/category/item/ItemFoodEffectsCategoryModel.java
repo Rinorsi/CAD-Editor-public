@@ -6,7 +6,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.FoodEffectEntryModel;
 import com.github.rinorsi.cadeditor.client.util.CompatFood;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import com.github.rinorsi.cadeditor.client.screen.model.category.item.FoodComponentState.FoodEffectData;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -16,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.food.FoodProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     private static final int MAX_AMPLIFIER = 255;
 
     private final FoodComponentState state;
-    private List<FoodEffectData> stagedEffects = List.of();
+    private List<FoodProperties.PossibleEffect> stagedEffects = List.of();
 
     public ItemFoodEffectsCategoryModel(ItemEditorModel editor) {
         super(ModTexts.gui("food_effects"), editor);
@@ -69,7 +69,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         getParent().applyFoodComponent();
     }
 
-    private EntryModel createFoodEffectEntry(FoodEffectData effect) {
+    private EntryModel createFoodEffectEntry(FoodProperties.PossibleEffect effect) {
         if (effect != null) {
             MobEffectInstance instance = effect.effect();
             String id = instance.getEffect().unwrapKey()
@@ -121,14 +121,14 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
                 showIcon
         );
 
-        List<FoodEffectData> list;
-        if (stagedEffects instanceof ArrayList<FoodEffectData> existing) {
+        List<FoodProperties.PossibleEffect> list;
+        if (stagedEffects instanceof ArrayList<FoodProperties.PossibleEffect> existing) {
             list = existing;
         } else {
             list = new ArrayList<>();
             stagedEffects = list;
         }
 
-        CompatFood.makeApplyEffect(instance, probability).ifPresent(list::add);
+        CompatFood.makePossibleEffect(instance, probability).ifPresent(list::add);
     }
 }
