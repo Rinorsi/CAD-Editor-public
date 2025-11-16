@@ -4,7 +4,10 @@ import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
@@ -14,6 +17,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -165,8 +170,10 @@ public final class ServerEditorUpdateLogic {
         var entity = level.getEntity(update.getEntityId());
         if (entity != null) {
             try {
-                entity.load(update.getTag());
+                CompoundTag appliedTag = update.getTag().copy();
+                entity.load(appliedTag);
                 if (entity.level() instanceof ServerLevel serverLevel) {
+                    reloadPassengers(serverLevel, entity, appliedTag);
                     serverLevel.getChunkSource().broadcastAndSend(entity,
                             new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues()));
                 }
@@ -177,6 +184,57 @@ public final class ServerEditorUpdateLogic {
             }
         } else {
             CommonUtil.showTargetError(player, ModTexts.ENTITY);
+        }
+    }
+
+    private static void reloadPassengers(ServerLevel level, Entity entity, CompoundTag sourceTag) {
+        clearExistingPassengers(entity);
+        if (!sourceTag.contains("Passengers", Tag.TAG_LIST)) {
+            return;
+        }
+        ListTag passengers = sourceTag.getList("Passengers", Tag.TAG_COMPOUND);
+        for (Tag tag : passengers) {
+            if (tag instanceof CompoundTag passengerTag) {
+                spawnPassengerRecursive(level, entity, passengerTag);
+            }
+        }
+    }
+
+    private static void clearExistingPassengers(Entity entity) {
+        for (Entity passenger : List.copyOf(entity.getPassengers())) {
+            passenger.stopRiding();
+            if (!(passenger instanceof ServerPlayer)) {
+                passenger.discard();
+            }
+        }
+        entity.ejectPassengers();
+    }
+
+    private static void spawnPassengerRecursive(ServerLevel level, Entity vehicle, CompoundTag passengerData) {
+        CompoundTag passengerTag = passengerData.copy();
+        ListTag nested = passengerTag.contains("Passengers", Tag.TAG_LIST)
+                ? passengerTag.getList("Passengers", Tag.TAG_COMPOUND)
+                : null;
+        passengerTag.remove("Passengers");
+        var passenger = EntityType.create(passengerTag, level).orElse(null);
+        if (passenger == null) {
+            return;
+        }
+        if (!passengerData.contains("Pos", Tag.TAG_LIST)) {
+            passenger.moveTo(vehicle.getX(), vehicle.getY(), vehicle.getZ(),
+                    passenger.getYRot(), passenger.getXRot());
+        }
+        level.addFreshEntity(passenger);
+        if (!passenger.startRiding(vehicle, true)) {
+            passenger.discard();
+            return;
+        }
+        if (nested != null) {
+            for (Tag nestedTag : nested) {
+                if (nestedTag instanceof CompoundTag nestedCompound) {
+                    spawnPassengerRecursive(level, passenger, nestedCompound);
+                }
+            }
         }
     }
     private static int toMenuSlotIndex(int invIndex) {

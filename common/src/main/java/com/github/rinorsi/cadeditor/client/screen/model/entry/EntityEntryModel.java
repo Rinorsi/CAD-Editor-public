@@ -65,8 +65,9 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
     }
 
     public CompoundTag copyValue() {
-        CompoundTag value = getValue();
-        return value == null ? new CompoundTag() : value.copy();
+        CompoundTag copy = getValue() == null ? new CompoundTag() : getValue().copy();
+        ensureEntityId(copy);
+        return copy;
     }
 
     @Override
@@ -131,5 +132,14 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
     private static EntityType<?> findEntityType(String value) {
         ResourceLocation location = ClientUtil.parseResourceLocation(value);
         return location == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(null);
+    }
+
+    private void ensureEntityId(CompoundTag tag) {
+        if (tag == null) {
+            return;
+        }
+        if ((!tag.contains("id", Tag.TAG_STRING) || tag.getString("id").isEmpty()) && getEntityType() != null) {
+            tag.putString("id", Objects.requireNonNull(EntityType.getKey(getEntityType())).toString());
+        }
     }
 }
