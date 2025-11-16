@@ -26,7 +26,6 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.OwnableEntity;
-import net.minecraft.world.entity.Saddleable;
 
 public class EntityEditorModel extends StandardEditorModel {
     public EntityEditorModel(EntityEditorContext context) {
@@ -107,17 +106,17 @@ public class EntityEditorModel extends StandardEditorModel {
     }
 
     private boolean hasMountData(Entity entity) {
-        if (entity instanceof Saddleable) {
+        if (entity instanceof LivingEntity) {
             return true;
         }
         CompoundTag tag = getContext().getTag();
         if (tag == null) {
             return false;
         }
-        return tag.contains("Saddle")
+        return tag.contains("Passengers", Tag.TAG_LIST)
+                || tag.contains("Saddle")
                 || tag.contains("Saddled")
                 || tag.contains("SaddleItem", Tag.TAG_COMPOUND)
-                || tag.contains("Passengers", Tag.TAG_LIST)
                 || tag.contains("Leash")
                 || tag.contains("LeashHolder")
                 || tag.contains("ChestedHorse");
