@@ -10,6 +10,7 @@ public abstract class EntryModel implements Model {
     private final BooleanProperty validProperty = BooleanProperty.create(true);
     private final IntegerProperty listIndexProperty = IntegerProperty.create(-1);
     private final IntegerProperty listSizeProperty = IntegerProperty.create(-1);
+    private final BooleanProperty reorderableProperty = BooleanProperty.create(true);
 
     protected EntryModel(CategoryModel category) {
         this.category = category;
@@ -57,6 +58,18 @@ public abstract class EntryModel implements Model {
 
     public void setListSize(int value) {
         listSizeProperty().setValue(value);
+    }
+
+    public boolean isReorderable() {
+        return reorderableProperty().getValue();
+    }
+
+    public BooleanProperty reorderableProperty() {
+        return reorderableProperty;
+    }
+
+    public void setReorderable(boolean value) {
+        reorderableProperty().setValue(value);
     }
 
     public abstract void apply();

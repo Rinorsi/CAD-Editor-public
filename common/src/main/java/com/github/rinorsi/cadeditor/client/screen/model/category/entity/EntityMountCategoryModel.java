@@ -117,7 +117,9 @@ public class EntityMountCategoryModel extends EntityCategoryModel {
         if (!id.isEmpty()) {
             type = EntityType.byString(id).orElse(null);
         }
-        return new EntityEntryModel(this, type, passengerTag, value -> {});
+        EntityEntryModel model = new EntityEntryModel(this, type, passengerTag, value -> {});
+        model.setReorderable(false);
+        return model;
     }
 
     private ItemStack readSaddleItem(CompoundTag data) {

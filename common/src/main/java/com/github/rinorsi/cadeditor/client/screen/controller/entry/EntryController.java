@@ -23,11 +23,12 @@ public abstract class EntryController<M extends EntryModel, V extends EntryView>
         view.getUpButton().disableProperty().bind(model.listIndexProperty().eq(0));
         view.getDownButton().disableProperty().bind(model.listIndexProperty().eq(model.listSizeProperty().substract(1)));
         model.listIndexProperty().addListener(this::updateListButtons);
+        model.reorderableProperty().addListener(value -> updateListButtons(model.getListIndex()));
         updateListButtons(model.getListIndex());
     }
 
     private void updateListButtons(int listIndex) {
-        view.setListButtonsVisible(listIndex >= 0);
+        view.setListButtonsVisible(model.isReorderable() && listIndex >= 0);
     }
 
     protected void resetModel() {

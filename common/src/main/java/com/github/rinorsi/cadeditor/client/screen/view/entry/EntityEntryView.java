@@ -13,6 +13,7 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 public class EntityEntryView extends LabeledEntryView {
     private TextField entityField;
     private TexturedButton selectEntityButton;
+    private TexturedButton pasteFromVaultButton;
     private TexturedButton openEditorButton;
     private TexturedButton openNbtEditorButton;
     private TexturedButton openSnbtEditorButton;
@@ -27,6 +28,8 @@ public class EntityEntryView extends LabeledEntryView {
             content.add(entityField = textField().prefHeight(16), 1);
             content.add(selectEntityButton = texturedButton(ModTextures.SEARCH, 16, 16, false)
                     .tooltip(ModTexts.SEARCH));
+            content.add(pasteFromVaultButton = texturedButton(ModTextures.PASTE, 16, 16, false)
+                    .tooltip(ModTexts.LOAD_VAULT));
             content.add(openEditorButton = texturedButton(ModTextures.EDITOR, 16, 16, false)
                     .tooltip(ModTexts.OPEN_EDITOR));
             content.add(openNbtEditorButton = texturedButton(ModTextures.NBT_EDITOR, 16, 16, false)
@@ -43,6 +46,10 @@ public class EntityEntryView extends LabeledEntryView {
 
     public TexturedButton getSelectEntityButton() {
         return selectEntityButton;
+    }
+
+    public TexturedButton getPasteFromVaultButton() {
+        return pasteFromVaultButton;
     }
 
     public TexturedButton getOpenEditorButton() {

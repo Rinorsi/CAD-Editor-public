@@ -26,7 +26,6 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.OwnableEntity;
-import net.minecraft.tags.EntityTypeTags;
 
 public class EntityEditorModel extends StandardEditorModel {
     public EntityEditorModel(EntityEditorContext context) {
@@ -58,9 +57,7 @@ public class EntityEditorModel extends StandardEditorModel {
             if (isTamable(entity)) {
                 getCategories().add(new EntityTamingCategoryModel(this));
             }
-            if (hasMountData(entity)) {
-                getCategories().add(new EntityMountCategoryModel(this));
-            }
+            getCategories().add(new EntityMountCategoryModel(this));
         }
         if (entity instanceof Mob) {
             getCategories().add(new EntitySpawnSettingsCategoryModel(this));
@@ -104,23 +101,6 @@ public class EntityEditorModel extends StandardEditorModel {
             }
         }
         return false;
-    }
-
-    private boolean hasMountData(Entity entity) {
-        if (entity != null && (entity.getType().is(EntityTypeTags.CAN_EQUIP_SADDLE) || entity.getType().is(EntityTypeTags.CAN_EQUIP_HARNESS))) {
-            return true;
-        }
-        CompoundTag tag = getContext().getTag();
-        if (tag == null) {
-            return false;
-        }
-        return tag.contains("Saddle")
-                || tag.contains("Saddled")
-                || tag.contains("SaddleItem")
-                || tag.contains("Passengers")
-                || tag.contains("Leash")
-                || tag.contains("LeashHolder")
-                || tag.contains("ChestedHorse");
     }
 
     private boolean isTamable(Entity entity) {

@@ -5,6 +5,9 @@ plugins {
     id "maven-publish"
 }
 
+def mixinVersion = rootProject.findProperty("mixin_version") ?: "0.8.7"
+def fabricMixinVersion = rootProject.findProperty("fabric_mixin_version") ?: "0.12.5+mixin.0.8.5"
+
 architectury {
     common("fabric", "neoforge")
 }
@@ -32,11 +35,14 @@ dependencies {
     minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
     mappings loom.officialMojangMappings()
     compileOnly "net.fabricmc:fabric-loader:${rootProject.loader_version}"
-    compileOnly "org.spongepowered:mixin:0.8.7"
+    compileOnly "org.spongepowered:mixin:${mixinVersion}"
     compileOnly "org.ow2.asm:asm:9.6"
     compileOnly "org.ow2.asm:asm-tree:9.6"
     compileOnly "com.google.errorprone:error_prone_annotations:2.28.0"
-    annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
+    loaderLibraries "net.fabricmc:sponge-mixin:${fabricMixinVersion}"
+    annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
+    annotationProcessor "com.google.code.gson:gson:2.10.1"
+    annotationProcessor "com.google.guava:guava:33.2.1-jre"
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
 }

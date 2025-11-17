@@ -77,6 +77,9 @@ allprojects {
 
         curseforgeProjectId = "1352735"
         modrinthProjectId  = "MJW1h2CF"
+        mixinConfigs = rootProject.findProperty("mixin_configs") ?: "cadeditor-common.mixins.json"
+        mixinVersion = rootProject.findProperty("mixin_version") ?: "0.8.7"
+        fabricMixinVersion = rootProject.findProperty("fabric_mixin_version") ?: "0.12.5+mixin.0.8.5"
     }
 
     base {
@@ -98,7 +101,10 @@ allprojects {
             attributes(
                 'Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Implementation-Vendor': rootProject.hasProperty('maven_group') ? rootProject.maven_group : ''
+                'Implementation-Vendor': rootProject.hasProperty('maven_group') ? rootProject.maven_group : '',
+                'MixinConfigs': project.mixinConfigs ?: '',
+                'MixinVersion': project.mixinVersion ?: '',
+                'Fabric-Mixin-Version': project.fabricMixinVersion ?: ''
             )
         }
     }

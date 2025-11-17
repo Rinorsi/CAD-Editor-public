@@ -6,6 +6,8 @@ import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
@@ -19,6 +21,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -175,12 +180,29 @@ public final class ServerEditorUpdateLogic {
         var entity = level.getEntity(update.getEntityId());
         if (entity != null) {
             try {
+                boolean passengersDefined = false;
+                ListTag requestedPassengers = null;
+                if (update.getTag() != null) {
+                    var passengersOpt = update.getTag().getList("Passengers");
+                    if (passengersOpt.isPresent()) {
+                        passengersDefined = true;
+                        ListTag list = passengersOpt.get();
+                        requestedPassengers = list.isEmpty() ? null : list.copy();
+                    }
+                }
                 float requestedHealth = update.getTag() == null ? Float.NaN : update.getTag().getFloatOr("Health", Float.NaN);
                 if (entity instanceof LivingEntity livingBefore) {
                     logLivingEntityState("before_load", livingBefore, requestedHealth);
                 }
                 var input = TagValueInput.create(ProblemReporter.DISCARDING, player.level().registryAccess(), update.getTag());
                 entity.load(input);
+                if (passengersDefined && entity.level() instanceof ServerLevel serverLevel) {
+                    if (requestedPassengers != null) {
+                        rebuildPassengers(serverLevel, entity, requestedPassengers);
+                    } else {
+                        clearPassengers(entity);
+                    }
+                }
                 if (entity instanceof LivingEntity livingAfterLoad) {
                     logLivingEntityState("after_load", livingAfterLoad, requestedHealth);
                     if (!Float.isNaN(requestedHealth)) {
@@ -361,6 +383,35 @@ public final class ServerEditorUpdateLogic {
             maxHealth.setBaseValue(sanitized);
         }
         livingEntity.setHealth(Math.min(sanitized, livingEntity.getMaxHealth()));
+    }
+
+    private static void rebuildPassengers(ServerLevel level, Entity root, ListTag passengers) {
+        clearPassengers(root);
+        if (passengers == null || passengers.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < passengers.size(); i++) {
+            if (!(passengers.get(i) instanceof CompoundTag passengerTag)) {
+                continue;
+            }
+            Entity passenger = EntityType.loadEntityRecursive(passengerTag, level, EntitySpawnReason.COMMAND, entity -> {
+                level.addFreshEntity(entity);
+                return entity;
+            });
+            if (passenger != null) {
+                passenger.startRiding(root, true);
+            }
+        }
+    }
+
+    private static void clearPassengers(Entity root) {
+        if (root.getPassengers().isEmpty()) {
+            return;
+        }
+        for (Entity passenger : List.copyOf(root.getPassengers())) {
+            passenger.stopRiding();
+            passenger.discard();
+        }
     }
 
     private static boolean isFeatureDebugEnabled() {
