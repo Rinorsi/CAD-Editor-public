@@ -6,6 +6,7 @@ import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -68,16 +69,18 @@ public class ItemSuspiciousStewEffectsCategoryModel extends ItemEditorCategoryMo
         }
 
         CompoundTag data = getData();
-        if (data == null || !data.contains("components", Tag.TAG_COMPOUND)) return List.of();
-        CompoundTag comps = data.getCompound("components");
-        if (!comps.contains("minecraft:suspicious_stew_effects", Tag.TAG_LIST)) return List.of();
-        ListTag list = comps.getList("minecraft:suspicious_stew_effects", Tag.TAG_COMPOUND);
+        if (data == null) return List.of();
+        CompoundTag comps = data.getCompound("components").orElse(null);
+        if (comps == null) return List.of();
+        ListTag list = comps.getList("minecraft:suspicious_stew_effects").orElse(null);
+        if (list == null) return List.of();
         List<EffectData> out = new ArrayList<>(list.size());
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag c = list.getCompound(i);
-            if (!c.contains("id", Tag.TAG_STRING)) continue;
-            String id = c.getString("id");
-            int duration = c.contains("duration", Tag.TAG_INT) ? c.getInt("duration") : 160;
+            CompoundTag c = list.getCompound(i).orElse(null);
+            if (c == null) continue;
+            String id = NbtHelper.getString(c, "id", "");
+            if (id.isEmpty()) continue;
+            int duration = c.getIntOr("duration", 160);
             out.add(new EffectData(id, duration));
         }
         return out;
@@ -113,7 +116,7 @@ public class ItemSuspiciousStewEffectsCategoryModel extends ItemEditorCategoryMo
         if (data != null) {
             return new PotionEffectEntryModel(this, data.id(), 0, data.duration(), false, true, true, this::collectEffect);
         }
-        String defaultId = MobEffects.MOVEMENT_SPEED.unwrapKey()
+        String defaultId = MobEffects.SPEED.unwrapKey()
                 .map(key -> key.location().toString())
                 .orElse("minecraft:movement_speed");
         return new PotionEffectEntryModel(this, defaultId, 0, 160, false, true, true, this::collectEffect);

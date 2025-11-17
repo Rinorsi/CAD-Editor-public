@@ -5,7 +5,7 @@ import com.github.franckyi.databindings.api.ObjectProperty;
 import com.github.franckyi.databindings.api.StringProperty;
 import com.github.rinorsi.cadeditor.client.context.EditorContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.nbt.TagParser;
+import com.github.rinorsi.cadeditor.client.util.SnbtHelper;
 
 @SuppressWarnings("this-escape")
 public class SNBTEditorModel implements EditorModel {
@@ -19,7 +19,7 @@ public class SNBTEditorModel implements EditorModel {
         valueProperty = StringProperty.create(context.getTag().toString());
         validProperty = valueProperty.mapToBoolean(value -> {
             try {
-                return TagParser.parseTag(value) != null;
+                return SnbtHelper.parse(value) != null;
             } catch (CommandSyntaxException e) {
                 return false;
             }
@@ -46,7 +46,7 @@ public class SNBTEditorModel implements EditorModel {
 
     private void refreshPreview() {
         try {
-            previewRootProperty().setValue(SNBTPreviewNode.fromTag(TagParser.parseTag(getValue())));
+            previewRootProperty().setValue(SNBTPreviewNode.fromTag(SnbtHelper.parse(getValue())));
         } catch (CommandSyntaxException e) {
             previewRootProperty().setValue(null);
         }
@@ -55,7 +55,7 @@ public class SNBTEditorModel implements EditorModel {
     @Override
     public void apply() {
         try {
-            context.setTag(TagParser.parseTag(getValue()));
+            context.setTag(SnbtHelper.parse(getValue()));
         } catch (CommandSyntaxException e) {
             throw new RuntimeException(e);
         }

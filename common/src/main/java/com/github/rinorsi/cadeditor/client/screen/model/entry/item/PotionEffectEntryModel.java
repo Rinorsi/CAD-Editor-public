@@ -8,7 +8,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.SelectionEntryMode
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.List;
@@ -177,34 +176,20 @@ public class PotionEffectEntryModel extends SelectionEntryModel {
 
     private static CompoundTag normalizeTag(CompoundTag tag) {
         CompoundTag normalized = new CompoundTag();
-        String id = "";
-        if (tag.contains("id", Tag.TAG_STRING)) {
-            id = tag.getString("id");
-        } else if (tag.contains("Id", Tag.TAG_STRING)) {
-            id = tag.getString("Id");
-        } else if (tag.contains("effect", Tag.TAG_STRING)) {
-            id = tag.getString("effect");
-        }
+        String id = tag.getString("id")
+                .or(() -> tag.getString("Id"))
+                .or(() -> tag.getString("effect"))
+                .orElse("");
         normalized.putString("id", id);
-        int amplifier = tag.contains("amplifier", Tag.TAG_INT) ? tag.getInt("amplifier") : tag.getInt("Amplifier");
-        int duration = tag.contains("duration", Tag.TAG_INT) ? tag.getInt("duration") : tag.getInt("Duration");
-        boolean ambient = tag.contains("ambient", Tag.TAG_ANY_NUMERIC) ? tag.getBoolean("ambient") : tag.getBoolean("Ambient");
-        boolean showParticles;
-        if (tag.contains("show_particles", Tag.TAG_ANY_NUMERIC)) {
-            showParticles = tag.getBoolean("show_particles");
-        } else if (tag.contains("ShowParticles", Tag.TAG_ANY_NUMERIC)) {
-            showParticles = tag.getBoolean("ShowParticles");
-        } else {
-            showParticles = true;
-        }
-        boolean showIcon;
-        if (tag.contains("show_icon", Tag.TAG_ANY_NUMERIC)) {
-            showIcon = tag.getBoolean("show_icon");
-        } else if (tag.contains("ShowIcon", Tag.TAG_ANY_NUMERIC)) {
-            showIcon = tag.getBoolean("ShowIcon");
-        } else {
-            showIcon = true;
-        }
+        int amplifier = tag.getInt("amplifier").orElseGet(() -> tag.getIntOr("Amplifier", 0));
+        int duration = tag.getInt("duration").orElseGet(() -> tag.getIntOr("Duration", 0));
+        boolean ambient = tag.getBoolean("ambient").orElseGet(() -> tag.getBooleanOr("Ambient", false));
+        boolean showParticles = tag.getBoolean("show_particles")
+                .or(() -> tag.getBoolean("ShowParticles"))
+                .orElse(true);
+        boolean showIcon = tag.getBoolean("show_icon")
+                .or(() -> tag.getBoolean("ShowIcon"))
+                .orElse(true);
         normalized.putInt("amplifier", amplifier);
         normalized.putInt("duration", Math.max(1, duration));
         normalized.putBoolean("ambient", ambient);

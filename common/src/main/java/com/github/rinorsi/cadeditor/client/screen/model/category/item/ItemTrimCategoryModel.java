@@ -3,9 +3,9 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
-import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.TrimMaterialSelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.TrimPatternSelectionEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -24,7 +24,6 @@ import java.util.Optional;
 public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
     private String patternId = "";
     private String materialId = "";
-    private boolean showInTooltip = true;
 
     private TrimPatternSelectionEntryModel patternEntry;
     private TrimMaterialSelectionEntryModel materialEntry;
@@ -46,9 +45,6 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
                     .map(ResourceKey::location)
                     .map(ResourceLocation::toString)
                     .orElse("");
-            showInTooltip = !trim.withTooltip(false).equals(trim);
-        } else {
-            showInTooltip = true;
         }
         patternEntry = new TrimPatternSelectionEntryModel(this, patternId,
                 value -> patternId = value == null ? "" : value.trim());
@@ -59,8 +55,6 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
         //TODO 记得加上中文搜索和常用排序
         getEntries().add(patternEntry);
         getEntries().add(materialEntry);
-        getEntries().add(new BooleanEntryModel(this, ModTexts.TRIM_SHOW_TOOLTIP, showInTooltip,
-                value -> showInTooltip = value == null || value));
     }
 
     @Override
@@ -82,14 +76,16 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
         }
         patternEntry.setValid(true);
         materialEntry.setValid(true);
-        ArmorTrim trim = new ArmorTrim(materialHolder.get(), patternHolder.get(), showInTooltip);
+        ArmorTrim trim = new ArmorTrim(materialHolder.get(), patternHolder.get());
         stack.set(DataComponents.TRIM, trim);
         CompoundTag data = getData();
-        if (data != null && data.contains("components")) {
-            CompoundTag components = data.getCompound("components");
-            components.remove("minecraft:trim");
-            if (components.isEmpty()) {
-                data.remove("components");
+        if (data != null) {
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                components.remove("minecraft:trim");
+                if (components.isEmpty()) {
+                    data.remove("components");
+                }
             }
         }
     }

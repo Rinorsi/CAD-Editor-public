@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotDecorationEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
@@ -77,10 +78,9 @@ public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
 
     private void cleanComponentTag() {
         CompoundTag data = getData();
-        if (data == null || !data.contains("components")) {
-            return;
-        }
-        CompoundTag components = data.getCompound("components");
+        if (data == null) return;
+        CompoundTag components = data.getCompound("components").orElse(null);
+        if (components == null) return;
         components.remove("minecraft:pot_decorations");
         if (components.isEmpty()) {
             data.remove("components");

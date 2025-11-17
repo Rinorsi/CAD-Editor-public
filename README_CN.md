@@ -23,7 +23,7 @@ https://github.com/skyecodes/IBE-Editor
 * 快速复制/导出：一键复制为命令，方便分享
 
 ## 安装与依赖
-* 运行环境：目前仅适用于 Minecraft 1.21.4（后续逐步适配更多版本）
+* 运行环境：目前仅适用于 Minecraft 1.21.8（后续逐步适配更多版本）
 * 加载器：NeoForge 或 Fabric
 * Fabric 版本需要安装 [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 * 建议使用 Java 21

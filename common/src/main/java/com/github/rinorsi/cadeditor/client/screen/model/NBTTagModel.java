@@ -7,7 +7,6 @@ import com.github.franckyi.databindings.api.StringProperty;
 import com.github.franckyi.guapi.api.mvc.Model;
 import com.github.franckyi.guapi.api.node.TreeView;
 import com.github.rinorsi.cadeditor.client.context.EditorContext;
-import com.github.rinorsi.cadeditor.mixin.CompoundTagMixin;
 import net.minecraft.nbt.*;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -46,7 +45,7 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
         valueProperty = StringProperty.create(value);
         if (tag != null) {
             switch (tag.getId()) {
-                case Tag.TAG_COMPOUND -> children.setAll(((CompoundTagMixin) tag).getEntries()
+                case Tag.TAG_COMPOUND -> children.setAll(((CompoundTag) tag).entrySet()
                         .stream()
                         .map(entry -> new NBTTagModel(getContext(), entry.getValue(), this, entry.getKey(), null))
                         .toList()
@@ -68,13 +67,14 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
                         .map(l -> new NBTTagModel(getContext(), Tag.TAG_LONG, this, Long.toString(l)))
                         .toList()
                 );
-                case Tag.TAG_BYTE -> setValue(Byte.toString(((ByteTag) tag).getAsByte()));
-                case Tag.TAG_SHORT -> setValue(Short.toString(((ShortTag) tag).getAsShort()));
-                case Tag.TAG_INT -> setValue(Integer.toString(((IntTag) tag).getAsInt()));
-                case Tag.TAG_LONG -> setValue(Long.toString(((LongTag) tag).getAsLong()));
-                case Tag.TAG_FLOAT -> setValue(Float.toString(((FloatTag) tag).getAsFloat()));
-                case Tag.TAG_DOUBLE -> setValue(Double.toString(((DoubleTag) tag).getAsDouble()));
-                default -> setValue(tag.getAsString());
+                case Tag.TAG_BYTE -> setValue(Byte.toString(((ByteTag) tag).byteValue()));
+                case Tag.TAG_SHORT -> setValue(Short.toString(((ShortTag) tag).shortValue()));
+                case Tag.TAG_INT -> setValue(Integer.toString(((IntTag) tag).intValue()));
+                case Tag.TAG_LONG -> setValue(Long.toString(((LongTag) tag).longValue()));
+                case Tag.TAG_FLOAT -> setValue(Float.toString(((FloatTag) tag).floatValue()));
+                case Tag.TAG_DOUBLE -> setValue(Double.toString(((DoubleTag) tag).doubleValue()));
+                case Tag.TAG_STRING -> setValue(((StringTag) tag).value());
+                default -> setValue(tag.toString());
             }
         }
         getChildren().addListener(() -> getRoot().setChildrenChanged(true));
@@ -168,13 +168,13 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
                     return FloatTag.valueOf(Float.parseFloat(getValue()));
                 case Tag.TAG_DOUBLE:
                     return DoubleTag.valueOf(Double.parseDouble(getValue()));
-                case Tag.TAG_BYTE_ARRAY:
-                    return new ByteArrayTag(getChildren()
-                            .stream()
-                            .map(NBTTagModel::getValue)
-                            .map(Byte::parseByte)
-                            .toList()
-                    );
+                case Tag.TAG_BYTE_ARRAY: {
+                    byte[] bytes = new byte[getChildren().size()];
+                    for (int i = 0; i < bytes.length; i++) {
+                        bytes[i] = Byte.parseByte(getChildren().get(i).getValue());
+                    }
+                    return new ByteArrayTag(bytes);
+                }
                 case Tag.TAG_STRING:
                     return StringTag.valueOf(getValue());
                 case Tag.TAG_LIST:
@@ -188,20 +188,20 @@ public class NBTTagModel implements TreeView.TreeItem<NBTTagModel>, Model {
                     CompoundTag compoundTag = new CompoundTag();
                     getChildren().forEach(childTag -> compoundTag.put(childTag.getName(), childTag.build()));
                     return compoundTag;
-                case Tag.TAG_INT_ARRAY:
-                    return new IntArrayTag(getChildren()
-                            .stream()
-                            .map(NBTTagModel::getValue)
-                            .map(Integer::parseInt)
-                            .toList()
-                    );
-                case Tag.TAG_LONG_ARRAY:
-                    return new LongArrayTag(getChildren()
-                            .stream()
-                            .map(NBTTagModel::getValue)
-                            .map(Long::parseLong)
-                            .toList()
-                    );
+                case Tag.TAG_INT_ARRAY: {
+                    int[] ints = new int[getChildren().size()];
+                    for (int i = 0; i < ints.length; i++) {
+                        ints[i] = Integer.parseInt(getChildren().get(i).getValue());
+                    }
+                    return new IntArrayTag(ints);
+                }
+                case Tag.TAG_LONG_ARRAY: {
+                    long[] longs = new long[getChildren().size()];
+                    for (int i = 0; i < longs.length; i++) {
+                        longs[i] = Long.parseLong(getChildren().get(i).getValue());
+                    }
+                    return new LongArrayTag(longs);
+                }
             }
         }
         return null;

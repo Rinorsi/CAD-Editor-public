@@ -14,8 +14,24 @@ public class VanillaTextAreaSkinDelegate<N extends TextArea> extends MultiLineEd
     private final MultiLineEditBoxMixin self;
     private final MultilineTextFieldMixin textFieldMixin;
 
+    private static final int DEFAULT_TEXT_COLOR = 0xffdfdfdf;
+    private static final int DEFAULT_CURSOR_COLOR = 0xffd0d0d0;
+
     public VanillaTextAreaSkinDelegate(N node) {
-        super(Minecraft.getInstance().font, node.getX(), node.getY(), node.getWidth() - 8, node.getHeight(), node.getPlaceholder(), node.getLabel());
+        super(
+                Minecraft.getInstance().font,
+                node.getX(),
+                node.getY(),
+                node.getWidth() - 8,
+                node.getHeight(),
+                node.getPlaceholder(),
+                node.getLabel(),
+                DEFAULT_TEXT_COLOR,
+                true,
+                DEFAULT_CURSOR_COLOR,
+                true,
+                true
+        );
         this.node = node;
         self = (MultiLineEditBoxMixin) this;
         textFieldMixin = (MultilineTextFieldMixin) self.getTextField();

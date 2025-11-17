@@ -21,6 +21,7 @@ import java.util.List;
 public class ItemToolCategoryModel extends ItemEditorCategoryModel {
     private float defaultMiningSpeed;
     private int damagePerBlock;
+    private boolean creativeCanBreak;
 
     public ItemToolCategoryModel(ItemEditorModel editor) {
         super(ModTexts.TOOL, editor);
@@ -35,9 +36,11 @@ public class ItemToolCategoryModel extends ItemEditorCategoryModel {
         if (effective != null) {
             defaultMiningSpeed = effective.defaultMiningSpeed();
             damagePerBlock = effective.damagePerBlock();
+            creativeCanBreak = effective.canDestroyBlocksInCreative();
         } else {
             defaultMiningSpeed = 1f;
             damagePerBlock = 0;
+            creativeCanBreak = false;
         }
         getEntries().add(new FloatEntryModel(this, ModTexts.TOOL_MINING_SPEED, defaultMiningSpeed,
                 value -> defaultMiningSpeed = value == null ? 1f : value));
@@ -91,17 +94,19 @@ public class ItemToolCategoryModel extends ItemEditorCategoryModel {
         if (hasInvalid) {
             return;
         }
-        if (parsedRules.isEmpty() && Math.abs(defaultMiningSpeed - 1f) < 1e-6 && damagePerBlock <= 0) {
+        if (parsedRules.isEmpty() && Math.abs(defaultMiningSpeed - 1f) < 1e-6 && damagePerBlock <= 0 && !creativeCanBreak) {
             stack.remove(DataComponents.TOOL);
         } else {
-            stack.set(DataComponents.TOOL, new Tool(parsedRules, defaultMiningSpeed, damagePerBlock));
+            stack.set(DataComponents.TOOL, new Tool(parsedRules, defaultMiningSpeed, damagePerBlock, creativeCanBreak));
         }
         CompoundTag tag = getData();
-        if (tag != null && tag.contains("components")) {
-            CompoundTag components = tag.getCompound("components");
-            components.remove("minecraft:tool");
-            if (components.isEmpty()) {
-                tag.remove("components");
+        if (tag != null) {
+            CompoundTag components = tag.getCompound("components").orElse(null);
+            if (components != null) {
+                components.remove("minecraft:tool");
+                if (components.isEmpty()) {
+                    tag.remove("components");
+                }
             }
         }
     }

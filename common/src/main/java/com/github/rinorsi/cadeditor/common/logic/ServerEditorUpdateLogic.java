@@ -1,29 +1,32 @@
 package com.github.rinorsi.cadeditor.common.logic;
 
+import com.github.franckyi.guapi.api.util.DebugMode;
+import com.github.rinorsi.cadeditor.client.ClientConfiguration;
 import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
+import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.TagValueInput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,7 +46,7 @@ public final class ServerEditorUpdateLogic {
             return;
         }
         try {
-            int hotbarIdx = player.getInventory().selected;
+            int hotbarIdx = player.getInventory().getSelectedSlot();
             player.getInventory().setItem(hotbarIdx, normalizedStack.copy());
             player.setItemInHand(InteractionHand.MAIN_HAND, normalizedStack.copy());
 
@@ -151,7 +154,8 @@ public final class ServerEditorUpdateLogic {
                     CommonUtil.showTargetError(player, ModTexts.BLOCK);
                     return;
                 }
-                blockEntity.loadWithComponents(update.getTag(), player.registryAccess());
+                var input = TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), update.getTag());
+                blockEntity.loadWithComponents(input);
                 blockEntity.setChanged();
             }
             level.sendBlockUpdated(pos, oldState, currentState, Block.UPDATE_CLIENTS);
@@ -171,12 +175,45 @@ public final class ServerEditorUpdateLogic {
         var entity = level.getEntity(update.getEntityId());
         if (entity != null) {
             try {
-                CompoundTag appliedTag = update.getTag().copy();
-                entity.load(appliedTag);
+                float requestedHealth = update.getTag() == null ? Float.NaN : update.getTag().getFloatOr("Health", Float.NaN);
+                if (entity instanceof LivingEntity livingBefore) {
+                    logLivingEntityState("before_load", livingBefore, requestedHealth);
+                }
+                var input = TagValueInput.create(ProblemReporter.DISCARDING, player.level().registryAccess(), update.getTag());
+                entity.load(input);
+                if (entity instanceof LivingEntity livingAfterLoad) {
+                    logLivingEntityState("after_load", livingAfterLoad, requestedHealth);
+                    if (!Float.isNaN(requestedHealth)) {
+                        applyRequestedHealth(livingAfterLoad, requestedHealth);
+                        logLivingEntityState("after_applied", livingAfterLoad, requestedHealth);
+                    }
+                }
+                ClientboundSetEntityDataPacket dataPacket =
+                        new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues());
                 if (entity.level() instanceof ServerLevel serverLevel) {
-                    reloadPassengers(serverLevel, entity, appliedTag);
-                    serverLevel.getChunkSource().broadcastAndSend(entity,
-                            new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues()));
+                    serverLevel.getChunkSource().broadcastAndSend(entity, dataPacket);
+                }
+                if (entity instanceof ServerPlayer targetPlayer) {
+                    targetPlayer.connection.send(dataPacket);
+                }
+
+                if (entity instanceof LivingEntity livingEntity) {
+                    ClientboundUpdateAttributesPacket attributesPacket =
+                            new ClientboundUpdateAttributesPacket(
+                                    entity.getId(),
+                                    livingEntity.getAttributes().getSyncableAttributes());
+                    if (entity.level() instanceof ServerLevel serverLevel) {
+                        serverLevel.getChunkSource().broadcastAndSend(entity, attributesPacket);
+                    }
+                    if (entity instanceof ServerPlayer targetPlayer) {
+                        targetPlayer.connection.send(attributesPacket);
+                        targetPlayer.connection.send(new ClientboundSetHealthPacket(
+                                targetPlayer.getHealth(),
+                                targetPlayer.getFoodData().getFoodLevel(),
+                                targetPlayer.getFoodData().getSaturationLevel()
+                        ));
+                    }
+                    logLivingEntityState("after_packets", livingEntity, requestedHealth);
                 }
                 CommonUtil.showUpdateSuccess(player, ModTexts.ENTITY);
             } catch (Exception e) {
@@ -187,58 +224,6 @@ public final class ServerEditorUpdateLogic {
             CommonUtil.showTargetError(player, ModTexts.ENTITY);
         }
     }
-
-    private static void reloadPassengers(ServerLevel level, Entity entity, CompoundTag sourceTag) {
-        clearExistingPassengers(entity);
-        if (!sourceTag.contains("Passengers", Tag.TAG_LIST)) {
-            return;
-        }
-        ListTag passengers = sourceTag.getList("Passengers", Tag.TAG_COMPOUND);
-        for (Tag tag : passengers) {
-            if (tag instanceof CompoundTag passengerTag) {
-                spawnPassengerRecursive(level, entity, passengerTag);
-            }
-        }
-    }
-
-    private static void clearExistingPassengers(Entity entity) {
-        for (Entity passenger : List.copyOf(entity.getPassengers())) {
-            passenger.stopRiding();
-            if (!(passenger instanceof ServerPlayer)) {
-                passenger.discard();
-            }
-        }
-        entity.ejectPassengers();
-    }
-
-    private static void spawnPassengerRecursive(ServerLevel level, Entity vehicle, CompoundTag passengerData) {
-        CompoundTag passengerTag = passengerData.copy();
-        ListTag nested = passengerTag.contains("Passengers", Tag.TAG_LIST)
-                ? passengerTag.getList("Passengers", Tag.TAG_COMPOUND)
-                : null;
-        passengerTag.remove("Passengers");
-        var passenger = EntityType.create(passengerTag, level, EntitySpawnReason.COMMAND).orElse(null);
-        if (passenger == null) {
-            return;
-        }
-        if (!passengerData.contains("Pos", Tag.TAG_LIST)) {
-            passenger.moveTo(vehicle.getX(), vehicle.getY(), vehicle.getZ(),
-                    passenger.getYRot(), passenger.getXRot());
-        }
-        level.addFreshEntity(passenger);
-        if (!passenger.startRiding(vehicle, true)) {
-            passenger.discard();
-            return;
-        }
-        if (nested != null) {
-            for (Tag nestedTag : nested) {
-                if (nestedTag instanceof CompoundTag nestedCompound) {
-                    spawnPassengerRecursive(level, passenger, nestedCompound);
-                }
-            }
-        }
-    }
-
     private static int toMenuSlotIndex(int invIndex) {
         return (invIndex >= 0 && invIndex < 9) ? 36 + invIndex : invIndex;
     }
@@ -246,7 +231,7 @@ public final class ServerEditorUpdateLogic {
     private static void syncMainHand(ServerPlayer player) {
         var menu = (player.containerMenu != null) ? player.containerMenu : player.inventoryMenu;
         int stateId = menu.incrementStateId();
-        int hotbarIdx = player.getInventory().selected;
+        int hotbarIdx = player.getInventory().getSelectedSlot();
         int menuSlot = 36 + hotbarIdx;
 
         player.connection.send(new ClientboundContainerSetSlotPacket(
@@ -317,7 +302,7 @@ public final class ServerEditorUpdateLogic {
     }
 
     private static void scheduleVerification(ServerPlayer player, Runnable action) {
-        var server = player.serverLevel().getServer();
+        var server = player.level().getServer();
         server.execute(() -> server.execute(action));
     }
 
@@ -350,5 +335,40 @@ public final class ServerEditorUpdateLogic {
             return false;
         }
         return a.getCount() == b.getCount() && ItemStack.isSameItemSameComponents(a, b);
+    }
+
+    private static void logLivingEntityState(String stage, LivingEntity livingEntity, float requestedHealth) {
+        if (!isFeatureDebugEnabled()) {
+            return;
+        }
+        try {
+            LOGGER.info("[CAD-Editor][EntityUpdate][{}] entity='{}' id={} uuid={} health={} max={} requestedHealth={}",
+                    stage,
+                    livingEntity.getName().getString(),
+                    livingEntity.getId(),
+                    livingEntity.getUUID(),
+                    livingEntity.getHealth(),
+                    livingEntity.getMaxHealth(),
+                    requestedHealth);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void applyRequestedHealth(LivingEntity livingEntity, float requestedHealth) {
+        float sanitized = requestedHealth <= 0f ? 0.0001f : requestedHealth;
+        AttributeInstance maxHealth = livingEntity.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(sanitized);
+        }
+        livingEntity.setHealth(Math.min(sanitized, livingEntity.getMaxHealth()));
+    }
+
+    private static boolean isFeatureDebugEnabled() {
+        try {
+            return ClientConfiguration.INSTANCE != null
+                    && ClientConfiguration.INSTANCE.getGuapiDebugMode() == DebugMode.FEATURE;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

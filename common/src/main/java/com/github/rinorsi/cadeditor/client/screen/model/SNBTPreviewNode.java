@@ -37,13 +37,11 @@ public final class SNBTPreviewNode implements TreeView.TreeItem<SNBTPreviewNode>
         switch (tag.getId()) {
             case Tag.TAG_COMPOUND -> {
                 CompoundTag compound = (CompoundTag) tag;
-                for (String key : compound.getAllKeys()) {
-                    Tag child = compound.get(key);
-                    SNBTPreviewNode childNode = new SNBTPreviewNode(describe(key, child, null));
+                for (var entry : compound.entrySet()) {
+                    Tag child = entry.getValue();
+                    SNBTPreviewNode childNode = new SNBTPreviewNode(describe(entry.getKey(), child, null));
                     addChild(node, childNode);
-                    if (child != null) {
-                        populate(childNode, child);
-                    }
+                    populate(childNode, child);
                 }
             }
             case Tag.TAG_LIST -> {
@@ -99,13 +97,14 @@ public final class SNBTPreviewNode implements TreeView.TreeItem<SNBTPreviewNode>
             case Tag.TAG_COMPOUND -> prefix + "Compound (" + ((CompoundTag) tag).size() + ")";
             case Tag.TAG_LIST -> {
                 ListTag list = (ListTag) tag;
-                String type = TagTypes.getType(list.getElementType()).getName();
+                byte elementId = list.isEmpty() ? Tag.TAG_END : list.get(0).getId();
+                String type = TagTypes.getType(elementId).getName();
                 yield prefix + "List<" + type + "> (" + list.size() + ")";
             }
             case Tag.TAG_BYTE_ARRAY -> prefix + "ByteArray (" + ((ByteArrayTag) tag).getAsByteArray().length + ")";
             case Tag.TAG_INT_ARRAY -> prefix + "IntArray (" + ((IntArrayTag) tag).getAsIntArray().length + ")";
             case Tag.TAG_LONG_ARRAY -> prefix + "LongArray (" + ((LongArrayTag) tag).getAsLongArray().length + ")";
-            default -> prefix + tag.getAsString();
+            default -> prefix + tag.toString();
         };
     }
 

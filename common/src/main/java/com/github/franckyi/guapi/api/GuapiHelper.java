@@ -16,6 +16,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -419,7 +420,15 @@ public final class GuapiHelper {
     }
 
     public static ClickEvent event(ClickEvent.Action action, String value) {
-        return new ClickEvent(action, value);
+        return switch (action) {
+            case OPEN_URL -> new ClickEvent.OpenUrl(URI.create(value));
+            case OPEN_FILE -> new ClickEvent.OpenFile(value);
+            case RUN_COMMAND -> new ClickEvent.RunCommand(value);
+            case SUGGEST_COMMAND -> new ClickEvent.SuggestCommand(value);
+            case CHANGE_PAGE -> new ClickEvent.ChangePage(Integer.parseInt(value));
+            case COPY_TO_CLIPBOARD -> new ClickEvent.CopyToClipboard(value);
+            default -> throw new UnsupportedOperationException("Unsupported click action: " + action);
+        };
     }
 
     public static ClickEvent link(String url) {

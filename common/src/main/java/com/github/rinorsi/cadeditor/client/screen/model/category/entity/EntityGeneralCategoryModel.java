@@ -7,13 +7,13 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ReadOnlyStringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.TextEntryModel;
+import com.github.rinorsi.cadeditor.client.util.ComponentJsonHelper;
+import com.github.rinorsi.cadeditor.client.util.NbtUuidHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.UUID;
@@ -31,7 +31,8 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
 
     @Override
     protected void setupEntries() {
-        getEntries().add(new FloatEntryModel(this, ModTexts.HEALTH, getData().getFloat(HEALTH_TAG), this::setHealth));
+        float health = getData().getFloatOr(HEALTH_TAG, 0f);
+        getEntries().add(new FloatEntryModel(this, ModTexts.HEALTH, health, this::setHealth));
         getEntries().add(new TextEntryModel(this, ModTexts.CUSTOM_NAME, getCustomName(), this::setCustomName));
 
         String playerUuid = resolvePlayerUuid();
@@ -39,12 +40,13 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
             getEntries().add(new ReadOnlyStringEntryModel(this, ModTexts.gui("uuid"), playerUuid));
         }
 
-        getEntries().add(new BooleanEntryModel(this, ModTexts.ALWAYS_SHOW_NAME, getData().getBoolean("CustomNameVisible"), b -> putBooleanOrRemove("CustomNameVisible", b)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.INVULNERABLE, getData().getBoolean("Invulnerable"), b -> getData().putBoolean("Invulnerable", b)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.SILENT, getData().getBoolean("Silent"), b -> putBooleanOrRemove("Silent", b)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.NO_GRAVITY, getData().getBoolean("NoGravity"), b -> putBooleanOrRemove("NoGravity", b)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.GLOWING, getData().getBoolean("Glowing"), b -> putBooleanOrRemove("Glowing", b)));
-        getEntries().add(new IntegerEntryModel(this, ModTexts.FIRE, getData().getShort("Fire"), s -> getData().putShort("Fire", s.shortValue())));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.ALWAYS_SHOW_NAME, getData().getBooleanOr("CustomNameVisible", false), b -> putBooleanOrRemove("CustomNameVisible", b)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.INVULNERABLE, getData().getBooleanOr("Invulnerable", false), b -> getData().putBoolean("Invulnerable", b)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.SILENT, getData().getBooleanOr("Silent", false), b -> putBooleanOrRemove("Silent", b)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.NO_GRAVITY, getData().getBooleanOr("NoGravity", false), b -> putBooleanOrRemove("NoGravity", b)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.GLOWING, getData().getBooleanOr("Glowing", false), b -> putBooleanOrRemove("Glowing", b)));
+        short fire = getData().getShortOr("Fire", (short) 0);
+        getEntries().add(new IntegerEntryModel(this, ModTexts.FIRE, (int) fire, s -> getData().putShort("Fire", s.shortValue())));
     }
 
     private String resolvePlayerUuid() {
@@ -53,25 +55,28 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
         }
         CompoundTag data = getData();
         if (data != null) {
-            if (data.hasUUID("UUID")) {
-                return data.getUUID("UUID").toString();
+            UUID uuid = NbtUuidHelper.getUuid(data, "UUID");
+            if (uuid != null) {
+                return uuid.toString();
             }
-            if (data.contains("UUIDMost", Tag.TAG_LONG) && data.contains("UUIDLeast", Tag.TAG_LONG)) {
-                return new UUID(data.getLong("UUIDMost"), data.getLong("UUIDLeast")).toString();
+            if (data.getLong("UUIDMost").isPresent() && data.getLong("UUIDLeast").isPresent()) {
+                long most = data.getLongOr("UUIDMost", 0L);
+                long least = data.getLongOr("UUIDLeast", 0L);
+                return new UUID(most, least).toString();
             }
-            if (data.contains("components", Tag.TAG_COMPOUND)) {
-                CompoundTag components = data.getCompound("components");
-                if (components.contains("minecraft:profile", Tag.TAG_COMPOUND)) {
-                    CompoundTag profile = components.getCompound("minecraft:profile");
-                    if (profile.contains("id", Tag.TAG_STRING)) {
-                        String uuid = profile.getString("id");
-                        if (!uuid.isBlank()) {
-                            return uuid;
+            if (data.contains("components")) {
+                CompoundTag components = data.getCompound("components").orElse(null);
+                if (components != null) {
+                    CompoundTag profile = components.getCompound("minecraft:profile").orElse(null);
+                    if (profile != null) {
+                        String uuidString = profile.getString("id").orElse("");
+                        if (!uuidString.isBlank()) {
+                            return uuidString;
                         }
                     }
                 }
             }
-            String id = data.getString("id");
+            String id = data.getString("id").orElse("");
             if (("minecraft:player".equals(id) || "player".equals(id)) && Minecraft.getInstance().player != null) {
                 return Minecraft.getInstance().player.getUUID().toString();
             }
@@ -80,18 +85,20 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
     }
 
     private MutableComponent getCustomName() {
-        String s = getData().getString("CustomName");
+        String s = getData().getString("CustomName").orElse("");
         if (s.isEmpty()) {
             return null;
         }
-        Component component = Component.Serializer.fromJson(s, ClientUtil.registryAccess());
-        return component == null ? null : component.copy();
+        return ComponentJsonHelper.decode(s, ClientUtil.registryAccess());
     }
 
     private void setCustomName(MutableComponent value) {
         if (value != null && !value.getString().isEmpty()) {
-            getData().putString("CustomName", Component.Serializer.toJson(value, ClientUtil.registryAccess()));
-        } else if (getData().getString("CustomName").isEmpty()) {
+            String json = ComponentJsonHelper.encode(value, ClientUtil.registryAccess());
+            if (!json.isEmpty()) {
+                getData().putString("CustomName", json);
+            }
+        } else if (getData().getString("CustomName").orElse("").isEmpty()) {
             getData().remove("CustomName");
         } else {
             getData().putString("CustomName", "");
@@ -113,12 +120,13 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
 
     private void updateMaxHealthAttribute(float health) {
         CompoundTag data = getData();
-        ListTag attributes = data.getList(ATTRIBUTES_TAG, Tag.TAG_COMPOUND);
+        ListTag attributes = data.getList(ATTRIBUTES_TAG).orElseGet(ListTag::new);
 
         CompoundTag maxHealthAttribute = null;
         for (int i = 0; i < attributes.size(); i++) {
-            CompoundTag attribute = attributes.getCompound(i);
-            if (MAX_HEALTH_ATTRIBUTE_ID.equals(attribute.getString(ATTRIBUTE_ID_TAG))) {
+            CompoundTag attribute = attributes.getCompound(i).orElse(null);
+            if (attribute == null) continue;
+            if (MAX_HEALTH_ATTRIBUTE_ID.equals(attribute.getString(ATTRIBUTE_ID_TAG).orElse(""))) {
                 maxHealthAttribute = attribute;
                 break;
             }
@@ -133,4 +141,5 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
         maxHealthAttribute.putDouble(ATTRIBUTE_BASE_TAG, health);
         data.put(ATTRIBUTES_TAG, attributes);
     }
+
 }

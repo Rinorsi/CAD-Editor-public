@@ -53,13 +53,13 @@ public class VillagerTradeEntryModel extends EntryModel {
         primaryItemProperty = ObjectProperty.create(readItem(source, "buy"));
         secondaryItemProperty = ObjectProperty.create(readItem(source, "buyB"));
         resultItemProperty = ObjectProperty.create(readItem(source, "sell"));
-        maxUsesProperty = IntegerProperty.create(source.contains("maxUses", Tag.TAG_INT) ? source.getInt("maxUses") : 12);
-        usesProperty = IntegerProperty.create(source.contains("uses", Tag.TAG_INT) ? source.getInt("uses") : 0);
-        demandProperty = IntegerProperty.create(source.contains("demand", Tag.TAG_INT) ? source.getInt("demand") : 0);
-        specialPriceProperty = IntegerProperty.create(source.contains("specialPrice", Tag.TAG_INT) ? source.getInt("specialPrice") : 0);
-        priceMultiplierProperty = ObjectProperty.create(source.contains("priceMultiplier", Tag.TAG_FLOAT) ? source.getFloat("priceMultiplier") : 0.05f);
-        rewardExpProperty = BooleanProperty.create(!source.contains("rewardExp", Tag.TAG_BYTE) || source.getBoolean("rewardExp"));
-        xpProperty = IntegerProperty.create(source.contains("xp", Tag.TAG_INT) ? source.getInt("xp") : 0);
+        maxUsesProperty = IntegerProperty.create(source.getIntOr("maxUses", 12));
+        usesProperty = IntegerProperty.create(source.getIntOr("uses", 0));
+        demandProperty = IntegerProperty.create(source.getIntOr("demand", 0));
+        specialPriceProperty = IntegerProperty.create(source.getIntOr("specialPrice", 0));
+        priceMultiplierProperty = ObjectProperty.create(source.getFloatOr("priceMultiplier", 0.05f));
+        rewardExpProperty = BooleanProperty.create(source.getBooleanOr("rewardExp", true));
+        xpProperty = IntegerProperty.create(source.getIntOr("xp", 0));
 
         originalTag = source;
 
@@ -77,10 +77,12 @@ public class VillagerTradeEntryModel extends EntryModel {
     }
 
     private static ItemStack readItem(CompoundTag tag, String key) {
-        if (!tag.contains(key, Tag.TAG_COMPOUND)) {
+        if (!tag.contains(key)) {
             return ItemStack.EMPTY;
         }
-        return ItemStack.parseOptional(ClientUtil.registryAccess(), tag.getCompound(key));
+        return tag.getCompound(key)
+                .map(compound -> ClientUtil.parseItemStack(ClientUtil.registryAccess(), compound))
+                .orElse(ItemStack.EMPTY);
     }
 
     private ItemStack sanitize(ItemStack stack) {
@@ -241,7 +243,7 @@ public class VillagerTradeEntryModel extends EntryModel {
     public CompoundTag toCompoundTag() {
         CompoundTag tag = new CompoundTag();
         if (originalTag != null) {
-            Set<String> keys = new HashSet<>(originalTag.getAllKeys());
+            Set<String> keys = new HashSet<>(originalTag.keySet());
             for (String key : keys) {
                 if (!KNOWN_KEYS.contains(key)) {
                     Tag value = originalTag.get(key);
@@ -274,7 +276,7 @@ public class VillagerTradeEntryModel extends EntryModel {
         if (stack.isEmpty()) {
             return new CompoundTag();
         }
-        return (CompoundTag) stack.save(ClientUtil.registryAccess(), new CompoundTag());
+        return ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
     }
 
     @Override

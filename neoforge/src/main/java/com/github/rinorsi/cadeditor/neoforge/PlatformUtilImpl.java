@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
@@ -33,7 +34,7 @@ public class PlatformUtilImpl {
     private static PayloadRegistrar activeRegistrar;
 
     public static <P> void sendToServer(NetworkHandler.Server<P> handler, P packet) {
-        PacketDistributor.sendToServer(wrap(handler, packet));
+        ClientPacketDistributor.sendToServer(wrap(handler, packet));
     }
 
     public static <P> void sendToClient(ServerPlayer player, NetworkHandler.Client<P> handler, P packet) {

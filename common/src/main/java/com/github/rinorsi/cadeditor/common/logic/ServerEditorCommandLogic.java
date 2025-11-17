@@ -10,11 +10,13 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.net.URI;
+
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class ServerEditorCommandLogic {
     private static final MutableComponent MUST_INSTALL = text("You must install CAD Editor in order to use this command.").withStyle(ChatFormatting.RED);
-    private static final MutableComponent DOWNLOAD = text("Click here to download CAD Editor!").withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/mc-mods/cad-editor"))).withStyle(ChatFormatting.AQUA, ChatFormatting.UNDERLINE);
+    private static final MutableComponent DOWNLOAD = text("Click here to download CAD Editor!").withStyle(style -> style.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://www.curseforge.com/minecraft/mc-mods/cad-editor")))).withStyle(ChatFormatting.AQUA, ChatFormatting.UNDERLINE);
     private static final MutableComponent NO_PERMISSION = text("You must be in creative mode to use this command.").withStyle(ChatFormatting.RED);
 
     public static int commandOpenEditor(ServerPlayer player, EditorCommandPacket.Target target, EditorType type) {

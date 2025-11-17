@@ -6,11 +6,12 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.EntityEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.storage.TagValueInput;
 
 public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
     private final SpawnEggItem item;
@@ -25,8 +26,10 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
     @Override
     protected void setupEntries() {
         var stack = getParent().getContext().getItemStack();
+        var registries = ClientUtil.registryAccess();
+        var valueInput = TagValueInput.create(ProblemReporter.DISCARDING, registries, spawnData);
         EntityEntryModel entityEntry = new EntityEntryModel(this,
-                EntityType.by(spawnData).orElse(item.getType(ClientUtil.registryAccess(), stack)),
+                EntityType.by(valueInput).orElse(item.getType(registries, stack)),
                 spawnData,
                 this::setEntity);
         getEntries().add(entityEntry.withWeight(0));
@@ -46,10 +49,10 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
         }
         CompoundTag itemData = getData();
         if (spawnData == null || spawnData.isEmpty()
-                || !spawnData.contains("id", Tag.TAG_STRING)
-                || spawnData.getString("id").isEmpty()) {
-            if (itemData.contains("tag", Tag.TAG_COMPOUND)) {
-                CompoundTag tag = itemData.getCompound("tag");
+                || !spawnData.contains("id")
+                || spawnData.getString("id").orElse("").isEmpty()) {
+            CompoundTag tag = itemData.getCompound("tag").orElse(null);
+            if (tag != null) {
                 tag.remove("EntityTag");
                 if (tag.isEmpty()) {
                     itemData.remove("tag");
@@ -72,10 +75,13 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
                 return data.copyTag();
             }
         }
-        if (rootTag != null && rootTag.contains("tag", Tag.TAG_COMPOUND)) {
-            CompoundTag legacy = rootTag.getCompound("tag");
-            if (legacy.contains("EntityTag", Tag.TAG_COMPOUND)) {
-                return legacy.getCompound("EntityTag").copy();
+        if (rootTag != null) {
+            CompoundTag legacy = rootTag.getCompound("tag").orElse(null);
+            if (legacy != null) {
+                CompoundTag entityTag = legacy.getCompound("EntityTag").orElse(null);
+                if (entityTag != null) {
+                    return entityTag.copy();
+                }
             }
         }
         return new CompoundTag();

@@ -6,7 +6,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 
 public class EntitySpawnSettingsCategoryModel extends EntityCategoryModel {
     public EntitySpawnSettingsCategoryModel(EntityEditorModel editor) {
@@ -16,19 +15,17 @@ public class EntitySpawnSettingsCategoryModel extends EntityCategoryModel {
     @Override
     protected void setupEntries() {
         CompoundTag data = getData();
-        getEntries().add(new BooleanEntryModel(this, ModTexts.CAN_PICK_UP_LOOT, data.getBoolean("CanPickUpLoot"), value -> setBoolean("CanPickUpLoot", value)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.PERSISTENCE_REQUIRED, data.getBoolean("PersistenceRequired"), value -> setBoolean("PersistenceRequired", value)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.NO_AI, data.getBoolean("NoAI"), value -> setBoolean("NoAI", value)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.LEFT_HANDED, data.getBoolean("LeftHanded"), value -> setBoolean("LeftHanded", value)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.CAN_JOIN_RAID, data.getBoolean("CanJoinRaid"), value -> setBoolean("CanJoinRaid", value)));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.PATROL_LEADER, data.getBoolean("PatrolLeader"), value -> setBoolean("PatrolLeader", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.CAN_PICK_UP_LOOT, data.getBooleanOr("CanPickUpLoot", false), value -> setBoolean("CanPickUpLoot", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.PERSISTENCE_REQUIRED, data.getBooleanOr("PersistenceRequired", false), value -> setBoolean("PersistenceRequired", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.NO_AI, data.getBooleanOr("NoAI", false), value -> setBoolean("NoAI", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.LEFT_HANDED, data.getBooleanOr("LeftHanded", false), value -> setBoolean("LeftHanded", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.CAN_JOIN_RAID, data.getBooleanOr("CanJoinRaid", false), value -> setBoolean("CanJoinRaid", value)));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.PATROL_LEADER, data.getBooleanOr("PatrolLeader", false), value -> setBoolean("PatrolLeader", value)));
 
-        String team = data.contains("Team", Tag.TAG_STRING) ? data.getString("Team") : "";
+        String team = data.getString("Team").orElse("");
         getEntries().add(new StringEntryModel(this, ModTexts.TEAM, team, this::setTeam));
 
-        float reinforcements = data.contains("SpawnReinforcementsChance", Tag.TAG_FLOAT)
-                ? data.getFloat("SpawnReinforcementsChance")
-                : 0f;
+        float reinforcements = data.getFloatOr("SpawnReinforcementsChance", 0f);
         getEntries().add(new FloatEntryModel(this, ModTexts.SPAWN_REINFORCEMENTS_CHANCE, reinforcements, this::setSpawnReinforcementsChance, value -> value >= 0f && value <= 1f));
     }
 

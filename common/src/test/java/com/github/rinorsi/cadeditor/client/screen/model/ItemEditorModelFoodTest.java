@@ -16,7 +16,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -52,7 +51,12 @@ class ItemEditorModelFoodTest {
 
         CompoundTag immediateTag = context.getTag();
         Assertions.assertNotNull(immediateTag, "Context tag should be initialized after enabling");
-        Assertions.assertTrue(immediateTag.getCompound("components").contains("minecraft:food", Tag.TAG_COMPOUND));
+        Assertions.assertTrue(
+                immediateTag.getCompound("components")
+                        .map(tag -> tag.contains("minecraft:food"))
+                        .orElse(false),
+                "Food component missing immediately after enabling"
+        );
 
         model.apply();
 
@@ -69,18 +73,16 @@ class ItemEditorModelFoodTest {
 
         CompoundTag tag = context.getTag();
         Assertions.assertNotNull(tag, "Context tag should be initialized");
-        Assertions.assertTrue(tag.contains("components", Tag.TAG_COMPOUND), "Components compound missing");
-
-        CompoundTag components = tag.getCompound("components");
-        Assertions.assertTrue(components.contains("minecraft:food", Tag.TAG_COMPOUND), "Food component missing in tag");
-        CompoundTag food = components.getCompound("minecraft:food");
-        Assertions.assertEquals(0, food.getInt("nutrition"));
-        Assertions.assertEquals(0.0f, food.getFloat("saturation"));
-        Assertions.assertTrue(food.getBoolean("can_always_eat"));
-        if (food.contains("eat_seconds", Tag.TAG_FLOAT)) {
-            Assertions.assertEquals(1.6f, food.getFloat("eat_seconds"), 1e-6f);
+        CompoundTag components = requireCompound(tag, "components");
+        Assertions.assertTrue(components.contains("minecraft:food"), "Food component missing in tag");
+        CompoundTag food = requireCompound(components, "minecraft:food");
+        Assertions.assertEquals(0, food.getInt("nutrition").orElse(0));
+        Assertions.assertEquals(0.0f, food.getFloat("saturation").orElse(0.0f));
+        Assertions.assertTrue(food.getBoolean("can_always_eat").orElse(false));
+        food.getFloat("eat_seconds").ifPresent(value -> Assertions.assertEquals(1.6f, value, 1e-6f));
+        if (food.contains("using_converts_to")) {
+            Assertions.fail("using_converts_to should not be present");
         }
-        Assertions.assertFalse(food.contains("using_converts_to", Tag.TAG_COMPOUND));
     }
 
     @Test
@@ -97,17 +99,17 @@ class ItemEditorModelFoodTest {
 
         CompoundTag enabledTag = context.getTag();
         Assertions.assertNotNull(enabledTag, "Tag should be initialized when food is enabled");
-        CompoundTag enabledComponents = enabledTag.getCompound("components");
-        Assertions.assertTrue(enabledComponents.contains("minecraft:food", Tag.TAG_COMPOUND), "Food component missing after enabling");
+        CompoundTag enabledComponents = requireCompound(enabledTag, "components");
+        Assertions.assertTrue(enabledComponents.contains("minecraft:food"), "Food component missing after enabling");
         Assertions.assertFalse(enabledComponents.contains("!minecraft:food"), "Removal marker should not persist while enabled");
 
         model.disableFoodComponent();
 
         CompoundTag disabledTag = context.getTag();
         Assertions.assertNotNull(disabledTag, "Tag should remain available after disabling");
-        CompoundTag disabledComponents = disabledTag.getCompound("components");
-        Assertions.assertFalse(disabledComponents.contains("minecraft:food", Tag.TAG_COMPOUND), "Food component should be cleared when disabled");
-        Assertions.assertTrue(disabledComponents.contains("!minecraft:food", Tag.TAG_COMPOUND), "Removal marker missing when food disabled");
+        CompoundTag disabledComponents = requireCompound(disabledTag, "components");
+        Assertions.assertFalse(disabledComponents.contains("minecraft:food"), "Food component should be cleared when disabled");
+        Assertions.assertTrue(disabledComponents.contains("!minecraft:food"), "Removal marker missing when food disabled");
 
         ItemStack disabledStack = context.getItemStack();
         Assertions.assertFalse(disabledStack.has(DataComponents.FOOD), () -> "Stack should stop being edible after disabling. Tag=" + disabledComponents);
@@ -119,9 +121,9 @@ class ItemEditorModelFoodTest {
 
         CompoundTag reenabledTag = context.getTag();
         Assertions.assertNotNull(reenabledTag, "Tag should still be initialized after re-enabling");
-        CompoundTag reenabledComponents = reenabledTag.getCompound("components");
-        Assertions.assertTrue(reenabledComponents.contains("minecraft:food", Tag.TAG_COMPOUND), "Food component missing after re-enabling");
-        Assertions.assertFalse(reenabledComponents.contains("!minecraft:food", Tag.TAG_COMPOUND), "Removal marker should be cleared after re-enabling");
+        CompoundTag reenabledComponents = requireCompound(reenabledTag, "components");
+        Assertions.assertTrue(reenabledComponents.contains("minecraft:food"), "Food component missing after re-enabling");
+        Assertions.assertFalse(reenabledComponents.contains("!minecraft:food"), "Removal marker should be cleared after re-enabling");
     }
 
     @Test
@@ -148,10 +150,10 @@ class ItemEditorModelFoodTest {
 
         CompoundTag tag = context.getTag();
         Assertions.assertNotNull(tag, "Context tag should be initialized");
-        CompoundTag components = tag.getCompound("components");
-        Assertions.assertTrue(components.contains("!minecraft:lore", Tag.TAG_COMPOUND));
-        Assertions.assertTrue(components.contains("!minecraft:rarity", Tag.TAG_COMPOUND));
-        Assertions.assertTrue(components.contains("!minecraft:repair_cost", Tag.TAG_COMPOUND));
+        CompoundTag components = requireCompound(tag, "components");
+        Assertions.assertTrue(components.contains("!minecraft:lore"));
+        Assertions.assertTrue(components.contains("!minecraft:rarity"));
+        Assertions.assertTrue(components.contains("!minecraft:repair_cost"));
         var remainder = updated.get(DataComponents.USE_REMAINDER);
         Assertions.assertNotNull(remainder, "Expected use remainder component");
         ItemStack remainderStack = remainder.convertInto().copy();
@@ -189,6 +191,11 @@ class ItemEditorModelFoodTest {
         ResourceLocation location = ResourceLocation.parse(id);
         return BuiltInRegistries.ITEM.getOptional(location)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown item id: " + id));
+    }
+
+    private static CompoundTag requireCompound(CompoundTag tag, String key) {
+        return tag.getCompound(key)
+                .orElseThrow(() -> new AssertionError("Missing compound tag: " + key));
     }
 
     private static ItemAttributeModifiers createSwordModifiers() {

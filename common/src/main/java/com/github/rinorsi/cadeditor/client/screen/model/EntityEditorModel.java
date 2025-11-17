@@ -26,6 +26,7 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.OwnableEntity;
+import net.minecraft.tags.EntityTypeTags;
 
 public class EntityEditorModel extends StandardEditorModel {
     public EntityEditorModel(EntityEditorContext context) {
@@ -86,19 +87,19 @@ public class EntityEditorModel extends StandardEditorModel {
         if (tag == null) {
             return false;
         }
-        String id = tag.getString("id");
+        String id = tag.getStringOr("id", "");
         if ("minecraft:player".equals(id) || "player".equals(id)) {
             return true;
         }
-        if (tag.contains("EnderItems", Tag.TAG_LIST)
-                || tag.contains("abilities", Tag.TAG_COMPOUND)
-                || tag.contains("playerGameType", Tag.TAG_INT)
-                || tag.contains("recipeBook", Tag.TAG_COMPOUND)) {
+        if (tag.contains("EnderItems")
+                || tag.contains("abilities")
+                || tag.contains("playerGameType")
+                || tag.contains("recipeBook")) {
             return true;
         }
-        if (tag.contains("components", Tag.TAG_COMPOUND)) {
-            CompoundTag components = tag.getCompound("components");
-            if (components.contains("minecraft:profile", Tag.TAG_COMPOUND)) {
+        if (tag.contains("components")) {
+            CompoundTag components = tag.getCompound("components").orElse(null);
+            if (components != null && components.contains("minecraft:profile")) {
                 return true;
             }
         }
@@ -106,17 +107,17 @@ public class EntityEditorModel extends StandardEditorModel {
     }
 
     private boolean hasMountData(Entity entity) {
-        if (entity instanceof LivingEntity) {
+        if (entity != null && (entity.getType().is(EntityTypeTags.CAN_EQUIP_SADDLE) || entity.getType().is(EntityTypeTags.CAN_EQUIP_HARNESS))) {
             return true;
         }
         CompoundTag tag = getContext().getTag();
         if (tag == null) {
             return false;
         }
-        return tag.contains("Passengers", Tag.TAG_LIST)
-                || tag.contains("Saddle")
+        return tag.contains("Saddle")
                 || tag.contains("Saddled")
-                || tag.contains("SaddleItem", Tag.TAG_COMPOUND)
+                || tag.contains("SaddleItem")
+                || tag.contains("Passengers")
                 || tag.contains("Leash")
                 || tag.contains("LeashHolder")
                 || tag.contains("ChestedHorse");
@@ -130,11 +131,11 @@ public class EntityEditorModel extends StandardEditorModel {
         if (tag == null) {
             return false;
         }
-        return tag.contains("Tame", Tag.TAG_BYTE)
-                || tag.contains("Owner", Tag.TAG_STRING)
+        return tag.contains("Tame")
+                || tag.contains("Owner")
                 || tag.contains("OwnerUUID")
-                || tag.contains("OwnerUUIDMost", Tag.TAG_LONG)
-                || tag.contains("OwnerUUIDLeast", Tag.TAG_LONG);
+                || tag.contains("OwnerUUIDMost")
+                || tag.contains("OwnerUUIDLeast");
     }
 
     public void handleEntityReplaced(CompoundTag newTag) {
@@ -175,8 +176,8 @@ public class EntityEditorModel extends StandardEditorModel {
     }
 
     private static void copyListTag(CompoundTag source, CompoundTag target, String key, int elementType) {
-        if (source.contains(key, Tag.TAG_LIST)) {
-            ListTag list = source.getList(key, elementType);
+        if (source.contains(key)) {
+            ListTag list = source.getListOrEmpty(key);
             target.put(key, list.copy());
         } else {
             target.remove(key);
@@ -184,18 +185,16 @@ public class EntityEditorModel extends StandardEditorModel {
     }
 
     private static void copyIntArrayTag(CompoundTag source, CompoundTag target, String key) {
-        if (source.contains(key, Tag.TAG_INT_ARRAY)) {
-            target.putIntArray(key, source.getIntArray(key));
-        } else {
-            target.remove(key);
-        }
+        source.getIntArray(key).ifPresentOrElse(
+                values -> target.putIntArray(key, values),
+                () -> target.remove(key)
+        );
     }
 
     private static void copyLongTag(CompoundTag source, CompoundTag target, String key) {
-        if (source.contains(key, Tag.TAG_LONG)) {
-            target.putLong(key, source.getLong(key));
-        } else {
-            target.remove(key);
-        }
+        source.getLong(key).ifPresentOrElse(
+                value -> target.putLong(key, value),
+                () -> target.remove(key)
+        );
     }
 }

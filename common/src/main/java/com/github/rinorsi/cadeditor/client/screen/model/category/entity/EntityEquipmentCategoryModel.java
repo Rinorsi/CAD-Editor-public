@@ -45,10 +45,10 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
 
     private ItemStack readItem(Slot slot) {
         CompoundTag data = getData();
-        if (!data.contains(slot.itemListTag, Tag.TAG_LIST)) {
+        if (data == null || !data.contains(slot.itemListTag)) {
             return ItemStack.EMPTY;
         }
-        ListTag list = data.getList(slot.itemListTag, Tag.TAG_COMPOUND);
+        ListTag list = data.getListOrEmpty(slot.itemListTag);
         if (slot.index >= list.size()) {
             return ItemStack.EMPTY;
         }
@@ -56,21 +56,21 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
         if (!(tag instanceof CompoundTag compound)) {
             return ItemStack.EMPTY;
         }
-        return ItemStack.parseOptional(ClientUtil.registryAccess(), compound);
+        return ClientUtil.parseItemStack(ClientUtil.registryAccess(), compound);
     }
 
     private float readDropChance(Slot slot) {
         CompoundTag data = getData();
-        if (!data.contains(slot.dropChanceListTag, Tag.TAG_LIST)) {
+        if (data == null || !data.contains(slot.dropChanceListTag)) {
             return slot.defaultDropChance;
         }
-        ListTag list = data.getList(slot.dropChanceListTag, Tag.TAG_FLOAT);
+        ListTag list = data.getListOrEmpty(slot.dropChanceListTag);
         if (slot.index >= list.size()) {
             return slot.defaultDropChance;
         }
         Tag tag = list.get(slot.index);
         if (tag instanceof FloatTag floatTag) {
-            return floatTag.getAsFloat();
+            return floatTag.floatValue();
         }
         return slot.defaultDropChance;
     }

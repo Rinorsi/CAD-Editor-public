@@ -5,6 +5,7 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.DoubleTag;
@@ -13,12 +14,15 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.ShortTag;
+import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.RegistryOps;
+import com.mojang.serialization.DataResult;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -143,13 +147,18 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         return pathContains(path, "minecraft:trim") || pathContains(path, "Trim") || pathContains(path, "trim");
     }
 
+    private static ItemStack decodeStack(HolderLookup.Provider lookup, CompoundTag edited) {
+        return ClientUtil.parseItemStack(edited);
+    }
+
     @Override
     public void update() {
         ItemStack result = itemStack.copy();
         CompoundTag edited = getTag();
+        HolderLookup.Provider lookup = ClientUtil.registryAccess();
         if (edited != null) {
             try {
-                ItemStack parsed = ItemStack.parseOptional(ClientUtil.registryAccess(), edited);
+                ItemStack parsed = decodeStack(lookup, edited);
                 if (!parsed.isEmpty()) {
                     result = parsed;
                 }
@@ -183,31 +192,18 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
     }
 
     private static CompoundTag saveStack(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            CompoundTag tag = new CompoundTag();
-            tag.putString("id", BuiltInRegistries.ITEM.getKey(Items.AIR).toString());
-            tag.putByte("Count", (byte) 0);
-            return tag;
-        }
-        var tag = stack.save(ClientUtil.registryAccess(), new CompoundTag());
-        return tag instanceof CompoundTag compound ? compound : new CompoundTag();
+        return ClientUtil.saveItemStack(stack);
     }
 
     private static String buildGiveCommand(ItemStack stack) {
         CompoundTag data = saveStack(stack);
-        String id = data.getString("id");
-        if (id == null || id.isEmpty()) {
-            id = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        }
-        CompoundTag components = data.contains("components", Tag.TAG_COMPOUND)
-                ? data.getCompound("components").copy()
-                : new CompoundTag();
-        if (data.contains("tag", Tag.TAG_COMPOUND)
-                && !components.contains("minecraft:custom_data", Tag.TAG_COMPOUND)) {
-            CompoundTag legacy = data.getCompound("tag");
-            if (!legacy.isEmpty()) {
-                components.put("minecraft:custom_data", legacy.copy());
-            }
+        String id = data.getStringOr("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+        CompoundTag components = data.getCompound("components")
+                .map(CompoundTag::copy)
+                .orElseGet(CompoundTag::new);
+        if (data.contains("tag") && !components.contains("minecraft:custom_data")) {
+            data.getCompound("tag").filter(tag -> !tag.isEmpty())
+                    .ifPresent(legacy -> components.put("minecraft:custom_data", legacy.copy()));
         }
         StringBuilder builder = new StringBuilder("/give @p ").append(id);
         String componentSpec = formatComponentList(components);
@@ -226,7 +222,7 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
             return "";
         }
         CompoundTag normalized = normalizeComponents(components);
-        List<String> keys = new ArrayList<>(normalized.getAllKeys());
+        List<String> keys = new ArrayList<>(normalized.keySet());
         Collections.sort(keys);
         StringJoiner joiner = new StringJoiner(", ", "[", "]");
         boolean hasEntry = false;
@@ -252,7 +248,7 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         CompoundTag normalized = components.copy();
         Tag attributeTag = normalized.get("minecraft:attribute_modifiers");
         if (attributeTag instanceof CompoundTag attributeCompound) {
-            ListTag modifiers = attributeCompound.getList("modifiers", Tag.TAG_COMPOUND);
+            ListTag modifiers = attributeCompound.getListOrEmpty("modifiers");
             if (!modifiers.isEmpty()) {
                 Set<UUID> usedIds = new HashSet<>();
                 for (Tag entryTag : modifiers) {
@@ -313,10 +309,10 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
             return null;
         }
         if (tag.getId() == Tag.TAG_STRING) {
-            return parseUuidString(((StringTag) tag).getAsString());
+            return parseUuidString(((StringTag) tag).asString().orElse(""));
         }
         if (tag.getId() == Tag.TAG_INT_ARRAY) {
-            return uuidFromIntArray(modifier.getIntArray(key));
+            return modifier.getIntArray(key).map(ItemEditorContext::uuidFromIntArray).orElse(null);
         }
         return null;
     }
@@ -371,13 +367,13 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         return switch (tag.getId()) {
             case Tag.TAG_COMPOUND -> formatCompound((CompoundTag) tag);
             case Tag.TAG_LIST -> formatList((ListTag) tag);
-            case Tag.TAG_STRING -> formatString(((StringTag) tag).getAsString());
-            case Tag.TAG_BYTE -> formatByte(key, ((ByteTag) tag).getAsByte());
-            case Tag.TAG_SHORT -> Integer.toString(((ShortTag) tag).getAsShort());
-            case Tag.TAG_INT -> Integer.toString(((IntTag) tag).getAsInt());
-            case Tag.TAG_LONG -> Long.toString(((LongTag) tag).getAsLong());
-            case Tag.TAG_FLOAT -> formatFloating(((FloatTag) tag).getAsFloat());
-            case Tag.TAG_DOUBLE -> formatFloating(((DoubleTag) tag).getAsDouble());
+            case Tag.TAG_STRING -> formatString(((StringTag) tag).asString().orElse(""));
+            case Tag.TAG_BYTE -> formatByte(key, ((NumericTag) tag).byteValue());
+            case Tag.TAG_SHORT -> Integer.toString(((NumericTag) tag).shortValue());
+            case Tag.TAG_INT -> Integer.toString(((NumericTag) tag).intValue());
+            case Tag.TAG_LONG -> Long.toString(((NumericTag) tag).longValue());
+            case Tag.TAG_FLOAT -> formatFloating(((NumericTag) tag).floatValue());
+            case Tag.TAG_DOUBLE -> formatFloating(((NumericTag) tag).doubleValue());
             case Tag.TAG_BYTE_ARRAY, Tag.TAG_INT_ARRAY, Tag.TAG_LONG_ARRAY -> tag.toString();
             default -> tag.toString();
         };
@@ -387,7 +383,7 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         if (tag.isEmpty()) {
             return "{}";
         }
-        List<String> keys = new ArrayList<>(tag.getAllKeys());
+        List<String> keys = new ArrayList<>(tag.keySet());
         Collections.sort(keys);
         StringJoiner joiner = new StringJoiner(", ", "{", "}");
         for (String key : keys) {

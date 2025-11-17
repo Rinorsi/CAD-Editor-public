@@ -2,10 +2,10 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
+import com.github.rinorsi.cadeditor.client.util.SnbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.world.item.component.CustomData;
 
 @SuppressWarnings("unused")
@@ -39,7 +39,7 @@ public class ItemCustomDataCategoryModel extends ItemEditorCategoryModel {
             return;
         }
         try {
-            CompoundTag tag = TagParser.parseTag(raw);
+            CompoundTag tag = SnbtHelper.parse(raw);
             stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
             snbtEntry.setValid(true);
         } catch (Exception ex) {

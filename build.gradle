@@ -98,17 +98,7 @@ allprojects {
             attributes(
                 'Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Implementation-Vendor': rootProject.hasProperty('maven_group') ? rootProject.maven_group : '',
-                'MixinConfigs': 'cadeditor-common.mixins.json',
-                'MixinVersion': '0.8.7',
-                'Fabric-Mixin-Version': '0.15.4+mixin.0.8.7'
-            )
-        }
-        doFirst {
-            manifest.attributes(
-                    'MixinConfigs': 'cadeditor-common.mixins.json',
-                    'MixinVersion': '0.8.7',
-                    'Fabric-Mixin-Version': '0.15.4+mixin.0.8.7'
+                'Implementation-Vendor': rootProject.hasProperty('maven_group') ? rootProject.maven_group : ''
             )
         }
     }

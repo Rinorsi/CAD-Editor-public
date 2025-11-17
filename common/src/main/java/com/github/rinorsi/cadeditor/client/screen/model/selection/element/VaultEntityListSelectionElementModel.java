@@ -21,7 +21,7 @@ public class VaultEntityListSelectionElementModel extends ListSelectionElementMo
     }
 
     private static String buildName(CompoundTag tag) {
-        String id = tag.getString("id");
+        String id = tag.getStringOr("id", "");
         if (id.isEmpty()) {
             id = "minecraft:unknown";
         }

@@ -17,7 +17,7 @@ public class VaultItemCategoryModel extends VaultCategoryModel {
     @Override
     protected void setupEntries() {
         Vault.getInstance().getItems().stream()
-                .map(tag -> ItemStack.parseOptional(ClientUtil.registryAccess(), tag))
+                .map(tag -> ClientUtil.parseItemStack(ClientUtil.registryAccess(), tag))
                 .forEach(itemStack -> getEntries().add(new VaultItemEntryModel(this, itemStack)));
     }
 

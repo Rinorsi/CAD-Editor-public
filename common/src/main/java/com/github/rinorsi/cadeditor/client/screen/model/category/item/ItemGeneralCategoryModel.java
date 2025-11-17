@@ -6,21 +6,16 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ItemSelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.component.DamageResistant;
-import net.minecraft.world.item.component.Unbreakable;
 
 public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private static final DamageResistant FIRE_DAMAGE_RESISTANCE = new DamageResistant(DamageTypeTags.IS_FIRE);
@@ -44,7 +39,6 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(new IntegerEntryModel(this, ModTexts.MAX_DAMAGE, getMaxDamageValue(stack), this::setMaxDamage, value -> value >= 0));
         getEntries().add(new BooleanEntryModel(this, ModTexts.UNBREAKABLE, isUnbreakable, this::setUnbreakable));
         getEntries().add(new RaritySelectionEntryModel(this, ModTexts.gui("rarity"), getRarityString(stack), this::setRarity));
-        getEntries().add(new IntegerEntryModel(this, ModTexts.gui("custom_model_data"), getCustomModelData(stack), this::setCustomModelData));
         getEntries().add(new IntegerEntryModel(this, ModTexts.gui("repair_cost"), getRepairCost(stack), this::setRepairCost));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("glint_override"), getGlintOverride(stack), this::setGlintOverride));
         getEntries().add(new BooleanEntryModel(this, ModTexts.FIRE_RESISTANT, isFireResistant(stack), this::setFireResistant));
@@ -76,7 +70,7 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private void setUnbreakable(boolean value) {
         ItemStack stack = getParent().getContext().getItemStack();
         if (value) {
-            stack.set(DataComponents.UNBREAKABLE, new Unbreakable(true));
+            stack.set(DataComponents.UNBREAKABLE, Unit.INSTANCE);
         } else {
             stack.remove(DataComponents.UNBREAKABLE);
         }
@@ -182,39 +176,6 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         } catch (Exception ignored) {}
     }
 
-    private int getCustomModelData(ItemStack stack) {
-        CustomModelData cmd = stack.get(DataComponents.CUSTOM_MODEL_DATA);
-        if (cmd == null || cmd.colors().isEmpty()) {
-            return 0;
-        }
-        Integer first = cmd.colors().get(0);
-        return first != null ? first : 0;
-    }
-
-    private void setCustomModelData(int value) {
-        ItemStack stack = getParent().getContext().getItemStack();
-        if (value > 0) {
-            CustomModelData existing = stack.get(DataComponents.CUSTOM_MODEL_DATA);
-            List<Float> floats = existing != null ? existing.floats() : List.of();
-            List<Boolean> flags = existing != null ? existing.flags() : List.of();
-            List<String> strings = existing != null ? existing.strings() : List.of();
-            List<Integer> colors = new ArrayList<>(existing != null ? existing.colors() : List.of());
-            if (colors.isEmpty()) {
-                colors.add(value);
-            } else {
-                colors.set(0, value);
-            }
-            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(
-                    List.copyOf(floats),
-                    List.copyOf(flags),
-                    List.copyOf(strings),
-                    List.copyOf(colors)
-            ));
-        } else {
-            stack.remove(DataComponents.CUSTOM_MODEL_DATA);
-        }
-    }
-
     private int getRepairCost(ItemStack stack) {
         Integer v = stack.get(DataComponents.REPAIR_COST);
         return v != null ? v : 0;
@@ -269,15 +230,15 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         if (root == null) {
             return;
         }
-        CompoundTag components = root.getCompound("components");
+        CompoundTag components = root.getCompound("components").orElse(null);
         if (enabled) {
-            if (!root.contains("components", Tag.TAG_COMPOUND)) {
+            if (components == null) {
                 components = new CompoundTag();
                 root.put("components", components);
             }
             components.put("minecraft:intangible_projectile", new CompoundTag());
             components.remove("!minecraft:intangible_projectile");
-        } else if (root.contains("components", Tag.TAG_COMPOUND)) {
+        } else if (components != null) {
             components.remove("minecraft:intangible_projectile");
             components.remove("!minecraft:intangible_projectile");
             if (components.isEmpty()) {

@@ -5,7 +5,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryM
 import com.github.rinorsi.cadeditor.client.screen.model.entry.TextEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.nbt.TagParser;
+import com.github.rinorsi.cadeditor.client.util.SnbtHelper;
 import net.minecraft.network.chat.Component;
 
 @SuppressWarnings("unused")
@@ -31,7 +31,7 @@ public class BlockEntityDataCategoryModel extends BlockEditorCategoryModel {
         super.apply();
         String raw = rawEditor.getValue() == null ? "{}" : rawEditor.getValue().getString();
         try {
-            getParent().getContext().setTag(TagParser.parseTag(raw));
+            getParent().getContext().setTag(SnbtHelper.parse(raw));
             rawEditor.setValid(true);
         } catch (CommandSyntaxException e) {
             rawEditor.setValid(false);

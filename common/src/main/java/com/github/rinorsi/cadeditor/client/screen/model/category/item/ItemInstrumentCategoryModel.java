@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Instrument;
+import net.minecraft.world.item.component.InstrumentComponent;
 
 import java.util.Optional;
 
@@ -26,12 +27,16 @@ public class ItemInstrumentCategoryModel extends ItemEditorCategoryModel {
     @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
-        Holder<Instrument> instrument = stack.get(DataComponents.INSTRUMENT);
-        if (instrument != null) {
-            instrumentId = instrument.unwrapKey()
-                    .map(ResourceKey::location)
-                    .map(ResourceLocation::toString)
-                    .orElse("");
+        InstrumentComponent component = stack.get(DataComponents.INSTRUMENT);
+        if (component != null) {
+            HolderLookup.Provider provider = ClientUtil.registryAccess();
+            if (provider != null) {
+                component.unwrap(provider)
+                        .flatMap(Holder::unwrapKey)
+                        .map(ResourceKey::location)
+                        .map(ResourceLocation::toString)
+                        .ifPresent(id -> instrumentId = id);
+            }
         }
         instrumentEntry = new InstrumentSelectionEntryModel(this, instrumentId,
                 value -> instrumentId = value == null ? "" : value.trim());
@@ -56,12 +61,13 @@ public class ItemInstrumentCategoryModel extends ItemEditorCategoryModel {
             instrumentEntry.setValid(false);
             return;
         }
-        Optional<Holder.Reference<Instrument>> instrumentHolder = lookup.get(ResourceKey.create(Registries.INSTRUMENT, location));
+        ResourceKey<Instrument> key = ResourceKey.create(Registries.INSTRUMENT, location);
+        Optional<Holder.Reference<Instrument>> instrumentHolder = lookup.get(key);
         if (instrumentHolder.isEmpty()) {
             instrumentEntry.setValid(false);
             return;
         }
         instrumentEntry.setValid(true);
-        stack.set(DataComponents.INSTRUMENT, instrumentHolder.get());
+        stack.set(DataComponents.INSTRUMENT, new InstrumentComponent(instrumentHolder.get()));
     }
 }

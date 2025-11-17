@@ -5,7 +5,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.LootTableSelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 
 import java.util.Optional;
 
@@ -26,8 +25,12 @@ public class BlockContainerLootCategoryModel extends BlockEditorCategoryModel {
         String table = "";
         String seed = "";
         if (tag != null) {
-            if (tag.contains("LootTable", Tag.TAG_STRING)) table = tag.getString("LootTable");
-            if (tag.contains("LootTableSeed", Tag.TAG_LONG)) seed = Long.toString(tag.getLong("LootTableSeed"));
+            if (tag.contains("LootTable")) {
+                table = tag.getString("LootTable").orElse("");
+            }
+            if (tag.contains("LootTableSeed")) {
+                seed = tag.getLong("LootTableSeed").map(value -> Long.toString(value)).orElse("");
+            }
         }
         tableEntry = new LootTableSelectionEntryModel(this, table, v -> {});
         seedEntry = new StringEntryModel(this, ModTexts.SEED, seed, v -> {});
@@ -61,7 +64,7 @@ public class BlockContainerLootCategoryModel extends BlockEditorCategoryModel {
                 return;
             }
         }
-        if (tag.contains("Items", Tag.TAG_LIST)) {
+        if (tag.contains("Items")) {
             tag.remove("Items");
         }
     }

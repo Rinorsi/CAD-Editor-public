@@ -123,17 +123,20 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
 
     private Map<ResourceLocation, CompoundTag> readExistingAttributes(CompoundTag data) {
         Map<ResourceLocation, CompoundTag> existing = new LinkedHashMap<>();
-        if (!data.contains(ATTRIBUTES_TAG, Tag.TAG_LIST)) {
+        if (!data.contains(ATTRIBUTES_TAG)) {
             return existing;
         }
-        ListTag list = data.getList(ATTRIBUTES_TAG, Tag.TAG_COMPOUND);
+        ListTag list = data.getList(ATTRIBUTES_TAG).orElse(null);
+        if (list == null) {
+            return existing;
+        }
         for (Tag element : list) {
             if (!(element instanceof CompoundTag compound)) {
                 continue;
             }
-            String idString = compound.getString(ID_TAG);
-            if (idString.isEmpty() && compound.contains(LEGACY_ID_TAG, Tag.TAG_STRING)) {
-                idString = compound.getString(LEGACY_ID_TAG);
+            String idString = compound.getString(ID_TAG).orElse("");
+            if (idString.isEmpty()) {
+                idString = compound.getString(LEGACY_ID_TAG).orElse("");
             }
             ResourceLocation id = ResourceLocation.tryParse(idString);
             if (id == null) {
@@ -149,10 +152,10 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
             return fallback;
         }
         if (tag.contains(BASE_TAG)) {
-            return tag.getDouble(BASE_TAG);
+            return tag.getDouble(BASE_TAG).orElse(fallback);
         }
         if (tag.contains(LEGACY_BASE_TAG)) {
-            return tag.getDouble(LEGACY_BASE_TAG);
+            return tag.getDouble(LEGACY_BASE_TAG).orElse(fallback);
         }
         return fallback;
     }
@@ -188,10 +191,10 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
         }
 
         private void ensureIdentity() {
-            if (!tag.contains(ID_TAG, Tag.TAG_STRING)) {
+            if (!tag.contains(ID_TAG)) {
                 tag.putString(ID_TAG, id.toString());
             }
-            if (!tag.contains(LEGACY_ID_TAG, Tag.TAG_STRING)) {
+            if (!tag.contains(LEGACY_ID_TAG)) {
                 tag.putString(LEGACY_ID_TAG, id.toString());
             }
         }

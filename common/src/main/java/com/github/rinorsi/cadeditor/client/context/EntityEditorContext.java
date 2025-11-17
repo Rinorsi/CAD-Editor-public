@@ -6,15 +6,11 @@ import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.DoubleTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -115,29 +111,7 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
     }
 
     private Entity createEntity(CompoundTag tag) {
-        if (tag == null) {
-            return null;
-        }
-        var level = Minecraft.getInstance().level;
-        if (level == null) {
-            return null;
-        }
-        CompoundTag copy = tag.copy();
-        clearIdentityData(copy);
-        ensureDefaultPositionData(copy);
-        ensureDefaultRotationData(copy);
-        ensureDefaultMotionData(copy);
-        Entity entity = EntityType.create(copy, level, EntitySpawnReason.COMMAND).orElse(null);
-        if (entity == null) {
-            EntityType<?> fallbackType = EntityType.byString(copy.getString("id")).orElse(null);
-            if (fallbackType != null) {
-                entity = fallbackType.create(level, EntitySpawnReason.COMMAND);
-            }
-        }
-        if (entity != null) {
-            entity.load(copy);
-        }
-        return entity;
+        return EntityType.loadEntityRecursive(tag, Minecraft.getInstance().level, EntitySpawnReason.COMMAND, entity -> entity);
     }
 
     public boolean replaceEntity(CompoundTag tag) {
@@ -148,43 +122,5 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
         setTag(tag);
         entity = newEntity;
         return true;
-    }
-
-    private static void clearIdentityData(CompoundTag tag) {
-        tag.remove("UUID");
-        tag.remove("UUIDMost");
-        tag.remove("UUIDLeast");
-        tag.remove("OwnerUUID");
-        tag.remove("OwnerUUIDMost");
-        tag.remove("OwnerUUIDLeast");
-    }
-
-    private static void ensureDefaultPositionData(CompoundTag tag) {
-        if (!tag.contains("Pos", Tag.TAG_LIST) || tag.getList("Pos", Tag.TAG_DOUBLE).size() != 3) {
-            ListTag pos = new ListTag();
-            pos.add(DoubleTag.valueOf(0d));
-            pos.add(DoubleTag.valueOf(0d));
-            pos.add(DoubleTag.valueOf(0d));
-            tag.put("Pos", pos);
-        }
-    }
-
-    private static void ensureDefaultRotationData(CompoundTag tag) {
-        if (!tag.contains("Rotation", Tag.TAG_LIST) || tag.getList("Rotation", Tag.TAG_FLOAT).size() != 2) {
-            ListTag rot = new ListTag();
-            rot.add(FloatTag.valueOf(0f));
-            rot.add(FloatTag.valueOf(0f));
-            tag.put("Rotation", rot);
-        }
-    }
-
-    private static void ensureDefaultMotionData(CompoundTag tag) {
-        if (!tag.contains("Motion", Tag.TAG_LIST) || tag.getList("Motion", Tag.TAG_DOUBLE).size() != 3) {
-            ListTag motion = new ListTag();
-            motion.add(DoubleTag.valueOf(0d));
-            motion.add(DoubleTag.valueOf(0d));
-            motion.add(DoubleTag.valueOf(0d));
-            tag.put("Motion", motion);
-        }
     }
 }

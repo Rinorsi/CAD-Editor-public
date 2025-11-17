@@ -9,6 +9,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.world.item.ItemUseAnimation;
 
 public final class ModTexts {
 
@@ -365,6 +366,10 @@ public final class ModTexts {
 
     public static MutableComponent trade(int i) {
         return translated("cadeditor.gui.trade", text(Integer.toString(i)));
+    }
+
+    public static MutableComponent useAnimationOption(ItemUseAnimation animation) {
+        return translated("cadeditor.gui.use_animation.option." + animation.getSerializedName());
     }
 
     public static MutableComponent gui(String s) {

@@ -1,15 +1,19 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.entity.player;
 
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.mixin.FoodDataAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
+import net.minecraft.world.level.storage.TagValueInput;
 
 /**
  * Handles player specific stats such as experience, hunger and absorption.
@@ -40,14 +44,14 @@ public class EntityPlayerStatsCategoryModel extends EntityCategoryModel {
     @Override
     protected void setupEntries() {
         CompoundTag data = ensurePlayerTag();
-        xpLevel = data.getInt(XP_LEVEL_TAG);
-        xpTotal = data.getInt(XP_TOTAL_TAG);
-        xpProgress = data.contains(XP_PROGRESS_TAG) ? data.getFloat(XP_PROGRESS_TAG) : 0f;
-        foodLevel = data.contains(FOOD_LEVEL_TAG) ? data.getInt(FOOD_LEVEL_TAG) : 20;
-        foodSaturation = data.contains(FOOD_SATURATION_TAG) ? data.getFloat(FOOD_SATURATION_TAG) : 5f;
-        foodExhaustion = data.contains(FOOD_EXHAUSTION_TAG) ? data.getFloat(FOOD_EXHAUSTION_TAG) : 0f;
-        absorption = data.contains(ABSORPTION_TAG) ? data.getFloat(ABSORPTION_TAG) : 0f;
-        sleeping = data.getBoolean(SLEEPING_TAG);
+        xpLevel = NbtHelper.getInt(data, XP_LEVEL_TAG, 0);
+        xpTotal = NbtHelper.getInt(data, XP_TOTAL_TAG, 0);
+        xpProgress = NbtHelper.getFloat(data, XP_PROGRESS_TAG, 0f);
+        foodLevel = NbtHelper.getInt(data, FOOD_LEVEL_TAG, 20);
+        foodSaturation = NbtHelper.getFloat(data, FOOD_SATURATION_TAG, 5f);
+        foodExhaustion = NbtHelper.getFloat(data, FOOD_EXHAUSTION_TAG, 0f);
+        absorption = NbtHelper.getFloat(data, ABSORPTION_TAG, 0f);
+        sleeping = NbtHelper.getBoolean(data, SLEEPING_TAG, false);
 
         getEntries().add(new IntegerEntryModel(this, Component.translatable("cadeditor.gui.xp_level"), xpLevel, value -> xpLevel = Math.max(0, value)));
         getEntries().add(new IntegerEntryModel(this, Component.translatable("cadeditor.gui.xp_total"), xpTotal, value -> xpTotal = Math.max(0, value)));
@@ -99,7 +103,10 @@ public class EntityPlayerStatsCategoryModel extends EntityCategoryModel {
             foodSyncTag.putInt(FOOD_LEVEL_TAG, clampedFood);
             foodSyncTag.putFloat(FOOD_SATURATION_TAG, clampedSaturation);
             foodSyncTag.putFloat(FOOD_EXHAUSTION_TAG, clampedExhaustion);
-            foodData.readAdditionalSaveData(foodSyncTag);
+            var registries = ClientUtil.registryAccess();
+            if (registries != null) {
+                foodData.readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, registries, foodSyncTag));
+            }
         }
         player.setAbsorptionAmount(Math.max(0f, absorption));
         if (sleeping) {

@@ -3,11 +3,11 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.LootTableSelectionEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -28,15 +28,15 @@ public class ItemContainerLootCategoryModel extends ItemEditorCategoryModel {
         String seed = "";
         CompoundTag data = getData();
         //TODO 后面要接上战利品表生成器，最好还能一键回填
-        if (data != null && data.contains("components", Tag.TAG_COMPOUND)) {
-            CompoundTag components = data.getCompound("components");
-            if (components.contains("minecraft:container_loot", Tag.TAG_COMPOUND)) {
-                CompoundTag loot = components.getCompound("minecraft:container_loot");
-                if (loot.contains("loot_table", Tag.TAG_STRING)) {
-                    tableId = loot.getString("loot_table");
-                }
-                if (loot.contains("seed", Tag.TAG_LONG)) {
-                    seed = Long.toString(loot.getLong("seed"));
+        if (data != null) {
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                CompoundTag loot = components.getCompound("minecraft:container_loot").orElse(null);
+                if (loot != null) {
+                    tableId = loot.getString("loot_table").orElse(tableId);
+                    if (loot.contains("seed")) {
+                        seed = Long.toString(loot.getLongOr("seed", 0L));
+                    }
                 }
             }
         }
@@ -59,12 +59,14 @@ public class ItemContainerLootCategoryModel extends ItemEditorCategoryModel {
 
         if (idRaw.isEmpty()) {
             CompoundTag data = getData();
-            if (data != null && data.contains("components", Tag.TAG_COMPOUND)) {
-                CompoundTag components = data.getCompound("components");
-                components.remove("minecraft:container_loot");
-                components.remove("!minecraft:container_loot");
-                components.put("!minecraft:container", new CompoundTag());
-                if (components.isEmpty()) data.remove("components");
+            if (data != null) {
+                CompoundTag components = data.getCompound("components").orElse(null);
+                if (components != null) {
+                    components.remove("minecraft:container_loot");
+                    components.remove("!minecraft:container_loot");
+                    components.put("!minecraft:container", new CompoundTag());
+                    if (components.isEmpty()) data.remove("components");
+                }
             }
             stack.remove(DataComponents.CONTAINER_LOOT);
             tableIdEntry.setValid(true);
@@ -84,10 +86,7 @@ public class ItemContainerLootCategoryModel extends ItemEditorCategoryModel {
             }
             CompoundTag data = getData();
             if (data != null) {
-                if (!data.contains("components", Tag.TAG_COMPOUND)) {
-                    data.put("components", new CompoundTag());
-                }
-                CompoundTag components = data.getCompound("components");
+                CompoundTag components = NbtHelper.getOrCreateCompound(data, "components");
                 if (hasSeed) {
                     loot.putLong("seed", seedValue);
                 }

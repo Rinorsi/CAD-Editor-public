@@ -4,8 +4,11 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.AttributeModifierEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
+import com.github.rinorsi.cadeditor.client.util.NbtUuidHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -21,12 +24,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel {
     private ListTag newAttributeModifiers;
+    private final Map<UUID, ResourceLocation> modifierIds = new HashMap<>();
 
     public ItemAttributeModifiersCategoryModel(ItemEditorModel editor) {
         super(ModTexts.ATTRIBUTE_MODIFIERS, editor);
@@ -36,44 +44,33 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
         ItemAttributeModifiers comps = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
-        boolean any = false;
+        modifierIds.clear();
         if (comps != null) {
-            any = true;
-            // Deduplicate by (attribute,id,amount,operation)
             Set<String> seen = new HashSet<>();
-            EquipmentSlotGroup[] groups = new EquipmentSlotGroup[]{
-                    EquipmentSlotGroup.MAINHAND, EquipmentSlotGroup.OFFHAND,
-                    EquipmentSlotGroup.FEET, EquipmentSlotGroup.LEGS, EquipmentSlotGroup.CHEST, EquipmentSlotGroup.HEAD,
-                    EquipmentSlotGroup.HAND, EquipmentSlotGroup.ARMOR, EquipmentSlotGroup.BODY, EquipmentSlotGroup.ANY
-            };
-            for (EquipmentSlotGroup g : groups) {
-                comps.forEach(g, (attr, mod) -> {
-                    CompoundTag t = mod.save();
-                    String opKey = t.contains("operation", Tag.TAG_STRING) ? t.getString("operation") : (t.contains("Operation", Tag.TAG_INT) ? Integer.toString(t.getInt("Operation")) : "");
-                    UUID uuid = parseModifierUuid(t);
-                    if (uuid == null && mod.id() != null) {
-                        uuid = parseUuidString(mod.id().toString());
-                    }
-                    if (uuid == null) {
-                        uuid = deterministicModifierUuid(t);
-                    }
-                    String attrName = attr.unwrapKey().map(k -> k.location().toString()).orElse("");
-                    int opIndex = toOperationIndex(t);
-                    String slot = toSlotString(g);
-                    String key = attrName + "|" + uuid + "|" + mod.amount() + "|" + opKey;
-                    if (seen.add(key)) {
-                        getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, mod.amount(), uuid, this::addAttributeModifier));
-                    }
-                });
+            for (ItemAttributeModifiers.Entry entry : comps.modifiers()) {
+                String attrName = entry.attribute().unwrapKey().map(k -> k.location().toString()).orElse("");
+                AttributeModifier modifier = entry.modifier();
+                UUID uuid = uuidFromResourceLocation(modifier.id());
+                modifierIds.put(uuid, modifier.id());
+                String slot = toSlotString(entry.slot());
+                int opIndex = operationToIndex(modifier.operation());
+                double amount = modifier.amount();
+                String key = attrName + "|" + uuid + "|" + amount + "|" + opIndex;
+                if (seen.add(key)) {
+                    getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, amount, uuid, this::addAttributeModifier));
+                }
+            }
+            if (!getEntries().isEmpty()) {
+                return;
             }
         }
-        if (!any) {
-            // Fallback to legacy NBT
-            getTag().getList("AttributeModifiers", Tag.TAG_COMPOUND).stream()
-                    .map(CompoundTag.class::cast)
-                    .map(this::createModifierEntry)
-                    .forEach(getEntries()::add);
-        }
+        // Fallback to legacy NBT
+        CompoundTag root = getTag();
+        ListTag legacyList = root == null ? new ListTag() : NbtHelper.getListOrEmpty(root, "AttributeModifiers");
+        legacyList.stream()
+                .map(CompoundTag.class::cast)
+                .map(this::createModifierEntry)
+                .forEach(getEntries()::add);
     }
 
     @Override
@@ -92,15 +89,19 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     }
 
     private EntryModel createModifierEntry(CompoundTag tag) {
-        if (tag != null) {
-            String attributeName = tag.getString("AttributeName");
-            String slot = tag.getString("Slot");
-            int operation = tag.getInt("Operation");
-            double amount = tag.getDouble("Amount");
-            UUID uuid = tag.getUUID("UUID");
-            return new AttributeModifierEntryModel(this, attributeName, slot, operation, amount, uuid, this::addAttributeModifier);
+        if (tag == null) {
+            return new AttributeModifierEntryModel(this, this::addAttributeModifier);
         }
-        return new AttributeModifierEntryModel(this, this::addAttributeModifier);
+        String attributeName = NbtHelper.getString(tag, "AttributeName", "");
+        String slot = NbtHelper.getString(tag, "Slot", "");
+        int operation = NbtHelper.getInt(tag, "Operation", 0);
+        double amount = NbtHelper.getDouble(tag, "Amount", 0d);
+        UUID uuid = parseModifierUuid(tag);
+        if (uuid == null) {
+            uuid = deterministicModifierUuid(tag);
+        }
+        modifierIds.putIfAbsent(uuid, null);
+        return new AttributeModifierEntryModel(this, attributeName, slot, operation, amount, uuid, this::addAttributeModifier);
     }
 
     @Override
@@ -120,37 +121,42 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         }
         // 2) Apply 1.21 Data Components to the actual stack
         ItemStack stack = getParent().getContext().getItemStack();
-        ItemAttributeModifiers mods = ItemAttributeModifiers.EMPTY;
         var attrLookupOpt = ClientUtil.registryAccess().lookup(Registries.ATTRIBUTE);
-        if (attrLookupOpt.isPresent()) {
-            var attrLookup = attrLookupOpt.get();
-            for (Tag t : newAttributeModifiers) {
-                if (t instanceof CompoundTag tag) {
-                    String attrName = tag.getString("AttributeName");
-                    String slot = tag.getString("Slot");
-                    int op = tag.getInt("Operation");
-                    double amount = tag.getDouble("Amount");
-                    UUID uuid = tag.getUUID("UUID");
-                    ResourceLocation attrRl = ResourceLocation.tryParse(attrName);
-                    if (attrRl == null) continue;
-                    ResourceKey<Attribute> attrKey = ResourceKey.create(Registries.ATTRIBUTE, attrRl);
-                    var holderOpt = attrLookup.get(attrKey);
-                    if (holderOpt.isEmpty()) continue;
-                    Holder<Attribute> holder = holderOpt.get();
-                    EquipmentSlotGroup group = fromSlotString(slot);
-                    // Build AttributeModifier through NBT load for operation compatibility
-                    CompoundTag m = new CompoundTag();
-                    m.putString("id", uuid.toString());
-                    m.putDouble("amount", amount);
-                    m.putString("operation", fromOperationIndex(op));
-                    AttributeModifier modifier = AttributeModifier.load(m);
-                    if (modifier != null) {
-                        mods = mods.withModifierAdded(holder, modifier, group);
-                    }
-                }
-            }
-            stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
+        if (attrLookupOpt.isEmpty()) {
+            stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+            return;
         }
+        HolderLookup.RegistryLookup<Attribute> attrLookup = attrLookupOpt.get();
+        List<ItemAttributeModifiers.Entry> componentEntries = new ArrayList<>();
+        for (Tag t : newAttributeModifiers) {
+            if (!(t instanceof CompoundTag tag)) {
+                continue;
+            }
+            String attrName = NbtHelper.getString(tag, "AttributeName", "");
+            ResourceLocation attrRl = ResourceLocation.tryParse(attrName);
+            if (attrRl == null) continue;
+            ResourceKey<Attribute> attrKey = ResourceKey.create(Registries.ATTRIBUTE, attrRl);
+            var holderOpt = attrLookup.get(attrKey);
+            if (holderOpt.isEmpty()) continue;
+            Holder<Attribute> holder = holderOpt.get();
+            String slotName = NbtHelper.getString(tag, "Slot", "");
+            EquipmentSlotGroup group = fromSlotString(slotName.isEmpty() ? "all" : slotName);
+            int op = NbtHelper.getInt(tag, "Operation", 0);
+            double amount = NbtHelper.getDouble(tag, "Amount", 0d);
+            UUID uuid = parseModifierUuid(tag);
+            if (uuid == null) {
+                uuid = deterministicModifierUuid(tag);
+            }
+            AttributeModifier.Operation operation = operationFromIndex(op);
+            ResourceLocation modifierId = resolveModifierId(uuid);
+            AttributeModifier modifier = new AttributeModifier(modifierId, amount, operation);
+            modifierIds.put(uuid, modifierId);
+            componentEntries.add(new ItemAttributeModifiers.Entry(holder, modifier, group));
+        }
+        ItemAttributeModifiers mods = componentEntries.isEmpty()
+                ? ItemAttributeModifiers.EMPTY
+                : new ItemAttributeModifiers(componentEntries);
+        stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
     }
 
     private void addAttributeModifier(String attributeName, String slot, int operation, double amount, UUID uuid) {
@@ -161,31 +167,27 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         }
         tag.putInt("Operation", operation);
         tag.putDouble("Amount", amount);
-        tag.putUUID("UUID", uuid);
+        NbtUuidHelper.putUuid(tag, "UUID", uuid);
+        modifierIds.putIfAbsent(uuid, null);
         newAttributeModifiers.add(tag);
     }
 
     private static UUID parseModifierUuid(CompoundTag tag) {
-        UUID uuid = parseUuidString(tag.contains("id", Tag.TAG_STRING) ? tag.getString("id") : null);
+        if (tag == null) {
+            return null;
+        }
+        UUID uuid = parseUuidString(tag.getString("UUID").orElse(null));
         if (uuid != null) {
             return uuid;
         }
-        if (tag.contains("id", Tag.TAG_INT_ARRAY)) {
-            uuid = uuidFromIntArray(tag.getIntArray("id"));
-            if (uuid != null) {
-                return uuid;
-            }
-        }
-        if (tag.contains("uuid", Tag.TAG_INT_ARRAY)) {
-            uuid = uuidFromIntArray(tag.getIntArray("uuid"));
-            if (uuid != null) {
-                return uuid;
-            }
-        }
-        if (tag.contains("UUID", Tag.TAG_INT_ARRAY)) {
-            return uuidFromIntArray(tag.getIntArray("UUID"));
-        }
-        return null;
+        uuid = parseUuidString(tag.getString("id").orElse(null));
+        if (uuid != null) return uuid;
+        uuid = uuidFromIntArray(NbtHelper.getIntArray(tag, "id"));
+        if (uuid != null) return uuid;
+        uuid = uuidFromIntArray(NbtHelper.getIntArray(tag, "uuid"));
+        if (uuid != null) return uuid;
+        uuid = uuidFromIntArray(NbtHelper.getIntArray(tag, "UUID"));
+        return uuid;
     }
 
     private static UUID parseUuidString(String value) {
@@ -270,25 +272,29 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         };
     }
 
-    private static int toOperationIndex(CompoundTag t) {
-        if (t.contains("Operation", Tag.TAG_INT)) return t.getInt("Operation");
-        if (t.contains("operation", Tag.TAG_STRING)) {
-            return switch (t.getString("operation")) {
-                case "add_value" -> 0;
-                case "add_multiplied_base" -> 1;
-                case "multiply_total" -> 2;
-                default -> 0;
-            };
-        }
-        return 0;
+    private static UUID uuidFromResourceLocation(ResourceLocation id) {
+        return UUID.nameUUIDFromBytes(("rl:" + id).getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String fromOperationIndex(int i) {
-        return switch (i) {
-            case 0 -> "add_value";
-            case 1 -> "add_multiplied_base";
-            case 2 -> "multiply_total";
-            default -> "add_value";
-        };
+    private ResourceLocation resolveModifierId(UUID uuid) {
+        ResourceLocation existing = modifierIds.get(uuid);
+        if (existing != null) {
+            return existing;
+        }
+        ResourceLocation generated = ResourceLocation.fromNamespaceAndPath("cadeditor", uuid.toString());
+        modifierIds.put(uuid, generated);
+        return generated;
+    }
+
+    private static AttributeModifier.Operation operationFromIndex(int index) {
+        AttributeModifier.Operation[] values = AttributeModifier.Operation.values();
+        if (index < 0 || index >= values.length) {
+            return values[0];
+        }
+        return values[index];
+    }
+
+    private static int operationToIndex(AttributeModifier.Operation operation) {
+        return operation.ordinal();
     }
 }

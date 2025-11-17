@@ -10,7 +10,6 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,15 +31,19 @@ public class EntityVillagerTradeCategoryModel extends EntityCategoryModel {
         tradeListStartIndex = 0;
         tradeEntries.clear();
         CompoundTag data = getData();
-        CompoundTag offers = data.contains(OFFERS_TAG, Tag.TAG_COMPOUND)
-                ? data.getCompound(OFFERS_TAG).copy()
-                : new CompoundTag();
+        CompoundTag offers = data.getCompound(OFFERS_TAG)
+                .map(CompoundTag::copy)
+                .orElseGet(CompoundTag::new);
         offersExtra = offers.copy();
         offersExtra.remove(RECIPES_TAG);
 
-        ListTag recipes = offers.contains(RECIPES_TAG, Tag.TAG_LIST) ? offers.getList(RECIPES_TAG, Tag.TAG_COMPOUND) : new ListTag();
+        ListTag recipes = offers.getList(RECIPES_TAG).orElseGet(ListTag::new);
         for (int i = 0; i < recipes.size(); i++) {
-            VillagerTradeEntryModel trade = new VillagerTradeEntryModel(this, recipes.getCompound(i));
+            CompoundTag recipe = recipes.getCompound(i).orElse(null);
+            if (recipe == null) {
+                continue;
+            }
+            VillagerTradeEntryModel trade = new VillagerTradeEntryModel(this, recipe);
             tradeEntries.add(trade);
             appendTradeEntries(trade);
         }

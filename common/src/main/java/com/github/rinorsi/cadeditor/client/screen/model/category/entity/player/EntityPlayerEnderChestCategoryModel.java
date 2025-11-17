@@ -4,6 +4,7 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.PlayerInventorySlotEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -54,14 +55,13 @@ public class EntityPlayerEnderChestCategoryModel extends EntityCategoryModel {
         if (data == null) {
             return slots;
         }
-        ListTag list = data.getList(ENDER_ITEMS_TAG, Tag.TAG_COMPOUND);
-        for (Tag element : list) {
-            if (!(element instanceof CompoundTag compound)) {
-                continue;
-            }
-            int slot = Byte.toUnsignedInt(compound.getByte("Slot"));
+        ListTag list = NbtHelper.getListOrEmpty(data, ENDER_ITEMS_TAG);
+        for (int i = 0; i < list.size(); i++) {
+            Tag element = list.get(i);
+            if (!(element instanceof CompoundTag compound)) continue;
+            int slot = Byte.toUnsignedInt(NbtHelper.getByte(compound, "Slot", (byte) -1));
             if (slot >= 0 && slot < ENDER_SLOT_COUNT) {
-                slots.set(slot, ItemStack.parseOptional(ClientUtil.registryAccess(), compound.copy()));
+                slots.set(slot, ClientUtil.parseItemStack(ClientUtil.registryAccess(), compound.copy()));
             }
         }
         return slots;
@@ -75,7 +75,7 @@ public class EntityPlayerEnderChestCategoryModel extends EntityCategoryModel {
             if (stack.isEmpty()) {
                 continue;
             }
-            CompoundTag tag = (CompoundTag) stack.save(ClientUtil.registryAccess(), new CompoundTag());
+            CompoundTag tag = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
             tag.putByte("Slot", (byte) entry.getSlotId());
             list.add(tag);
         }

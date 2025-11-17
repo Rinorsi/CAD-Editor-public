@@ -56,7 +56,7 @@ public final class ColoredItemHelper {
         data.putString("id", "minecraft:potion");
         data.putInt("Count", 1);
         data.put("tag", tag);
-        return ItemStack.parseOptional(registryAccess(), data);
+        return ClientUtil.parseItemStack(data);
     }
 
     public static ItemStack createColoredArmorItem(ItemStack armorItem, int color) {
@@ -64,7 +64,7 @@ public final class ColoredItemHelper {
         if (color == Color.NONE) {
             copy.remove(DataComponents.DYED_COLOR);
         } else {
-            copy.set(DataComponents.DYED_COLOR, new DyedItemColor(color, true));
+            copy.set(DataComponents.DYED_COLOR, new DyedItemColor(color));
         }
         return copy;
     }

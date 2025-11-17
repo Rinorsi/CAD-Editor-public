@@ -1,10 +1,12 @@
 
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -97,11 +99,13 @@ public class ItemLodestoneCategoryModel extends ItemEditorCategoryModel {
             return;
         }
         CompoundTag data = getData();
-        if (data != null && data.contains("components")) {
-            CompoundTag components = data.getCompound("components");
-            components.remove("minecraft:lodestone_tracker");
-            if (components.isEmpty()) {
-                data.remove("components");
+        if (data != null) {
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                components.remove("minecraft:lodestone_tracker");
+                if (components.isEmpty()) {
+                    data.remove("components");
+                }
             }
         }
     }

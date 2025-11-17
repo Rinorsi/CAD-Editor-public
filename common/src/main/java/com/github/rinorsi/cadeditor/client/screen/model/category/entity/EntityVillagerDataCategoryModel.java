@@ -6,7 +6,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerPro
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerTypeSelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 
 public class EntityVillagerDataCategoryModel extends EntityCategoryModel {
     private static final String VILLAGER_DATA_TAG = "VillagerData";
@@ -22,13 +21,11 @@ public class EntityVillagerDataCategoryModel extends EntityCategoryModel {
     @Override
     protected void setupEntries() {
         CompoundTag data = getData();
-        CompoundTag villagerData = data.contains(VILLAGER_DATA_TAG, Tag.TAG_COMPOUND)
-                ? data.getCompound(VILLAGER_DATA_TAG)
-                : new CompoundTag();
+        CompoundTag villagerData = data.getCompound(VILLAGER_DATA_TAG).orElseGet(CompoundTag::new);
 
-        professionId = normalizeId(villagerData.getString("profession"), "minecraft:none");
-        typeId = normalizeId(villagerData.getString("type"), "minecraft:plains");
-        level = villagerData.contains("level", Tag.TAG_INT) ? villagerData.getInt("level") : 1;
+        professionId = normalizeId(villagerData.getString("profession").orElse(null), "minecraft:none");
+        typeId = normalizeId(villagerData.getString("type").orElse(null), "minecraft:plains");
+        level = villagerData.getIntOr("level", 1);
 
         getEntries().add(new VillagerProfessionSelectionEntryModel(this, ModTexts.VILLAGER_PROFESSION, professionId,
                 value -> professionId = normalizeId(value, "minecraft:none")));
@@ -46,9 +43,7 @@ public class EntityVillagerDataCategoryModel extends EntityCategoryModel {
 
     private void writeVillagerData() {
         CompoundTag data = getData();
-        CompoundTag villagerData = data.contains(VILLAGER_DATA_TAG, Tag.TAG_COMPOUND)
-                ? data.getCompound(VILLAGER_DATA_TAG)
-                : new CompoundTag();
+        CompoundTag villagerData = data.getCompound(VILLAGER_DATA_TAG).orElseGet(CompoundTag::new);
         villagerData.putString("profession", normalizeId(professionId, "minecraft:none"));
         villagerData.putString("type", normalizeId(typeId, "minecraft:plains"));
         villagerData.putInt("level", clampLevel(level));

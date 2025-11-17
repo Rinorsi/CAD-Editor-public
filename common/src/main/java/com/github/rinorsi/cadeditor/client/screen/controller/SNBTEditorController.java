@@ -4,11 +4,11 @@ import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
 import com.github.rinorsi.cadeditor.client.screen.model.SNBTEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.view.SNBTEditorView;
+import com.github.rinorsi.cadeditor.client.util.SnbtHelper;
 import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.nbt.SnbtPrinterTagVisitor;
-import net.minecraft.nbt.TagParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,7 +31,7 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
         view.getTextArea().textProperty().bindBidirectional(model.valueProperty());
         view.getTextArea().setValidator(s -> {
             try {
-                return TagParser.parseTag(s) != null;
+                return SnbtHelper.parse(s) != null;
             } catch (CommandSyntaxException e) {
                 return false;
             }
@@ -55,7 +55,7 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
     private void format() {
         SnbtPrinterTagVisitor formatter = new SnbtPrinterTagVisitor("  ", 0, new ArrayList<>());
         try {
-            model.setValue(formatter.visit(TagParser.parseTag(view.getTextArea().getText())));
+            model.setValue(formatter.visit(SnbtHelper.parse(view.getTextArea().getText())));
         } catch (CommandSyntaxException e) {
             LOGGER.error("无法解析 NBT 标签", e);
         }

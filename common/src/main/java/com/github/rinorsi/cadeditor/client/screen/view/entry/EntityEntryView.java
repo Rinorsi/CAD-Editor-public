@@ -1,6 +1,5 @@
 package com.github.rinorsi.cadeditor.client.screen.view.entry;
 
-import com.github.franckyi.guapi.api.node.HBox;
 import com.github.franckyi.guapi.api.node.ItemView;
 import com.github.franckyi.guapi.api.node.Label;
 import com.github.franckyi.guapi.api.node.Node;
@@ -14,7 +13,6 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 public class EntityEntryView extends LabeledEntryView {
     private TextField entityField;
     private TexturedButton selectEntityButton;
-    private TexturedButton loadVaultButton;
     private TexturedButton openEditorButton;
     private TexturedButton openNbtEditorButton;
     private TexturedButton openSnbtEditorButton;
@@ -29,22 +27,14 @@ public class EntityEntryView extends LabeledEntryView {
             content.add(entityField = textField().prefHeight(16), 1);
             content.add(selectEntityButton = texturedButton(ModTextures.SEARCH, 16, 16, false)
                     .tooltip(ModTexts.SEARCH));
+            content.add(openEditorButton = texturedButton(ModTextures.EDITOR, 16, 16, false)
+                    .tooltip(ModTexts.OPEN_EDITOR));
+            content.add(openNbtEditorButton = texturedButton(ModTextures.NBT_EDITOR, 16, 16, false)
+                    .tooltip(ModTexts.OPEN_NBT_EDITOR));
+            content.add(openSnbtEditorButton = texturedButton(ModTextures.SNBT_EDITOR, 16, 16, false)
+                    .tooltip(ModTexts.OPEN_SNBT_EDITOR));
             content.spacing(4).align(CENTER);
         });
-    }
-
-    @Override
-    public void build() {
-        super.build();
-        HBox buttons = getButtonBox();
-        buttons.getChildren().add(loadVaultButton = texturedButton(ModTextures.PASTE, 16, 16, false)
-                .tooltip(ModTexts.LOAD_VAULT));
-        buttons.getChildren().add(openEditorButton = texturedButton(ModTextures.EDITOR, 16, 16, false)
-                .tooltip(ModTexts.OPEN_EDITOR));
-        buttons.getChildren().add(openNbtEditorButton = texturedButton(ModTextures.NBT_EDITOR, 16, 16, false)
-                .tooltip(ModTexts.OPEN_NBT_EDITOR));
-        buttons.getChildren().add(openSnbtEditorButton = texturedButton(ModTextures.SNBT_EDITOR, 16, 16, false)
-                .tooltip(ModTexts.OPEN_SNBT_EDITOR));
     }
 
     public TextField getEntityField() {
@@ -53,10 +43,6 @@ public class EntityEntryView extends LabeledEntryView {
 
     public TexturedButton getSelectEntityButton() {
         return selectEntityButton;
-    }
-
-    public TexturedButton getLoadVaultButton() {
-        return loadVaultButton;
     }
 
     public TexturedButton getOpenEditorButton() {

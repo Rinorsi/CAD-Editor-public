@@ -1,6 +1,5 @@
 package com.github.rinorsi.cadeditor.mixin;
 
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,7 +51,4 @@ public interface EditBoxMixin {
 
     @Invoker("getMaxLength")
     int invokeGetMaxLength();
-
-    @Invoker("renderHighlight")
-    void invokeRenderHighlight(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2);
 }

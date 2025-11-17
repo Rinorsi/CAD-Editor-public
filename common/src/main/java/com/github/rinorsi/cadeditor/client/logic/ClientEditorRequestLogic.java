@@ -16,8 +16,10 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -39,8 +41,9 @@ public final class ClientEditorRequestLogic {
                 DebugLog.infoKey("cadeditor.debug.request.entity.server", entity.getId());
                 NetworkManager.sendToServer(NetworkManager.ENTITY_EDITOR_REQUEST, new EntityEditorPacket.Request(editorType, entity.getId()));
             } else {
-                var tag = new CompoundTag();
-                entity.save(tag);
+                TagValueOutput writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, ClientUtil.registryAccess());
+                entity.save(writer);
+                CompoundTag tag = writer.buildResult();
                 DebugLog.infoKey("cadeditor.debug.request.entity.local", entity.getName().getString());
                 ModScreenHandler.openEditor(editorType, new EntityEditorContext(tag, ModTexts.errorServerModRequired(ModTexts.ENTITY), true, null));
             }
@@ -63,7 +66,7 @@ public final class ClientEditorRequestLogic {
                 var blockEntity = level.getBlockEntity(blockPos);
                 CompoundTag tag = null;
                 if (blockEntity != null) {
-                    tag = blockEntity.saveWithId(ClientUtil.registryAccess());
+                    tag = blockEntity.saveWithFullMetadata(ClientUtil.registryAccess());
                 }
                 DebugLog.infoKey("cadeditor.debug.request.block.local", blockState.getBlock().getName().getString());
                 ModScreenHandler.openEditor(editorType, new BlockEditorContext(blockState, tag, ModTexts.errorServerModRequired(ModTexts.BLOCK), null));
@@ -88,7 +91,7 @@ public final class ClientEditorRequestLogic {
             if (Minecraft.getInstance().player.isCreative()) {
                 DebugLog.infoKey("cadeditor.debug.request.mainhand.local_creative", item.getDisplayName().getString());
                 ModScreenHandler.openEditor(editorType, new ItemEditorContext(item, null, true, context ->
-                        Minecraft.getInstance().player.connection.send(new ServerboundSetCreativeModeSlotPacket(Minecraft.getInstance().player.getInventory().selected + Inventory.INVENTORY_SIZE, context.getItemStack().copy()))));
+                        Minecraft.getInstance().player.connection.send(new ServerboundSetCreativeModeSlotPacket(Minecraft.getInstance().player.getInventory().getSelectedSlot() + Inventory.INVENTORY_SIZE, context.getItemStack().copy()))));
             } else {
                 DebugLog.infoKey("cadeditor.debug.request.mainhand.local", item.getDisplayName().getString());
                 ModScreenHandler.openEditor(editorType, new ItemEditorContext(item, ModTexts.errorServerModRequired(ModTexts.ITEM), true, null));

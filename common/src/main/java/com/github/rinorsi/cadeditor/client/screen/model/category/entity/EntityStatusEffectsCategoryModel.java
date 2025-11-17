@@ -33,7 +33,7 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         if (data == null) {
             return;
         }
-        ListTag effects = data.getList(EFFECTS_TAG, Tag.TAG_COMPOUND);
+        ListTag effects = data.getList(EFFECTS_TAG).orElseGet(ListTag::new);
         for (Tag element : effects) {
             if (element instanceof CompoundTag compound) {
                 getEntries().add(createEffectEntry(compound));
@@ -99,26 +99,22 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         boolean showIcon = true;
 
         if (tag != null) {
-            if (tag.contains("id", Tag.TAG_STRING)) {
-                id = tag.getString("id");
-            } else if (tag.contains("Id", Tag.TAG_BYTE)) {
-                id = Integer.toString(Byte.toUnsignedInt(tag.getByte("Id")));
+            id = tag.getString("id")
+                    .or(() -> tag.getString("Id"))
+                    .orElse(id);
+            if (id.isEmpty()) {
+                id = tag.getInt("Id").map(value -> Integer.toString(value)).orElse(id);
             }
-            amplifier = tag.contains("amplifier", Tag.TAG_INT) ? tag.getInt("amplifier") : tag.getInt("Amplifier");
-            if (tag.contains("duration", Tag.TAG_INT)) {
-                duration = Math.max(1, tag.getInt("duration"));
-            } else if (tag.contains("Duration", Tag.TAG_INT)) {
-                duration = Math.max(1, tag.getInt("Duration"));
-            }
-            ambient = tag.contains("ambient", Tag.TAG_BYTE) ? tag.getBoolean("ambient") : tag.getBoolean("Ambient");
-            showParticles = !tag.contains("show_particles", Tag.TAG_BYTE) || tag.getBoolean("show_particles");
-            if (tag.contains("ShowParticles", Tag.TAG_BYTE)) {
-                showParticles = tag.getBoolean("ShowParticles");
-            }
-            showIcon = !tag.contains("show_icon", Tag.TAG_BYTE) || tag.getBoolean("show_icon");
-            if (tag.contains("ShowIcon", Tag.TAG_BYTE)) {
-                showIcon = tag.getBoolean("ShowIcon");
-            }
+            amplifier = tag.getIntOr("amplifier", tag.getIntOr("Amplifier", amplifier));
+            duration = Math.max(1, tag.getIntOr("duration", tag.getIntOr("Duration", duration)));
+            duration = Math.max(1, duration);
+            ambient = tag.getBoolean("ambient").orElse(tag.getBooleanOr("Ambient", ambient));
+            showParticles = tag.getBoolean("show_particles")
+                    .or(() -> tag.getBoolean("ShowParticles"))
+                    .orElse(true);
+            showIcon = tag.getBoolean("show_icon")
+                    .or(() -> tag.getBoolean("ShowIcon"))
+                    .orElse(true);
         }
 
         return new PotionEffectEntryModel(this, id, Math.max(0, amplifier), Math.max(1, duration), ambient, showParticles, showIcon, updated -> {});

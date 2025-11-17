@@ -79,7 +79,11 @@ public final class ForgeLootTableTracker {
             return;
         }
         try {
-            Collection<ResourceLocation> keys = registries.getKeys(Registries.LOOT_TABLE);
+            Collection<ResourceLocation> keys = registries.lookup()
+                    .lookupOrThrow(Registries.LOOT_TABLE)
+                    .listElements()
+                    .map(reference -> reference.key().location())
+                    .toList();
             LootTableIndex.updateAll(new ArrayList<>(keys));
         } catch (Throwable ignored) {
             LootTableIndex.updateAll(Collections.emptyList());

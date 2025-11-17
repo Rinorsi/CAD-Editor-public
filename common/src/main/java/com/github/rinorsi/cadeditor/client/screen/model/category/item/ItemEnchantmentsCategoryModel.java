@@ -4,6 +4,7 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.EnchantmentEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
@@ -50,11 +51,16 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
                     .map(this::createEnchantment)
                     .forEach(getEntries()::add);
         }
-        if (!any && getData().contains("tag", Tag.TAG_COMPOUND) && getTag().contains("Enchantments", Tag.TAG_LIST)) {
-            getTag().getList("Enchantments", Tag.TAG_COMPOUND).stream()
-                    .map(CompoundTag.class::cast)
-                    .map(this::createEnchantment)
-                    .forEach(getEntries()::add);
+        CompoundTag data = getData();
+        CompoundTag legacyTag = data != null ? data.getCompound("tag").orElse(null) : null;
+        if (!any && legacyTag != null) {
+            ListTag enchantList = legacyTag.getList("Enchantments").orElse(null);
+            if (enchantList != null) {
+                enchantList.stream()
+                        .map(CompoundTag.class::cast)
+                        .map(this::createEnchantment)
+                        .forEach(getEntries()::add);
+            }
         }
     }
 
@@ -80,7 +86,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private EnchantmentEntryModel createEnchantment(CompoundTag tag) {
-        return createEnchantment(tag.getString("id"), tag.getInt("lvl"));
+        return createEnchantment(NbtHelper.getString(tag, "id", ""), tag.getIntOr("lvl", 0));
     }
 
     private EnchantmentEntryModel createEnchantment(String id, int level) {
@@ -133,8 +139,8 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
             ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
             for (Tag tag : newEnch) {
                 if (tag instanceof CompoundTag compoundTag) {
-                    String id = compoundTag.getString("id");
-                    int lvl = compoundTag.getInt("lvl");
+                    String id = NbtHelper.getString(compoundTag, "id", "");
+                    int lvl = compoundTag.getIntOr("lvl", 0);
                     if (lvl > 0) {
                         ResourceLocation rl = ResourceLocation.tryParse(id);
                         if (rl != null) {
@@ -147,10 +153,16 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
             EnchantmentHelper.setEnchantments(stack, mutable.toImmutable());
             clearLegacyEnchantments();
         } else {
+            CompoundTag root = getOrCreateTag();
+            CompoundTag legacyTag = root.getCompound("tag").orElseGet(() -> {
+                CompoundTag created = new CompoundTag();
+                root.put("tag", created);
+                return created;
+            });
             if (!newEnch.isEmpty()) {
-                getOrCreateTag().put("Enchantments", newEnch);
-            } else if (getData().contains("tag", Tag.TAG_COMPOUND) && getTag().contains("Enchantments")) {
-                getTag().remove("Enchantments");
+                legacyTag.put("Enchantments", newEnch);
+            } else if (legacyTag.contains("Enchantments")) {
+                legacyTag.remove("Enchantments");
             }
         }
     }
@@ -160,11 +172,13 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void clearLegacyEnchantments() {
-        if (getData().contains("tag", Tag.TAG_COMPOUND)) {
-            CompoundTag tag = getTag();
-            if (tag.contains("Enchantments")) {
-                tag.remove("Enchantments");
-            }
+        CompoundTag data = getData();
+        if (data == null) {
+            return;
+        }
+        CompoundTag tag = data.getCompound("tag").orElse(null);
+        if (tag != null && tag.contains("Enchantments")) {
+            tag.remove("Enchantments");
         }
     }
 }

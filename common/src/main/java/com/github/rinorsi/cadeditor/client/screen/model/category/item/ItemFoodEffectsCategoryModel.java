@@ -85,9 +85,9 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
                     effect.probability(),
                     this::addFoodEffect);
         }
-        String defaultId = MobEffects.MOVEMENT_SPEED.unwrapKey()
+        String defaultId = MobEffects.SPEED.unwrapKey()
                 .map(key -> key.location().toString())
-                .orElse("minecraft:movement_speed");
+                .orElse("minecraft:speed");
         return new FoodEffectEntryModel(this, defaultId, 0, 1, false, true, true, 1.0f, this::addFoodEffect);
     }
 

@@ -4,10 +4,12 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
+import com.github.rinorsi.cadeditor.client.util.SnbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
@@ -80,19 +82,24 @@ public class ItemContainerCategoryModel extends ItemEditorCategoryModel {
             stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(parsed));
         }
         CompoundTag data = getData();
-        if (data != null && data.contains("components")) {
-            CompoundTag components = data.getCompound("components");
-            components.remove("minecraft:container");
-            if (components.isEmpty()) {
-                data.remove("components");
+        if (data != null) {
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                components.remove("minecraft:container");
+                if (components.isEmpty()) {
+                    data.remove("components");
+                }
             }
         }
     }
 
     private Optional<ItemStack> parseSlot(String spec) {
         try {
-            CompoundTag tag = TagParser.parseTag(spec);
-            ItemStack parsed = ItemStack.parseOptional(ClientUtil.registryAccess(), tag);
+            Tag raw = SnbtHelper.parse(spec);
+            if (!(raw instanceof CompoundTag tag)) {
+                return Optional.empty();
+            }
+            ItemStack parsed = ClientUtil.parseItemStack(ClientUtil.registryAccess(), tag);
             if (parsed.isEmpty()) {
                 return Optional.empty();
             }
@@ -103,7 +110,7 @@ public class ItemContainerCategoryModel extends ItemEditorCategoryModel {
     }
 
     private String formatSlot(ItemStack stack) {
-        CompoundTag tag = (CompoundTag) stack.save(ClientUtil.registryAccess(), new CompoundTag());
+        CompoundTag tag = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
         return tag.toString();
     }
 }

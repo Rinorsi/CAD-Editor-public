@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.skin;
 
+import com.github.franckyi.guapi.api.RenderHelper;
 import com.github.rinorsi.cadeditor.client.screen.widget.SyntaxHighlightingTextArea;
 import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter;
 import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter.Token;
@@ -168,8 +169,9 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         if (text.isEmpty()) {
             return x;
         }
-        int renderedX = graphics.drawString(font, text, x, y, TEXT_COLOR);
-        return clampCursorPosition(x, renderedX);
+        graphics.drawString(font, text, x, y, RenderHelper.ensureOpaqueColor(TEXT_COLOR));
+        int renderedEnd = x + font.width(text);
+        return clampCursorPosition(x, renderedEnd);
     }
 
     private int drawColored(GuiGraphics graphics, String text, int x, int y, ChatFormatting colour) {
@@ -177,9 +179,10 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
             return x;
         }
         Integer rgb = colour.getColor();
-        int colourValue = rgb != null ? rgb : TEXT_COLOR;
-        int renderedX = graphics.drawString(font, text, x, y, colourValue);
-        return clampCursorPosition(x, renderedX);
+        int colourValue = RenderHelper.ensureOpaqueColor(rgb != null ? rgb : TEXT_COLOR);
+        graphics.drawString(font, text, x, y, colourValue);
+        int renderedEnd = x + font.width(text);
+        return clampCursorPosition(x, renderedEnd);
     }
 
     @Override

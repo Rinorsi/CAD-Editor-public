@@ -7,6 +7,8 @@ import com.github.rinorsi.cadeditor.common.ColoredItemHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
@@ -19,6 +21,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Instrument;
@@ -643,7 +646,7 @@ public final class ClientCache {
                         .map(holder -> new SelectableSpriteListSelectionElementModel(
                                 holder.value().getDescriptionId(),
                                 holder.key().location(),
-                                () -> Minecraft.getInstance().getMobEffectTextures().get(holder)))
+                                mobEffectSpriteSupplier(holder)))
                         .sorted()
                         .toList())
                 .orElseGet(List::of);
@@ -652,8 +655,11 @@ public final class ClientCache {
     private static List<TrimPatternSelectionElementModel> buildTrimPatternSelectionItems(HolderLookup.RegistryLookup<TrimPattern> lookup) {
         return lookup.listElements()
                 .map(holder -> {
-                    var itemHolder = holder.value().templateItem();
-                    return new TrimPatternSelectionElementModel(holder.value().description(), holder.key().location(), iconFromHolder(itemHolder));
+                    ResourceLocation patternId = holder.key().location();
+                    return new TrimPatternSelectionElementModel(
+                            holder.value().description(),
+                            patternId,
+                            () -> patternIconStack(patternId));
                 })
                 .sorted()
                 .toList();
@@ -661,7 +667,13 @@ public final class ClientCache {
 
     private static List<TrimMaterialSelectionElementModel> buildTrimMaterialSelectionItems(HolderLookup.RegistryLookup<TrimMaterial> lookup) {
         return lookup.listElements()
-                .map(holder -> new TrimMaterialSelectionElementModel(holder.value().description(), holder.key().location(), iconFromHolder(holder.value().ingredient())))
+                .map(holder -> {
+                    ResourceLocation materialId = holder.key().location();
+                    return new TrimMaterialSelectionElementModel(
+                            holder.value().description(),
+                            materialId,
+                            () -> materialIconStack(materialId));
+                })
                 .sorted()
                 .toList();
     }
@@ -695,6 +707,61 @@ public final class ClientCache {
                         ModTexts.soundFilterNamespace(namespace), element -> element instanceof SoundEventListSelectionElementModel sound
                                 && sound.getNamespace().equals(namespace))));
         return List.copyOf(filters);
+    }
+
+    private static Supplier<TextureAtlasSprite> mobEffectSpriteSupplier(Holder<MobEffect> holder) {
+        return () -> Minecraft.getInstance()
+                .getGuiSprites()
+                .getSprite(net.minecraft.client.gui.Gui.getMobEffectSprite(holder));
+    }
+
+    private static ItemStack patternIconStack(ResourceLocation patternId) {
+        return new ItemStack(patternTemplateItem(patternId));
+    }
+
+    private static Item patternTemplateItem(ResourceLocation patternId) {
+        return switch (patternId.getPath()) {
+            case "sentry" -> Items.SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "dune" -> Items.DUNE_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "coast" -> Items.COAST_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "wild" -> Items.WILD_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "ward" -> Items.WARD_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "eye" -> Items.EYE_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "vex" -> Items.VEX_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "tide" -> Items.TIDE_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "snout" -> Items.SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "rib" -> Items.RIB_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "spire" -> Items.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "wayfinder" -> Items.WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "shaper" -> Items.SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "silence" -> Items.SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "raiser" -> Items.RAISER_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "host" -> Items.HOST_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "flow" -> Items.FLOW_ARMOR_TRIM_SMITHING_TEMPLATE;
+            case "bolt" -> Items.BOLT_ARMOR_TRIM_SMITHING_TEMPLATE;
+            default -> Items.SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE;
+        };
+    }
+
+    private static ItemStack materialIconStack(ResourceLocation materialId) {
+        return new ItemStack(materialDisplayItem(materialId));
+    }
+
+    private static Item materialDisplayItem(ResourceLocation materialId) {
+        return switch (materialId.getPath()) {
+            case "quartz" -> Items.QUARTZ;
+            case "iron" -> Items.IRON_INGOT;
+            case "netherite" -> Items.NETHERITE_INGOT;
+            case "redstone" -> Items.REDSTONE;
+            case "copper" -> Items.COPPER_INGOT;
+            case "gold" -> Items.GOLD_INGOT;
+            case "emerald" -> Items.EMERALD;
+            case "diamond" -> Items.DIAMOND;
+            case "lapis" -> Items.LAPIS_LAZULI;
+            case "amethyst" -> Items.AMETHYST_SHARD;
+            case "resin" -> Items.RESIN_BRICK;
+            default -> Items.IRON_INGOT;
+        };
     }
 
     private static Supplier<ItemStack> iconFromHolder(Holder<Item> holder) {

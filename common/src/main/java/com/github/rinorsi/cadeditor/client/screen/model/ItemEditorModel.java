@@ -22,11 +22,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.TippedArrowItem;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BannerItem;
 import net.minecraft.world.item.CompassItem;
 import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.ShieldItem;
@@ -35,6 +33,8 @@ import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.consume_effects.ConsumeEffect;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.entity.EquipmentSlot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -89,6 +89,8 @@ public class ItemEditorModel extends StandardEditorModel {
     protected void setupCategories() {
         generalCategory = new ItemGeneralCategoryModel(this);
         getCategories().add(generalCategory);
+        getCategories().add(new ItemCustomModelDataCategoryModel(this));
+        getCategories().add(new ItemConsumableCategoryModel(this));
         getCategories().add(new ItemDisplayCategoryModel(this));
         getCategories().add(new ItemEnchantmentsCategoryModel(this));
         ItemStack stack = getContext().getItemStack();
@@ -101,7 +103,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof SpawnEggItem spawnEgg) {
             getCategories().add(new ItemSpawnEggCategoryModel(this, spawnEgg));
         }
-        if (stack.has(DataComponents.TOOL) || item instanceof DiggerItem) {
+        if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE)) {
             getCategories().add(new ItemToolCategoryModel(this));
         }
         if (item instanceof MapItem || stack.has(DataComponents.MAP_ID) || stack.has(DataComponents.MAP_COLOR)
@@ -141,7 +143,7 @@ public class ItemEditorModel extends StandardEditorModel {
                 getCategories().add(new ItemContainerLootCategoryModel(this));
             }
         }
-        if (stack.has(DataComponents.TRIM) || item instanceof ArmorItem) {
+        if (stack.has(DataComponents.TRIM) || isArmorStack(stack)) {
             getCategories().add(new ItemTrimCategoryModel(this));
         }
         if (stack.has(DataComponents.BANNER_PATTERNS) || stack.has(DataComponents.BASE_COLOR)
@@ -200,12 +202,12 @@ public class ItemEditorModel extends StandardEditorModel {
 
         CompoundTag stagedLegacy = copyLegacyPayload(context.getTag());
         var registryAccess = getRegistryAccess();
-        var rebuilt = context.getItemStack().save(registryAccess, new net.minecraft.nbt.CompoundTag());
+        var rebuilt = ClientUtil.saveItemStack(registryAccess, context.getItemStack());
         if (rebuilt instanceof net.minecraft.nbt.CompoundTag compound) {
             if (stagedLegacy != null && !stagedLegacy.isEmpty()) compound.put(KEY_LEGACY_TAG, stagedLegacy);
             else compound.remove(KEY_LEGACY_TAG);
             context.setTag(compound);
-            ItemStack parsed = ItemStack.parseOptional(registryAccess, compound);
+            ItemStack parsed = ClientUtil.parseItemStack(registryAccess, compound);
             context.setItemStack(parsed.isEmpty() ? context.getItemStack().copy() : parsed);
         }
     }
@@ -231,8 +233,13 @@ public class ItemEditorModel extends StandardEditorModel {
 
     public void applyFoodComponent() {
         ItemStack stack = getContext().getItemStack();
-        if (desiredFoodEnabled) {
+        foodState.setEnabled(desiredFoodEnabled);
+        boolean wantsFood = desiredFoodEnabled;
+        boolean wantsConsumable = wantsConsumableComponent();
+        if (wantsFood) {
             writeFoodComponents(stack);
+        } else if (wantsConsumable) {
+            writeStandaloneConsumable(stack);
         } else {
             stack.remove(DataComponents.FOOD);
             stack.remove(DataComponents.CONSUMABLE);
@@ -241,6 +248,42 @@ public class ItemEditorModel extends StandardEditorModel {
             DebugLog.infoKey("cadeditor.debug.food.removed", describeStackForLogs(stack));
         }
         syncContextSnapshot(stack);
+    }
+
+    private void writeStandaloneConsumable(ItemStack stack) {
+        try {
+            List<ConsumeEffect> statusEffects = buildStatusEffects();
+            Consumable consumable = foodState.buildConsumable(statusEffects);
+            Optional<ItemStack> convertsTo = foodState.resolveUsingConvertsTo();
+            Optional<UseRemainder> useRemainder = foodState.buildUseRemainder(convertsTo);
+
+            stack.remove(DataComponents.FOOD);
+            stack.set(DataComponents.CONSUMABLE, consumable);
+            if (useRemainder.isPresent()) {
+                stack.set(DataComponents.USE_REMAINDER, useRemainder.get());
+            } else {
+                stack.remove(DataComponents.USE_REMAINDER);
+            }
+
+            foodState.updateOriginalUsingConvertsTo(convertsTo);
+            DebugLog.infoKey(
+                    "cadeditor.debug.food.applied_consumable",
+                    describeStackForLogs(stack),
+                    consumable.consumeSeconds(),
+                    statusEffects
+            );
+        } catch (Throwable t) {
+            LOGGER.error("Building consumable component failed, falling back to minimal values. Cause: {}", t.toString());
+            stack.remove(DataComponents.FOOD);
+            Consumable.Builder builder = Consumable.builder()
+                    .consumeSeconds(foodState.getConsumeSeconds())
+                    .hasConsumeParticles(foodState.hasConsumeParticles())
+                    .animation(foodState.getAnimation());
+            foodState.getConsumeSound().ifPresent(builder::sound);
+            stack.set(DataComponents.CONSUMABLE, builder.build());
+            stack.remove(DataComponents.USE_REMAINDER);
+            foodState.updateOriginalUsingConvertsTo(Optional.empty());
+        }
     }
 
     private void writeFoodComponents(ItemStack stack) {
@@ -403,12 +446,17 @@ public class ItemEditorModel extends StandardEditorModel {
     private void syncContextSnapshot(ItemStack stack) {
         var context = getContext();
         var registryAccess = getRegistryAccess();
-        var saved = stack.save(registryAccess, new CompoundTag());
+        var saved = ClientUtil.saveItemStack(registryAccess, stack);
         if (!(saved instanceof CompoundTag compound)) return;
 
-        if (!desiredFoodEnabled) {
+        foodState.setEnabled(desiredFoodEnabled);
+        boolean wantsFood = desiredFoodEnabled;
+        boolean wantsConsumable = wantsConsumableComponent();
+
+        Set<String> suppressedKeys = suppressedComponentKeys();
+        if (!suppressedKeys.isEmpty()) {
             CompoundTag components = ensureComponentsTag(compound);
-            for (String key : FOOD_COMPONENT_KEYS) {
+            for (String key : suppressedKeys) {
                 components.put(TOMBSTONE_PREFIX + key, new CompoundTag());
             }
         }
@@ -418,20 +466,29 @@ public class ItemEditorModel extends StandardEditorModel {
         if (legacy != null && !legacy.isEmpty()) compound.put(KEY_LEGACY_TAG, legacy);
         else compound.remove(KEY_LEGACY_TAG);
 
-        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : FOOD_COMPONENT_KEYS;
+        Set<String> doNotCopyBack = suppressedKeys.isEmpty() ? Collections.emptySet() : suppressedKeys;
         compound = mergeComponentsPreservingUnknown(oldRoot, compound, doNotCopyBack);
 
-        if (desiredFoodEnabled && !hasComponent(compound, FOOD_COMPONENT_KEY)) {
+        if (wantsFood && !hasComponent(compound, FOOD_COMPONENT_KEY)) {
             ensureComponentsTag(compound).put(FOOD_COMPONENT_KEY, buildMinimalFoodNbt());
         }
 
         context.setTag(compound);
-        ItemStack parsed = ItemStack.parseOptional(registryAccess, compound);
+        ItemStack parsed = ClientUtil.parseItemStack(registryAccess, compound);
         if (!parsed.isEmpty()) {
-            if (desiredFoodEnabled && parsed.get(DataComponents.FOOD) == null) {
+            if (wantsFood && parsed.get(DataComponents.FOOD) == null) {
                 writeFoodComponents(parsed);
-            } else if (!desiredFoodEnabled && parsed.get(DataComponents.FOOD) != null) {
+            } else if (!wantsFood && parsed.get(DataComponents.FOOD) != null) {
                 parsed.remove(DataComponents.FOOD);
+            }
+
+            if (wantsConsumable && parsed.get(DataComponents.CONSUMABLE) == null) {
+                if (wantsFood) {
+                    writeFoodComponents(parsed);
+                } else {
+                    writeStandaloneConsumable(parsed);
+                }
+            } else if (!wantsConsumable && parsed.get(DataComponents.CONSUMABLE) != null) {
                 parsed.remove(DataComponents.CONSUMABLE);
                 parsed.remove(DataComponents.USE_REMAINDER);
             }
@@ -440,9 +497,19 @@ public class ItemEditorModel extends StandardEditorModel {
             foodState.setEnabled(desiredFoodEnabled);
         } else {
             ItemStack fallback = stack.copy();
-            if (desiredFoodEnabled && fallback.get(DataComponents.FOOD) == null) writeFoodComponents(fallback);
-            else if (!desiredFoodEnabled && fallback.get(DataComponents.FOOD) != null) {
+            if (wantsFood && fallback.get(DataComponents.FOOD) == null) {
+                writeFoodComponents(fallback);
+            } else if (!wantsFood && fallback.get(DataComponents.FOOD) != null) {
                 fallback.remove(DataComponents.FOOD);
+            }
+
+            if (wantsConsumable && fallback.get(DataComponents.CONSUMABLE) == null) {
+                if (wantsFood) {
+                    writeFoodComponents(fallback);
+                } else {
+                    writeStandaloneConsumable(fallback);
+                }
+            } else if (!wantsConsumable && fallback.get(DataComponents.CONSUMABLE) != null) {
                 fallback.remove(DataComponents.CONSUMABLE);
                 fallback.remove(DataComponents.USE_REMAINDER);
             }
@@ -468,19 +535,23 @@ public class ItemEditorModel extends StandardEditorModel {
             CompoundTag oldRoot, CompoundTag newRoot, Set<String> keysNotToCopy) {
         CompoundTag merged = newRoot.copy();
 
-        if (!merged.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-            if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-                merged.put(KEY_COMPONENTS, oldRoot.getCompound(KEY_COMPONENTS).copy());
+        if (!merged.contains(KEY_COMPONENTS)) {
+            if (oldRoot != null) {
+                oldRoot.getCompound(KEY_COMPONENTS).ifPresent(oldComps -> merged.put(KEY_COMPONENTS, oldComps.copy()));
             }
             return merged;
         }
 
-        CompoundTag newComps = merged.getCompound(KEY_COMPONENTS);
+        CompoundTag newComps = merged.getCompound(KEY_COMPONENTS).orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            merged.put(KEY_COMPONENTS, created);
+            return created;
+        });
 
-        if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
-            CompoundTag oldComps = oldRoot.getCompound(KEY_COMPONENTS);
+        if (oldRoot != null && oldRoot.contains(KEY_COMPONENTS)) {
+            CompoundTag oldComps = oldRoot.getCompound(KEY_COMPONENTS).orElse(null);
 
-            for (String oldKey : oldComps.getAllKeys()) {
+            if (oldComps != null) for (String oldKey : oldComps.keySet()) {
                 if (oldKey.startsWith(TOMBSTONE_PREFIX)) continue;
                 if (keysNotToCopy != null && keysNotToCopy.contains(oldKey)) continue;
 
@@ -511,31 +582,55 @@ public class ItemEditorModel extends StandardEditorModel {
 
     private String stackTagForLogs(ItemStack stack) {
         if (stack.isEmpty()) return "<empty>";
-        var saved = stack.save(getRegistryAccess(), new CompoundTag());
-        if (!(saved instanceof CompoundTag compound)) return "<empty>";
-        Set<String> doNotCopyBack = desiredFoodEnabled ? Collections.emptySet() : FOOD_COMPONENT_KEYS;
+        CompoundTag compound = ClientUtil.saveItemStack(getRegistryAccess(), stack);
+        Set<String> doNotCopyBack = suppressedComponentKeys();
         CompoundTag merged = mergeComponentsPreservingUnknown(getContext().getTag(), compound.copy(), doNotCopyBack);
         return merged.toString();
     }
 
     private static CompoundTag copyLegacyPayload(CompoundTag container) {
-        if (container == null || !container.contains(KEY_LEGACY_TAG, Tag.TAG_COMPOUND)) return null;
-        CompoundTag legacy = container.getCompound(KEY_LEGACY_TAG);
-        if (legacy.isEmpty()) return null;
-        return legacy.copy();
+        if (container == null) return null;
+        return container.getCompound(KEY_LEGACY_TAG)
+                .filter(legacy -> !legacy.isEmpty())
+                .map(CompoundTag::copy)
+                .orElse(null);
     }
 
     private static boolean hasComponent(CompoundTag root, String key) {
         return root != null
-                && root.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)
-                && root.getCompound(KEY_COMPONENTS).contains(key);
+                && root.contains(KEY_COMPONENTS)
+                && root.getCompound(KEY_COMPONENTS).map(comp -> comp.contains(key)).orElse(false);
     }
 
     private static CompoundTag ensureComponentsTag(CompoundTag root) {
-        if (!root.contains(KEY_COMPONENTS, Tag.TAG_COMPOUND)) {
+        if (!root.contains(KEY_COMPONENTS)) {
             root.put(KEY_COMPONENTS, new CompoundTag());
         }
-        return root.getCompound(KEY_COMPONENTS);
+        return root.getCompound(KEY_COMPONENTS).orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            root.put(KEY_COMPONENTS, created);
+            return created;
+        });
+    }
+
+    private static boolean isArmorStack(ItemStack stack) {
+        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        return equippable != null && equippable.slot().isArmor();
+    }
+
+    private boolean wantsConsumableComponent() {
+        return desiredFoodEnabled || foodState.isConsumableStandaloneEnabled();
+    }
+
+    private Set<String> suppressedComponentKeys() {
+        Set<String> suppressed = new HashSet<>();
+        if (!desiredFoodEnabled) {
+            suppressed.add(FOOD_COMPONENT_KEY);
+        }
+        if (!wantsConsumableComponent()) {
+            suppressed.add(CONSUMABLE_COMPONENT_KEY);
+            suppressed.add(USE_REMAINDER_COMPONENT_KEY);
+        }
+        return suppressed;
     }
 }
-

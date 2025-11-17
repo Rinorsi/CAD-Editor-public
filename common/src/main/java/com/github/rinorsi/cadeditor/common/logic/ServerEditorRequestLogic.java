@@ -5,7 +5,9 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
+import net.minecraft.world.level.storage.TagValueOutput;
 
 public final class ServerEditorRequestLogic {
     public static void onMainHandItemEditorRequest(ServerPlayer player, MainHandItemEditorPacket.Request request) {
@@ -38,19 +40,23 @@ public final class ServerEditorRequestLogic {
         var blockEntity = level.getBlockEntity(request.getBlockPos());
         CompoundTag tag = null;
         if (blockEntity != null) {
-            tag = blockEntity.saveWithId(player.registryAccess());
+            TagValueOutput writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, player.registryAccess());
+            blockEntity.saveWithId(writer);
+            tag = writer.buildResult();
         }
         NetworkManager.sendToClient(player, NetworkManager.BLOCK_EDITOR_RESPONSE, new BlockEditorPacket.Response(request, PermissionLogic.hasPermission(player), blockState, tag));
     }
 
     public static void onEntityEditorRequest(ServerPlayer player, EntityEditorPacket.Request request) {
         var entity = player.level().getEntity(request.getEntityId());
-        var tag = (CompoundTag) null;
+        var tag = (net.minecraft.nbt.CompoundTag) null;
         if (entity != null) {
-            tag = new CompoundTag();
-            if (!entity.save(tag)) {
-                entity.saveWithoutId(tag);
+            TagValueOutput writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, player.registryAccess());
+            if (!entity.save(writer)) {
+                writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, player.registryAccess());
+                entity.saveWithoutId(writer);
             }
+            tag = writer.buildResult();
         }
         NetworkManager.sendToClient(player, NetworkManager.ENTITY_EDITOR_RESPONSE, new EntityEditorPacket.Response(request, PermissionLogic.hasPermission(player), tag));
     }

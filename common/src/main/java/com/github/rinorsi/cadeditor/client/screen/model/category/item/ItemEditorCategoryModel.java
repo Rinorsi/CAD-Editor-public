@@ -3,7 +3,6 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryModel;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 
 public abstract class ItemEditorCategoryModel extends EditorCategoryModel {
@@ -21,28 +20,28 @@ public abstract class ItemEditorCategoryModel extends EditorCategoryModel {
     }
 
     protected CompoundTag getTag() {
-        return getData().getCompound("tag");
+        CompoundTag data = getData();
+        return data.getCompound("tag").orElseGet(() -> {
+            CompoundTag tag = new CompoundTag();
+            data.put("tag", tag);
+            return tag;
+        });
     }
 
     protected CompoundTag getSubTag(String name) {
-        return getTag().getCompound(name);
+        return getTag().getCompound(name).orElseGet(CompoundTag::new);
     }
 
     protected CompoundTag getOrCreateTag() {
-        if (!getData().contains("tag", Tag.TAG_COMPOUND)) {
-            var tag = new CompoundTag();
-            getData().put("tag", tag);
-            return tag;
-        }
         return getTag();
     }
 
     protected CompoundTag getOrCreateSubTag(String name) {
-        if (!getOrCreateTag().contains(name, Tag.TAG_COMPOUND)) {
-            var tag = new CompoundTag();
-            getTag().put(name, tag);
-            return tag;
-        }
-        return getSubTag(name);
+        CompoundTag tag = getOrCreateTag();
+        return tag.getCompound(name).orElseGet(() -> {
+            CompoundTag child = new CompoundTag();
+            tag.put(name, child);
+            return child;
+        });
     }
 }

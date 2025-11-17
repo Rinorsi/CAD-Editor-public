@@ -65,9 +65,8 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
     }
 
     public CompoundTag copyValue() {
-        CompoundTag copy = getValue() == null ? new CompoundTag() : getValue().copy();
-        ensureEntityId(copy);
-        return copy;
+        CompoundTag value = getValue();
+        return value == null ? new CompoundTag() : value.copy();
     }
 
     @Override
@@ -76,7 +75,7 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
     }
 
     private void syncFromValue(CompoundTag value) {
-        String id = value.contains("id", Tag.TAG_STRING) ? value.getString("id") : "";
+        String id = value.getStringOr("id", "");
         EntityType<?> type = findEntityType(id);
         if (type != null) {
             String canonical = Objects.requireNonNull(EntityType.getKey(type)).toString();
@@ -96,7 +95,7 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
 
     private static CompoundTag sanitizeInitialValue(CompoundTag spawnData, EntityType<?> entityType) {
         CompoundTag value = spawnData == null ? new CompoundTag() : spawnData.copy();
-        if ((value == null || !value.contains("id", Tag.TAG_STRING) || value.getString("id").isEmpty()) && entityType != null) {
+        if ((value == null || !value.contains("id") || value.getStringOr("id", "").isEmpty()) && entityType != null) {
             value.putString("id", Objects.requireNonNull(EntityType.getKey(entityType)).toString());
         }
         return value;
@@ -104,7 +103,7 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
 
     private CompoundTag sanitizeIncomingValue(CompoundTag incoming) {
         CompoundTag value = incoming == null ? new CompoundTag() : incoming.copy();
-        String id = value.contains("id", Tag.TAG_STRING) ? value.getString("id") : "";
+        String id = value.getStringOr("id", "");
         EntityType<?> type = findEntityType(id);
         if (type != null) {
             String canonical = Objects.requireNonNull(EntityType.getKey(type)).toString();
@@ -132,14 +131,5 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
     private static EntityType<?> findEntityType(String value) {
         ResourceLocation location = ClientUtil.parseResourceLocation(value);
         return location == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(null);
-    }
-
-    private void ensureEntityId(CompoundTag tag) {
-        if (tag == null) {
-            return;
-        }
-        if ((!tag.contains("id", Tag.TAG_STRING) || tag.getString("id").isEmpty()) && getEntityType() != null) {
-            tag.putString("id", Objects.requireNonNull(EntityType.getKey(getEntityType())).toString());
-        }
     }
 }

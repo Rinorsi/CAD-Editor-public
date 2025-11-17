@@ -104,11 +104,13 @@ public class ItemBannerPatternCategoryModel extends ItemEditorCategoryModel {
         }
         CompoundTag data = getData();
         if (data != null && data.contains("components")) {
-            CompoundTag components = data.getCompound("components");
-            components.remove("minecraft:banner_patterns");
-            components.remove("minecraft:base_color");
-            if (components.isEmpty()) {
-                data.remove("components");
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                components.remove("minecraft:banner_patterns");
+                components.remove("minecraft:base_color");
+                if (components.isEmpty()) {
+                    data.remove("components");
+                }
             }
         }
     }

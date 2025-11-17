@@ -2,9 +2,9 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -23,12 +23,14 @@ public class ItemProfileCategoryModel extends ItemEditorCategoryModel {
         String uuid = "";
 
         CompoundTag data = getData();
-        if (data != null && data.contains("components", Tag.TAG_COMPOUND)) {
-            CompoundTag components = data.getCompound("components");
-            if (components.contains("minecraft:profile", Tag.TAG_COMPOUND)) {
-                CompoundTag profile = components.getCompound("minecraft:profile");
-                if (profile.contains("name", Tag.TAG_STRING)) name = profile.getString("name");
-                if (profile.contains("id", Tag.TAG_STRING)) uuid = profile.getString("id");
+        if (data != null) {
+            CompoundTag components = data.getCompound("components").orElse(null);
+            if (components != null) {
+                CompoundTag profile = components.getCompound("minecraft:profile").orElse(null);
+                if (profile != null) {
+                    name = NbtHelper.getString(profile, "name", name);
+                    uuid = NbtHelper.getString(profile, "id", uuid);
+                }
             }
         }
 
@@ -49,8 +51,11 @@ public class ItemProfileCategoryModel extends ItemEditorCategoryModel {
 
         CompoundTag data = getData();
         if (data == null) return;
-        CompoundTag components = data.contains("components", Tag.TAG_COMPOUND)
-                ? data.getCompound("components") : new CompoundTag();
+        CompoundTag components = data.getCompound("components").orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            data.put("components", created);
+            return created;
+        });
 
         if (name.isEmpty() && uuid.isEmpty()) {
             components.remove("minecraft:profile");
@@ -60,8 +65,8 @@ public class ItemProfileCategoryModel extends ItemEditorCategoryModel {
             if (!uuid.isEmpty()) profile.putString("id", uuid);
             components.put("minecraft:profile", profile);
         }
-        if (!data.contains("components", Tag.TAG_COMPOUND) && !components.isEmpty()) {
-            data.put("components", components);
+        if (components.isEmpty()) {
+            data.remove("components");
         }
     }
 }

@@ -167,7 +167,7 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
         Map<String, ItemStack> stacksById = new LinkedHashMap<>();
         List<CompoundTag> storedItems = Vault.getInstance().getItems();
         for (int i = 0; i < storedItems.size(); i++) {
-            ItemStack stack = ItemStack.parseOptional(ClientUtil.registryAccess(), storedItems.get(i));
+            ItemStack stack = ClientUtil.parseItemStack(ClientUtil.registryAccess(), storedItems.get(i));
             if (stack.isEmpty()) {
                 continue;
             }

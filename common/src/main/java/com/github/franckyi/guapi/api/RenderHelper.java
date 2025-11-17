@@ -1,10 +1,11 @@
 package com.github.franckyi.guapi.api;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -12,7 +13,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class RenderHelper {
     private static Minecraft mc() {
@@ -32,7 +37,11 @@ public final class RenderHelper {
     }
 
     public static void drawString(GuiGraphics guiGraphics, Component text, float x, float y, int color, boolean shadow) {
-        guiGraphics.drawString(font(), text, (int) x, (int) y, color, shadow);
+        guiGraphics.drawString(font(), text, (int) x, (int) y, ensureOpaqueColor(color), shadow);
+    }
+
+    public static int ensureOpaqueColor(int color) {
+        return (color & 0xFF000000) == 0 ? color | 0xFF000000 : color;
     }
 
     public static void fillRectangle(GuiGraphics guiGraphics, int x0, int y0, int x1, int y1, int color) {
@@ -55,22 +64,15 @@ public final class RenderHelper {
     }
 
     public static void drawTexture(GuiGraphics guiGraphics, ResourceLocation id, int x, int y, int width, int height, int imageX, int imageY, int imageWidth, int imageHeight) {
-        RenderSystem.setShaderTexture(0, id);
-        RenderSystem.enableBlend();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        guiGraphics.blit(RenderType::guiTextured, id, x, y, (float) imageX, (float) imageY, width, height, imageWidth, imageHeight);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, id, x, y, (float) imageX, (float) imageY, width, height, imageWidth, imageHeight);
     }
 
     public static void drawSprite(GuiGraphics guiGraphics, TextureAtlasSprite sprite, int x, int y, int imageWidth, int imageHeight) {
-        RenderSystem.setShaderTexture(0, sprite.atlasLocation());
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blitSprite(RenderType::guiTextured, sprite, x, y, imageWidth, imageHeight);
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, imageWidth, imageHeight);
     }
 
     public static void drawTooltip(GuiGraphics guiGraphics, List<Component> text, int x, int y) {
-        guiGraphics.renderComponentTooltip(font(), text, x, y);
+        renderTooltip(guiGraphics, font(), text, Optional.empty(), x, y);
     }
 
     public static void drawTooltip(GuiGraphics guiGraphics, ItemStack itemStack, int x, int y) {
@@ -83,8 +85,8 @@ public final class RenderHelper {
         } else {
             context = Item.TooltipContext.EMPTY;
         }
-        guiGraphics.renderComponentTooltip(font(),
-                itemStack.getTooltipLines(context, minecraft.player, TooltipFlag.Default.NORMAL), x, y);
+        List<Component> lines = itemStack.getTooltipLines(context, minecraft.player, TooltipFlag.Default.NORMAL);
+        renderTooltip(guiGraphics, font(), lines, itemStack.getTooltipImage(), x, y);
     }
 
     public static void drawItem(GuiGraphics guiGraphics, ItemStack itemStack, int x, int y) {
@@ -93,5 +95,14 @@ public final class RenderHelper {
 
     public static void drawItemDecorations(GuiGraphics guiGraphics, ItemStack itemStack, int x, int y) {
         guiGraphics.renderItemDecorations(font(), itemStack, x, y);
+    }
+
+    private static void renderTooltip(GuiGraphics guiGraphics, Font font, List<Component> lines, Optional<TooltipComponent> image, int x, int y) {
+        List<ClientTooltipComponent> components = new ArrayList<>(lines.size() + (image.isPresent() ? 1 : 0));
+        for (Component line : lines) {
+            components.add(ClientTooltipComponent.create(line.getVisualOrderText()));
+        }
+        image.ifPresent(extra -> components.add(components.isEmpty() ? 0 : 1, ClientTooltipComponent.create(extra)));
+        guiGraphics.renderTooltip(font, components, x, y, DefaultTooltipPositioner.INSTANCE, null);
     }
 }

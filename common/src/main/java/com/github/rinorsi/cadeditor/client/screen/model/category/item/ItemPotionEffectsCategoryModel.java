@@ -8,11 +8,13 @@ import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionEffectEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionSelectionEntryModel;
+import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
@@ -63,12 +65,14 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
             contents.customEffects().forEach(e -> getEntries().add(createPotionEffectEntry(toTag(e), false)));
         } else {
-            potionId = getTag().getString("Potion");
+            CompoundTag legacy = getTag();
+            potionId = NbtHelper.getString(legacy, "Potion", "");
             customColor = getCustomPotionColor();
             originalBaseEffectTags = resolveBasePotionEffects(potionId);
             originalBaseEntryCount = originalBaseEffectTags.size();
             originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
-            getTag().getList("custom_potion_effects", Tag.TAG_COMPOUND).stream()
+            ListTag customEffects = legacy == null ? new ListTag() : legacy.getListOrEmpty("custom_potion_effects");
+            customEffects.stream()
                     .map(CompoundTag.class::cast)
                     .map(t -> createPotionEffectEntry(t, false))
                     .forEach(getEntries()::add);
@@ -127,7 +131,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         if (effectLookupOpt.isPresent()) {
             var effectLookup = effectLookupOpt.get();
             for (CompoundTag c : effectiveEffects) {
-                String id = c.getString("id");
+                String id = NbtHelper.getString(c, "id", "");
                 ResourceLocation rl = ResourceLocation.tryParse(id);
                 if (rl == null) {
                     continue;
@@ -136,15 +140,15 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
                 if (holderOpt.isEmpty()) {
                     continue;
                 }
-                int amplifier = c.getInt("amplifier");
-                int duration = c.contains("duration", Tag.TAG_INT) ? c.getInt("duration") : 1;
-                boolean ambient = c.getBoolean("ambient");
-                boolean showParticles = !c.contains("show_particles", Tag.TAG_BYTE) || c.getBoolean("show_particles");
-                boolean showIcon = c.contains("show_icon", Tag.TAG_BYTE) && c.getBoolean("show_icon");
+                int amplifier = c.getIntOr("amplifier", 0);
+                int duration = c.getIntOr("duration", 1);
+                boolean ambient = c.getBooleanOr("ambient", false);
+                boolean showParticles = !c.contains("show_particles") || c.getBooleanOr("show_particles", true);
+                boolean showIcon = c.getBooleanOr("show_icon", false);
                 effects.add(new MobEffectInstance(holderOpt.get(), duration, amplifier, ambient, showParticles, showIcon));
             }
         }
-        String potionStr = getOrCreateTag().getString("Potion");
+        String potionStr = NbtHelper.getString(getTag(), "Potion", "");
         if (baseEffectsModified && !potionStr.isEmpty()) {
             potionStr = "";
             getOrCreateTag().putString("Potion", potionStr);
@@ -175,16 +179,16 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         } else {
             stack.remove(DataComponents.POTION_CONTENTS);
         }
-        if (getData().contains("tag", Tag.TAG_COMPOUND)) {
-            var tag = getTag();
-            tag.remove("Potion");
-            tag.remove("CustomPotionColor");
-            tag.remove("custom_potion_effects");
+        CompoundTag legacy = getTag();
+        if (legacy != null) {
+            legacy.remove("Potion");
+            legacy.remove("CustomPotionColor");
+            legacy.remove("custom_potion_effects");
         }
     }
 
     private int getCustomPotionColor() {
-        return getTag().contains("CustomPotionColor", Tag.TAG_INT) ? getTag().getInt("CustomPotionColor") : Color.NONE;
+        return NbtHelper.getInt(getTag(), "CustomPotionColor", Color.NONE);
     }
 
     private void setCustomPotionColor(int color) {
@@ -197,16 +201,20 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
 
     private EntryModel createPotionEffectEntry(CompoundTag tag, boolean baseEffect) {
         if (tag != null) {
-            String id = tag.getString("id");
-            int amplifier = tag.getInt("amplifier");
-            int duration = tag.contains("duration", Tag.TAG_INT) ? tag.getInt("duration") : 1;
-            boolean ambient = tag.getBoolean("ambient");
-            boolean showParticles = !tag.contains("show_particles", Tag.TAG_BYTE) || tag.getBoolean("show_particles");
-            boolean showIcon = tag.getBoolean("show_icon");
+            String id = NbtHelper.getString(tag, "id", "");
+            int amplifier = tag.getIntOr("amplifier", tag.getIntOr("Amplifier", 0));
+            int duration = tag.getIntOr("duration", tag.getIntOr("Duration", 1));
+            boolean ambient = tag.getBooleanOr("ambient", tag.getBooleanOr("Ambient", false));
+            boolean showParticles = tag.getBoolean("show_particles")
+                    .or(() -> tag.getBoolean("ShowParticles"))
+                    .orElse(true);
+            boolean showIcon = tag.getBoolean("show_icon")
+                    .or(() -> tag.getBoolean("ShowIcon"))
+                    .orElse(true);
             return new PotionEffectEntryModel(this, id, amplifier, duration, ambient, showParticles, showIcon,
                     this::collectPotionEffect, baseEffect, tag);
         }
-        String defaultId = MobEffects.MOVEMENT_SPEED.unwrapKey()
+        String defaultId = MobEffects.SPEED.unwrapKey()
                 .map(key -> key.location().toString())
                 .orElse("minecraft:movement_speed");
         return new PotionEffectEntryModel(this, defaultId, 0, 1, false, true, true, this::collectPotionEffect);

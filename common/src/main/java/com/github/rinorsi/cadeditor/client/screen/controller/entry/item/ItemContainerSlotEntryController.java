@@ -129,7 +129,7 @@ public class ItemContainerSlotEntryController extends EntryController<ItemContai
         List<VaultItemListSelectionElementModel> elements = new ArrayList<>();
         Map<String, ItemStack> stacksById = new LinkedHashMap<>();
         for (int i = 0; i < storedItems.size(); i++) {
-            ItemStack stack = ItemStack.parseOptional(ClientUtil.registryAccess(), storedItems.get(i));
+            ItemStack stack = ClientUtil.parseItemStack(ClientUtil.registryAccess(), storedItems.get(i));
             if (stack.isEmpty()) {
                 continue;
             }

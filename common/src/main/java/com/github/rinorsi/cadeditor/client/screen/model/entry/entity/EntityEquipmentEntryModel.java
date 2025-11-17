@@ -122,7 +122,7 @@ public class EntityEquipmentEntryModel extends EntryModel {
         if (stack.isEmpty()) {
             return new CompoundTag();
         }
-        return (CompoundTag) stack.save(ClientUtil.registryAccess(), new CompoundTag());
+        return ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
     }
 
     public void markAsDefault() {

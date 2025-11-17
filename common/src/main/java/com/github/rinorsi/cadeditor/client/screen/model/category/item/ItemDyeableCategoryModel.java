@@ -28,7 +28,7 @@ public class ItemDyeableCategoryModel extends ItemEditorCategoryModel {
         if (value == Color.NONE) {
             stack.remove(DataComponents.DYED_COLOR);
         } else {
-            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(value, true));
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(value));
         }
     }
 

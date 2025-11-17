@@ -7,7 +7,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.ItemContainer
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -34,20 +33,23 @@ public class BlockContainerGridCategoryModel extends BlockEditorCategoryModel {
 
     private List<ItemStack> readItemSlots(CompoundTag tag) {
         List<ItemStack> out = new ArrayList<>();
-        if (!tag.contains("Items", Tag.TAG_LIST)) return out;
-        ListTag list = tag.getList("Items", Tag.TAG_COMPOUND);
+        if (!tag.contains("Items")) return out;
+        ListTag list = tag.getList("Items").orElse(null);
+        if (list == null) return out;
         int maxSlot = -1;
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag it = list.getCompound(i);
-            int slot = it.contains("Slot", Tag.TAG_BYTE) ? Byte.toUnsignedInt(it.getByte("Slot")) : i;
+            CompoundTag it = list.getCompound(i).orElse(null);
+            if (it == null) continue;
+            int slot = it.getByte("Slot").map(Byte::toUnsignedInt).orElse(i);
             if (slot > maxSlot) maxSlot = slot;
         }
         if (maxSlot < 0) return out;
         for (int i = 0; i <= maxSlot; i++) out.add(ItemStack.EMPTY);
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag it = list.getCompound(i);
-            int slot = it.contains("Slot", Tag.TAG_BYTE) ? Byte.toUnsignedInt(it.getByte("Slot")) : i;
-            ItemStack parsed = ItemStack.parseOptional(ClientUtil.registryAccess(), it);
+            CompoundTag it = list.getCompound(i).orElse(null);
+            if (it == null) continue;
+            int slot = it.getByte("Slot").map(Byte::toUnsignedInt).orElse(i);
+            ItemStack parsed = ClientUtil.parseItemStack(ClientUtil.registryAccess(), it);
             if (slot >= 0 && slot < out.size()) {
                 out.set(slot, parsed);
             } else {
@@ -83,7 +85,7 @@ public class BlockContainerGridCategoryModel extends BlockEditorCategoryModel {
             if (!(model instanceof ItemContainerSlotEntryModel entry)) continue;
             ItemStack stack = entry.getItemStack();
             if (stack.isEmpty()) { idx++; continue; }
-            CompoundTag itemTag = (CompoundTag) stack.save(ClientUtil.registryAccess(), new CompoundTag());
+            CompoundTag itemTag = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
             itemTag.putByte("Slot", (byte) idx);
             items.add(itemTag);
             idx++;

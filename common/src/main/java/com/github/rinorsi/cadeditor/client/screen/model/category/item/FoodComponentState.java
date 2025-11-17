@@ -1,11 +1,15 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
@@ -39,6 +43,7 @@ public class FoodComponentState {
     private boolean hasConsumeParticles;
     private ItemUseAnimation animation = DEFAULT_ANIMATION;
     private Optional<Holder<SoundEvent>> consumeSound = Optional.empty();
+    private boolean consumableStandaloneEnabled;
     private String usingConvertsToId = "";
     private Optional<ItemStack> originalUsingConvertsTo = Optional.empty();
     private Optional<ItemStack> customUsingConvertsTo = Optional.empty();
@@ -50,17 +55,21 @@ public class FoodComponentState {
         Consumable consumable = stack.get(DataComponents.CONSUMABLE);
         UseRemainder remainder = stack.get(DataComponents.USE_REMAINDER);
 
-        if (food != null || consumable != null) {
-            hasEverBeenEnabled = true;
-            setEnabled(true);
-        } else {
+        boolean hasFoodComponent = food != null;
+        boolean hasConsumableComponent = consumable != null;
+
+        if (!hasFoodComponent && !hasConsumableComponent) {
             resetToDefaults();
             setEnabled(false);
             DebugLog.infoKey("cadeditor.debug.food.missing", describeStack(stack));
             return;
         }
 
-        if (food != null) {
+        hasEverBeenEnabled = true;
+        setEnabled(hasFoodComponent);
+        consumableStandaloneEnabled = !hasFoodComponent && hasConsumableComponent;
+
+        if (hasFoodComponent) {
             nutrition = food.nutrition();
             saturation = food.saturation();
             alwaysEat = food.canAlwaysEat();
@@ -70,7 +79,7 @@ public class FoodComponentState {
             alwaysEat = false;
         }
 
-        if (consumable != null) {
+        if (hasConsumableComponent) {
             consumeSeconds = consumable.consumeSeconds();
             hasConsumeParticles = consumable.hasConsumeParticles();
             animation = consumable.animation();
@@ -119,6 +128,7 @@ public class FoodComponentState {
         hasConsumeParticles = false;
         animation = DEFAULT_ANIMATION;
         consumeSound = Optional.empty();
+        consumableStandaloneEnabled = false;
         usingConvertsToId = "";
         originalUsingConvertsTo = Optional.empty();
         customUsingConvertsTo = Optional.empty();
@@ -135,6 +145,14 @@ public class FoodComponentState {
         if (enabled) {
             hasEverBeenEnabled = true;
         }
+    }
+
+    public boolean isConsumableStandaloneEnabled() {
+        return consumableStandaloneEnabled;
+    }
+
+    public void setConsumableStandaloneEnabled(boolean value) {
+        consumableStandaloneEnabled = value;
     }
 
     public int getNutrition() {
@@ -190,11 +208,37 @@ public class FoodComponentState {
     }
 
     public void setConsumeSound(Optional<Holder<SoundEvent>> sound) {
-        consumeSound = sound == null ? Optional.empty() : sound;
-
-
+        consumeSound = sound == null ? Optional.empty() : sound;
     }
 
+    public String getConsumeSoundId() {
+        return consumeSound
+                .flatMap(holder -> holder.unwrapKey().map(ResourceKey::location))
+                .map(ResourceLocation::toString)
+                .orElse("");
+    }
+
+    public boolean setConsumeSoundId(String id) {
+        if (id == null || id.isBlank()) {
+            consumeSound = Optional.empty();
+            return true;
+        }
+        ResourceLocation location = ClientUtil.parseResourceLocation(id);
+        if (location == null) {
+            return false;
+        }
+        var lookupOpt = ClientUtil.registryAccess().lookup(Registries.SOUND_EVENT);
+        if (lookupOpt.isEmpty()) {
+            return false;
+        }
+        HolderLookup.RegistryLookup<SoundEvent> lookup = lookupOpt.get();
+        Optional<Holder.Reference<SoundEvent>> holder = lookup.get(ResourceKey.create(Registries.SOUND_EVENT, location));
+        if (holder.isEmpty()) {
+            return false;
+        }
+        consumeSound = Optional.of(holder.get());
+        return true;
+    }
     public String getUsingConvertsToId() {
         return usingConvertsToId;
     }
@@ -218,6 +262,7 @@ public class FoodComponentState {
         setSaturation(0f);
         setAlwaysEat(true);
         setConsumeSeconds(DEFAULT_CONSUME_SECONDS);
+        setConsumableStandaloneEnabled(false);
         setUsingConvertsToId("");
         originalUsingConvertsTo = Optional.empty();
         customUsingConvertsTo = Optional.empty();

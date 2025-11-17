@@ -4,8 +4,8 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.BlockEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.TextEntryModel;
+import com.github.rinorsi.cadeditor.client.util.ComponentJsonHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 public class BlockContainerCategoryModel extends BlockEditorCategoryModel {
@@ -15,25 +15,28 @@ public class BlockContainerCategoryModel extends BlockEditorCategoryModel {
 
     @Override
     protected void setupEntries() {
+        String lock = getData().getString("Lock").orElse("");
         getEntries().addAll(
                 new TextEntryModel(this, ModTexts.CUSTOM_NAME, getCustomName(), this::setCustomName),
-                new StringEntryModel(this, ModTexts.LOCK_CODE, getData().getString("Lock"), this::setLockCode)
+                new StringEntryModel(this, ModTexts.LOCK_CODE, lock, this::setLockCode)
         );
     }
 
     private MutableComponent getCustomName() {
-        String s = getData().getString("CustomName");
+        String s = getData().getString("CustomName").orElse("");
         if (s.isEmpty()) {
             return null;
         }
-        Component component = Component.Serializer.fromJson(s, ClientUtil.registryAccess());
-        return component == null ? null : component.copy();
+        return ComponentJsonHelper.decode(s, ClientUtil.registryAccess());
     }
 
     private void setCustomName(MutableComponent value) {
         if (value != null && !value.getString().isEmpty()) {
-            getData().putString("CustomName", Component.Serializer.toJson(value, ClientUtil.registryAccess()));
-        } else if (getData().getString("CustomName").isEmpty()) {
+            String json = ComponentJsonHelper.encode(value, ClientUtil.registryAccess());
+            if (!json.isEmpty()) {
+                getData().putString("CustomName", json);
+            }
+        } else if (getData().getString("CustomName").orElse("").isEmpty()) {
             getData().remove("CustomName");
         } else {
             getData().putString("CustomName", "");

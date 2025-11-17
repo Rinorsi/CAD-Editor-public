@@ -9,7 +9,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemStack;
@@ -54,16 +53,16 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
 
     private EnumSet<HideFlag> readLegacyFlags(ItemStack stack) {
         EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        if (stack.has(DataComponents.HIDE_TOOLTIP)) {
+        if (LegacyHideComponentSupport.INSTANCE.hasHideTooltip(stack)) {
             flags.add(HideFlag.OTHER);
-        } else if (stack.has(DataComponents.HIDE_ADDITIONAL_TOOLTIP)) {
+        } else if (LegacyHideComponentSupport.INSTANCE.hasHideAdditionalTooltip(stack)) {
             for (HideFlag flag : HideFlag.values()) {
                 if (flag != HideFlag.OTHER) {
                     flags.add(flag);
                 }
             }
         } else {
-            int mask = getTag() != null ? getTag().getInt("HideFlags") : 0;
+            int mask = getTag() != null ? getTag().getIntOr("HideFlags", 0) : 0;
             if (mask != 0) {
                 for (HideFlag flag : HideFlag.values()) {
                     if ((mask & flag.getValue()) != 0) {
@@ -83,8 +82,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getParent().getContext().getItemStack();
 
         TooltipDisplaySupport.INSTANCE.clear(stack);
-        stack.remove(DataComponents.HIDE_TOOLTIP);
-        stack.remove(DataComponents.HIDE_ADDITIONAL_TOOLTIP);
+        LegacyHideComponentSupport.INSTANCE.clear(stack);
 
         EnumSet<HideFlag> storedFlags = EnumSet.copyOf(selectedFlags);
         EnumSet<HideFlag> componentFlags = EnumSet.copyOf(storedFlags);
@@ -136,12 +134,11 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private EnumSet<HideFlag> readRemovedComponents(ItemStack stack) {
-        Tag saved = stack.save(ClientUtil.registryAccess(), new CompoundTag());
-        CompoundTag root = saved instanceof CompoundTag compound ? compound : new CompoundTag();
-        if (!root.contains("components", Tag.TAG_COMPOUND)) {
+        CompoundTag root = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
+        if (!root.contains("components")) {
             return EnumSet.noneOf(HideFlag.class);
         }
-        CompoundTag components = root.getCompound("components");
+        CompoundTag components = root.getCompound("components").orElseGet(CompoundTag::new);
         EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
         for (HideFlag flag : HideFlag.values()) {
             if (flag == HideFlag.OTHER) continue;
@@ -159,12 +156,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void applyLegacyComponentVisibility(ItemStack stack, EnumSet<HideFlag> componentFlags, boolean hideTooltip) {
-        if (hideTooltip) {
-            stack.set(DataComponents.HIDE_TOOLTIP, Unit.INSTANCE);
-        } else {
-            stack.remove(DataComponents.HIDE_TOOLTIP);
-        }
-
+        LegacyHideComponentSupport.INSTANCE.apply(stack, hideTooltip);
         applyComponentVisibilityFallback(stack, componentFlags);
     }
 
@@ -343,6 +335,57 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
 
         public static HideFlag fromComponent(DataComponentType<?> type) {
             return COMPONENT_TO_FLAG.get(type);
+        }
+    }
+
+    private static final class LegacyHideComponentSupport {
+        static final LegacyHideComponentSupport INSTANCE = new LegacyHideComponentSupport();
+
+        private final DataComponentType<Unit> hideTooltip;
+        private final DataComponentType<Unit> hideAdditionalTooltip;
+
+        @SuppressWarnings("unchecked")
+        private LegacyHideComponentSupport() {
+            this.hideTooltip = findComponent("HIDE_TOOLTIP");
+            this.hideAdditionalTooltip = findComponent("HIDE_ADDITIONAL_TOOLTIP");
+        }
+
+        @SuppressWarnings("unchecked")
+        private static DataComponentType<Unit> findComponent(String fieldName) {
+            try {
+                var field = DataComponents.class.getDeclaredField(fieldName);
+                return (DataComponentType<Unit>) field.get(null);
+            } catch (ReflectiveOperationException ignored) {
+                return null;
+            }
+        }
+
+        private boolean hasHideTooltip(ItemStack stack) {
+            return hideTooltip != null && stack.has(hideTooltip);
+        }
+
+        private boolean hasHideAdditionalTooltip(ItemStack stack) {
+            return hideAdditionalTooltip != null && stack.has(hideAdditionalTooltip);
+        }
+
+        private void clear(ItemStack stack) {
+            if (hideTooltip != null) {
+                stack.remove(hideTooltip);
+            }
+            if (hideAdditionalTooltip != null) {
+                stack.remove(hideAdditionalTooltip);
+            }
+        }
+
+        private void apply(ItemStack stack, boolean hideTooltipFlag) {
+            if (hideTooltip == null) {
+                return;
+            }
+            if (hideTooltipFlag) {
+                stack.set(hideTooltip, Unit.INSTANCE);
+            } else {
+                stack.remove(hideTooltip);
+            }
         }
     }
 

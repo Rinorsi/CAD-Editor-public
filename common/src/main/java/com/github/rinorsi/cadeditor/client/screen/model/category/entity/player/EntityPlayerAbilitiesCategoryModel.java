@@ -31,14 +31,14 @@ public class EntityPlayerAbilitiesCategoryModel extends EntityCategoryModel {
 
     @Override
     protected void setupEntries() {
-        CompoundTag abilities = ensurePlayerTag().getCompound(ABILITIES_TAG);
-        invulnerable = abilities.getBoolean("invulnerable");
-        mayFly = abilities.getBoolean("mayfly");
-        flying = abilities.getBoolean("flying");
-        mayBuild = !abilities.contains("mayBuild") || abilities.getBoolean("mayBuild");
-        instabuild = abilities.getBoolean("instabuild");
-        flySpeed = abilities.contains("flySpeed") ? abilities.getFloat("flySpeed") : 0.05f;
-        walkSpeed = abilities.contains("walkSpeed") ? abilities.getFloat("walkSpeed") : 0.1f;
+        CompoundTag abilities = ensurePlayerTag().getCompound(ABILITIES_TAG).orElseGet(CompoundTag::new);
+        invulnerable = abilities.getBooleanOr("invulnerable", false);
+        mayFly = abilities.getBooleanOr("mayfly", false);
+        flying = abilities.getBooleanOr("flying", false);
+        mayBuild = abilities.contains("mayBuild") ? abilities.getBooleanOr("mayBuild", true) : true;
+        instabuild = abilities.getBooleanOr("instabuild", false);
+        flySpeed = abilities.getFloatOr("flySpeed", 0.05f);
+        walkSpeed = abilities.getFloatOr("walkSpeed", 0.1f);
 
         getEntries().add(new BooleanEntryModel(this, Component.translatable("cadeditor.gui.ability_invulnerable"), invulnerable, value -> invulnerable = value));
         getEntries().add(new BooleanEntryModel(this, Component.translatable("cadeditor.gui.ability_mayfly"), mayFly, value -> mayFly = value));
