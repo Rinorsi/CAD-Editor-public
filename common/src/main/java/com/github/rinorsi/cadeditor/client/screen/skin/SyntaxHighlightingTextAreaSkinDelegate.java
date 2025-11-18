@@ -25,8 +25,8 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
-    private static final int SELECTION_TEXT_COLOR = 0xFF2D7BFF;
     private static final int TOKEN_ADVANCE_PADDING = 2;
+    private static final int LINE_SPACING = 2;
 
     private final SyntaxHighlightingTextArea node;
     private final MultilineTextField textField;
@@ -67,6 +67,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         int baseX = getX() + innerPadding();
 
         Iterable<?> visualLines = textField.iterateLines();
+        int lineHeightWithSpacing = font.lineHeight + LINE_SPACING;
         for (Object view : visualLines) {
             int lineStart = beginIndex(view);
             int lineEnd = Math.min(fullText.length(), endIndex(view));
@@ -85,7 +86,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                 }
                 caretY = lineY;
             }
-            lineY += font.lineHeight;
+            lineY += lineHeightWithSpacing;
         }
 
         if (shouldBlink && !cursorInText && withinContentAreaTopBottom(caretY, caretY + font.lineHeight)) {
@@ -102,7 +103,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
             for (Object line : textField.iterateLines()) {
                 if (beginIndex(selected) > endIndex(line)) {
-                    selectionY += font.lineHeight;
+                    selectionY += lineHeightWithSpacing;
                     continue;
                 }
                 if (beginIndex(line) > endIndex(selected)) {
@@ -114,19 +115,12 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                     int from = Math.max(selectionStart, lineStart);
                     int to = Math.min(selectionEnd, lineEnd);
                     int startX = selectionBaseX + font.width(fullText.substring(lineStart, from));
-                    int endX;
-                    if (endIndex(selected) > lineEnd) {
-                        endX = getX() + getWidth() - innerPadding();
-                    } else {
-                        endX = selectionBaseX + font.width(fullText.substring(lineStart, to));
-                    }
+                    int endX = endIndex(selected) > lineEnd
+                            ? getX() + getWidth() - innerPadding()
+                            : selectionBaseX + font.width(fullText.substring(lineStart, to));
                     graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
-                    if (to > from) {
-                        String selectedText = fullText.substring(from, to);
-                        graphics.drawString(font, selectedText, startX, selectionY, SELECTION_TEXT_COLOR);
-                    }
                 }
-                selectionY += font.lineHeight;
+                selectionY += lineHeightWithSpacing;
             }
         }
     }

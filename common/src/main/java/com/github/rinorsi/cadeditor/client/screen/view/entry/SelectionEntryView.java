@@ -11,11 +11,13 @@ public class SelectionEntryView extends StringEntryView {
     private TexturedButton selectionScreenButton;
     private HBox selectionBox;
     private Node previewNode;
+    private Node textContent;
 
     @Override
     protected Node createLabeledContent() {
+        textContent = super.createLabeledContent();
         return selectionBox = hBox(box -> {
-            box.add(super.createLabeledContent(), 1);
+            box.add(textContent, 1);
             box.add(selectionScreenButton = texturedButton(ModTextures.SEARCH, 16, 16, false));
             box.align(CENTER).spacing(4);
         });
@@ -46,11 +48,7 @@ public class SelectionEntryView extends StringEntryView {
         var children = selectionBox.getChildren();
         boolean contains = children.contains(previewNode);
         if (visible && !contains) {
-            int index = children.indexOf(selectionScreenButton);
-            if (index == -1) {
-                index = children.size();
-            }
-            children.add(index + 1, previewNode);
+            children.add(0, previewNode);
         } else if (!visible && contains) {
             children.remove(previewNode);
         }
