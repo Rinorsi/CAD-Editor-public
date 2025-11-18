@@ -151,9 +151,9 @@ class ItemEditorModelFoodTest {
         CompoundTag tag = context.getTag();
         Assertions.assertNotNull(tag, "Context tag should be initialized");
         CompoundTag components = requireCompound(tag, "components");
-        Assertions.assertTrue(components.contains("!minecraft:lore"));
-        Assertions.assertTrue(components.contains("!minecraft:rarity"));
-        Assertions.assertTrue(components.contains("!minecraft:repair_cost"));
+        Assertions.assertFalse(components.contains("!minecraft:lore"));
+        Assertions.assertFalse(components.contains("!minecraft:rarity"));
+        Assertions.assertFalse(components.contains("!minecraft:repair_cost"));
         var remainder = updated.get(DataComponents.USE_REMAINDER);
         Assertions.assertNotNull(remainder, "Expected use remainder component");
         ItemStack remainderStack = remainder.convertInto().copy();

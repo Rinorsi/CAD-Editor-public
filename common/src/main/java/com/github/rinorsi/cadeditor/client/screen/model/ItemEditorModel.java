@@ -7,9 +7,12 @@ import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -61,6 +64,32 @@ public class ItemEditorModel extends StandardEditorModel {
         "minecraft:tooltip_display",
         "minecraft:enchantment_glint_override",
         "minecraft:custom_name"
+    );
+    private static final String TOOLTIP_DISPLAY_COMPONENT_KEY = "minecraft:tooltip_display";
+    private static final String HIDE_TOOLTIP_COMPONENT_KEY = "minecraft:hide_tooltip";
+    private static final String HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY = "minecraft:hide_additional_tooltip";
+    private static final String SHOW_IN_TOOLTIP_FIELD = "show_in_tooltip";
+    private static final String LEVELS_FIELD = "levels";
+    private static final Set<String> COMPONENTS_WITH_TOOLTIP_BOOLEAN = Set.of(
+            "minecraft:enchantments",
+            "minecraft:stored_enchantments",
+            "minecraft:attribute_modifiers",
+            "minecraft:unbreakable",
+            "minecraft:can_break",
+            "minecraft:can_place_on",
+            "minecraft:dyed_color",
+            "minecraft:trim",
+            "minecraft:jukebox_playable"
+    );
+    private static final Map<String, ItemHideFlagsCategoryModel.HideFlag> COMPONENT_KEY_TO_HIDE_FLAG =
+            buildHideFlagComponentMap();
+    private static final Set<String> TOMBSTONE_COMPONENT_IDS = Set.of(
+            "minecraft:lore",
+            "minecraft:attribute_modifiers",
+            "minecraft:rarity",
+            "minecraft:repair_cost",
+            "minecraft:enchantments",
+            "minecraft:stored_enchantments"
     );
 
     private static final int MIN_NUTRITION = 0;
@@ -531,7 +560,7 @@ public class ItemEditorModel extends StandardEditorModel {
         return food;
     }
 
-    private static CompoundTag mergeComponentsPreservingUnknown(
+    static CompoundTag mergeComponentsPreservingUnknown(
             CompoundTag oldRoot, CompoundTag newRoot, Set<String> keysNotToCopy) {
         CompoundTag merged = newRoot.copy();
 
@@ -539,7 +568,6 @@ public class ItemEditorModel extends StandardEditorModel {
             if (oldRoot != null) {
                 oldRoot.getCompound(KEY_COMPONENTS).ifPresent(oldComps -> merged.put(KEY_COMPONENTS, oldComps.copy()));
             }
-            return merged;
         }
 
         CompoundTag newComps = merged.getCompound(KEY_COMPONENTS).orElseGet(() -> {
@@ -569,6 +597,7 @@ public class ItemEditorModel extends StandardEditorModel {
             }
         }
 
+        applyComponentMigrations(merged);
         return merged;
     }
 
@@ -594,6 +623,216 @@ public class ItemEditorModel extends StandardEditorModel {
                 .filter(legacy -> !legacy.isEmpty())
                 .map(CompoundTag::copy)
                 .orElse(null);
+    }
+
+    private static void applyComponentMigrations(CompoundTag root) {
+        migrateLegacyEnchantments(root);
+        migrateLegacyHideFlags(root);
+    }
+
+    private static void migrateLegacyEnchantments(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        migrateLegacyEnchantmentList(legacyTag, root, "Enchantments", "minecraft:enchantments");
+        migrateLegacyEnchantmentList(legacyTag, root, "StoredEnchantments", "minecraft:stored_enchantments");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyEnchantmentList(CompoundTag legacyTag, CompoundTag root, String legacyKey, String componentKey) {
+        ListTag enchantList = legacyTag.getList(legacyKey).orElse(null);
+        if (enchantList == null || enchantList.isEmpty()) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        CompoundTag components = ensureComponentsTag(root);
+        if (components.contains(componentKey)) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        CompoundTag levels = new CompoundTag();
+        boolean hasData = false;
+        for (Tag element : enchantList) {
+            if (!(element instanceof CompoundTag enchantment)) {
+                continue;
+            }
+            String id = enchantment.getString("id").orElse("");
+            if (id.isEmpty()) {
+                continue;
+            }
+            if (!id.contains(":")) {
+                id = "minecraft:" + id;
+            }
+            ResourceLocation rl = ResourceLocation.tryParse(id);
+            if (rl == null) {
+                continue;
+            }
+            int level = enchantment.getIntOr("lvl", 0);
+            if (level <= 0) {
+                continue;
+            }
+            levels.putInt(rl.toString(), level);
+            hasData = true;
+        }
+        if (hasData) {
+            CompoundTag component = new CompoundTag();
+            component.put(LEVELS_FIELD, levels);
+            components.put(componentKey, component);
+        }
+        legacyTag.remove(legacyKey);
+    }
+
+    private static void migrateLegacyHideFlags(CompoundTag root) {
+        CompoundTag components = root.getCompound(KEY_COMPONENTS).orElse(null);
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        boolean hideTooltip = false;
+        EnumSet<ItemHideFlagsCategoryModel.HideFlag> hiddenFlags = EnumSet.noneOf(ItemHideFlagsCategoryModel.HideFlag.class);
+
+        if (components != null) {
+            if (components.contains(HIDE_TOOLTIP_COMPONENT_KEY)) {
+                hideTooltip = true;
+                components.remove(HIDE_TOOLTIP_COMPONENT_KEY);
+            }
+            if (components.contains(HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY)) {
+                for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
+                    if (flag != ItemHideFlagsCategoryModel.HideFlag.OTHER) {
+                        hiddenFlags.add(flag);
+                    }
+                }
+                components.remove(HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY);
+            }
+            List<String> keys = List.copyOf(components.keySet());
+            for (String key : keys) {
+                if (!key.startsWith(TOMBSTONE_PREFIX)) {
+                    continue;
+                }
+                String target = key.substring(1);
+                ItemHideFlagsCategoryModel.HideFlag flag = COMPONENT_KEY_TO_HIDE_FLAG.get(target);
+                if (flag != null) {
+                    hiddenFlags.add(flag);
+                    components.remove(key);
+                } else if (TOOLTIP_DISPLAY_COMPONENT_KEY.equals(target)
+                        || HIDE_TOOLTIP_COMPONENT_KEY.equals(target)
+                        || HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY.equals(target)
+                        || TOMBSTONE_COMPONENT_IDS.contains(target)) {
+                    components.remove(key);
+                }
+            }
+        }
+
+        if (legacyTag != null && legacyTag.contains("HideFlags")) {
+            int mask = legacyTag.getIntOr("HideFlags", 0);
+            if (mask != 0) {
+                for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
+                    if (flag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
+                        if ((mask & flag.getValue()) != 0) {
+                            hideTooltip = true;
+                        }
+                        continue;
+                    }
+                    if ((mask & flag.getValue()) != 0) {
+                        hiddenFlags.add(flag);
+                    }
+                }
+            }
+            legacyTag.remove("HideFlags");
+        }
+
+        if (!hideTooltip && hiddenFlags.isEmpty()) {
+            if (legacyTag != null && legacyTag.isEmpty()) {
+                root.remove(KEY_LEGACY_TAG);
+            }
+            return;
+        }
+
+        CompoundTag comps = ensureComponentsTag(root);
+        Set<String> hiddenComponentIds = new LinkedHashSet<>();
+        for (ItemHideFlagsCategoryModel.HideFlag flag : hiddenFlags) {
+            for (DataComponentType<?> type : flag.hiddenComponents()) {
+                String id = componentId(type);
+                if (id == null) {
+                    continue;
+                }
+                hiddenComponentIds.add(id);
+                if (COMPONENTS_WITH_TOOLTIP_BOOLEAN.contains(id)) {
+                    setComponentTooltipVisibility(comps, id, false);
+                }
+            }
+        }
+
+        if (!hiddenComponentIds.isEmpty() || hideTooltip || !comps.contains(TOOLTIP_DISPLAY_COMPONENT_KEY)) {
+            writeTooltipDisplayTag(comps, hideTooltip, hiddenComponentIds);
+        }
+
+        if (legacyTag != null && legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void writeTooltipDisplayTag(CompoundTag components, boolean hideTooltip, Set<String> hiddenComponentIds) {
+        if (!hideTooltip && hiddenComponentIds.isEmpty()) {
+            components.remove(TOOLTIP_DISPLAY_COMPONENT_KEY);
+            return;
+        }
+        CompoundTag tooltip = components.getCompound(TOOLTIP_DISPLAY_COMPONENT_KEY).orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            components.put(TOOLTIP_DISPLAY_COMPONENT_KEY, created);
+            return created;
+        });
+        if (hideTooltip) {
+            tooltip.putBoolean("hide_tooltip", true);
+        } else {
+            tooltip.remove("hide_tooltip");
+        }
+        if (!hiddenComponentIds.isEmpty()) {
+            ListTag list = new ListTag();
+            for (String id : hiddenComponentIds) {
+                list.add(StringTag.valueOf(id));
+            }
+            tooltip.put("hidden_components", list);
+        } else {
+            tooltip.remove("hidden_components");
+        }
+        if (tooltip.isEmpty()) {
+            components.remove(TOOLTIP_DISPLAY_COMPONENT_KEY);
+        }
+    }
+
+    private static void setComponentTooltipVisibility(CompoundTag components, String componentId, boolean show) {
+        components.getCompound(componentId).ifPresent(comp -> {
+            if (show) {
+                comp.remove(SHOW_IN_TOOLTIP_FIELD);
+            } else {
+                comp.putBoolean(SHOW_IN_TOOLTIP_FIELD, false);
+            }
+        });
+    }
+
+    private static Map<String, ItemHideFlagsCategoryModel.HideFlag> buildHideFlagComponentMap() {
+        Map<String, ItemHideFlagsCategoryModel.HideFlag> map = new HashMap<>();
+        for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
+            if (flag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
+                continue;
+            }
+            for (DataComponentType<?> type : flag.hiddenComponents()) {
+                String id = componentId(type);
+                if (id != null) {
+                    map.put(id, flag);
+                }
+            }
+        }
+        return Map.copyOf(map);
+    }
+
+    private static String componentId(DataComponentType<?> type) {
+        if (type == null) {
+            return null;
+        }
+        ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+        return id == null ? null : id.toString();
     }
 
     private static boolean hasComponent(CompoundTag root, String key) {

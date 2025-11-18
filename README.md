@@ -32,6 +32,10 @@ https://github.com/skyecodes/IBE-Editor
 * **Fabric users:** also install [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 * **Java:** 21 recommended
 
+## Release notes
+
+* 1.21.8 migration: legacy `HideFlags`, `!minecraft:*` tombstones, and raw `Enchantments` lists are automatically converted to the new `ItemEnchantments` + `minecraft:tooltip_display` data components. Hiding lore/enchantments/etc. now relies on component `show_in_tooltip` fields, keeping Raw Data exports free of negated component markers.
+
 ## Build from source
 
 The project uses the [Architectury](https://github.com/architectury) toolchain.
