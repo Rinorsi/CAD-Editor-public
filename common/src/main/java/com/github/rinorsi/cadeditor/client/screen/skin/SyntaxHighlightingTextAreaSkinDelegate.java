@@ -26,7 +26,6 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
-    private static final int SELECTION_TEXT_COLOR = 0xFF2D7BFF;
     private static final int TOKEN_ADVANCE_PADDING = 2;
 
     private final SyntaxHighlightingTextArea node;
@@ -122,7 +121,6 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                         endX = selectionBaseX + font.width(fullText.substring(lineStart, to));
                     }
                     graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
-                    drawSelectionText(graphics, fullText.substring(from, to), startX, selectionY);
                 }
                 selectionY += font.lineHeight;
             }
@@ -185,13 +183,6 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         graphics.drawString(font, text, x, y, colourValue);
         int renderedEnd = x + font.width(text);
         return clampCursorPosition(x, renderedEnd);
-    }
-
-    private void drawSelectionText(GuiGraphics graphics, String text, int x, int y) {
-        if (text == null || text.isEmpty()) {
-            return;
-        }
-        graphics.drawString(font, text, x, y, RenderHelper.ensureOpaqueColor(SELECTION_TEXT_COLOR));
     }
 
     @Override
