@@ -1,6 +1,8 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
+import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.FoodEffectEntryModel;
@@ -18,11 +20,17 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     private static final int MAX_DURATION_TICKS = 20 * 60 * 60;
     private static final int MAX_AMPLIFIER = 255;
+    private static final int DEFAULT_SELECTION_DURATION = 160;
+    private static final float DEFAULT_SELECTION_PROBABILITY = 1.0f;
 
     private final FoodComponentState state;
     private List<FoodProperties.PossibleEffect> stagedEffects = List.of();
@@ -45,6 +53,11 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     @Override
     public EntryModel createNewListEntry() {
         return createFoodEffectEntry(null);
+    }
+
+    @Override
+    public void addEntryInList() {
+        openEffectSelection();
     }
 
     @Override
@@ -130,5 +143,68 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         }
 
         CompatFood.makePossibleEffect(instance, probability).ifPresent(list::add);
+    }
+
+    private void openEffectSelection() {
+        Set<ResourceLocation> selected = collectEffectIds();
+        ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
+                "", ClientCache.getEffectSelectionItems(),
+                value -> {}, true,
+                this::applySelectedEffects,
+                selected);
+    }
+
+    private void applySelectedEffects(List<ResourceLocation> selections) {
+        Map<ResourceLocation, FoodEffectEntryModel> existing = new LinkedHashMap<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof FoodEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    existing.putIfAbsent(id, effect);
+                }
+            }
+        }
+        List<FoodEffectEntryModel> desired = new ArrayList<>();
+        if (selections != null) {
+            for (ResourceLocation id : selections) {
+                FoodEffectEntryModel entry = existing.remove(id);
+                if (entry == null) {
+                    entry = (FoodEffectEntryModel) createFoodEffectEntry(null);
+                    entry.setValue(id.toString());
+                    entry.setDuration(DEFAULT_SELECTION_DURATION);
+                    entry.setUseSeconds(true);
+                    entry.setProbability(DEFAULT_SELECTION_PROBABILITY);
+                    entry.setAmplifier(0);
+                    entry.setAmbient(false);
+                    entry.setShowParticles(true);
+                    entry.setShowIcon(true);
+                }
+                desired.add(entry);
+            }
+        }
+        replaceEffectEntries(desired);
+    }
+
+    private void replaceEffectEntries(List<FoodEffectEntryModel> entries) {
+        int start = getEntryListStart();
+        int endExclusive = getEntries().size() - (canAddEntryInList() ? 1 : 0);
+        for (int i = endExclusive - 1; i >= start; i--) {
+            getEntries().remove(i);
+        }
+        getEntries().addAll(start, entries);
+        updateEntryListIndexes();
+    }
+
+    private Set<ResourceLocation> collectEffectIds() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof FoodEffectEntryModel effect) {
+                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+        }
+        return ids;
     }
 }
