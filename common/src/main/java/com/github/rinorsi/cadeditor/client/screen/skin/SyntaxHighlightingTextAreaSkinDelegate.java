@@ -24,7 +24,8 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final String CURSOR_APPEND_CHARACTER = "_";
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
-    private static final int SELECTION_COLOR = -16776961;
+    private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
+    private static final int SELECTION_TEXT_COLOR = 0xFF2D7BFF;
     private static final int TOKEN_ADVANCE_PADDING = 2;
 
     private final SyntaxHighlightingTextArea node;
@@ -112,14 +113,19 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                     int lineEnd = Math.min(fullText.length(), endIndex(line));
                     int from = Math.max(selectionStart, lineStart);
                     int to = Math.min(selectionEnd, lineEnd);
+                    String selectedText = from < to ? fullText.substring(from, to) : "";
                     int startX = selectionBaseX + font.width(fullText.substring(lineStart, from));
+                    int selectionTextEndX = startX + font.width(selectedText);
                     int endX;
                     if (endIndex(selected) > lineEnd) {
                         endX = getX() + getWidth() - innerPadding();
                     } else {
-                        endX = selectionBaseX + font.width(fullText.substring(lineStart, to));
+                        endX = selectionTextEndX;
                     }
-                    graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_COLOR);
+                    graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
+                    if (!selectedText.isEmpty()) {
+                        graphics.drawString(font, selectedText, startX, selectionY, SELECTION_TEXT_COLOR);
+                    }
                 }
                 selectionY += font.lineHeight;
             }

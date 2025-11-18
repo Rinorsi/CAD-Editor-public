@@ -16,6 +16,7 @@ import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.consume_effects.ConsumeEffect;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -326,9 +327,8 @@ public class FoodComponentState {
             return ItemStack.EMPTY;
         }
         ItemStack sanitized = source.copy();
-        sanitized.setCount(1);
-        sanitized.remove(DataComponents.FOOD);
-        sanitized.remove(DataComponents.CONSUMABLE);
+        int maxCount = Math.max(1, Math.min(64, sanitized.getMaxStackSize()));
+        sanitized.setCount(Mth.clamp(sanitized.getCount(), 1, maxCount));
         sanitized.remove(DataComponents.USE_REMAINDER);
         DebugLog.infoKey("cadeditor.debug.food.convert_sanitize", describeStack(sanitized));
         return sanitized;

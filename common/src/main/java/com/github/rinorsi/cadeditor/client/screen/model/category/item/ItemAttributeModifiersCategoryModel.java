@@ -27,6 +27,11 @@ import java.util.UUID;
 
 public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel {
     private ListTag newAttributeModifiers;
+    private static final EquipmentSlotGroup[] DISPLAY_GROUPS = new EquipmentSlotGroup[]{
+            EquipmentSlotGroup.MAINHAND, EquipmentSlotGroup.OFFHAND,
+            EquipmentSlotGroup.FEET, EquipmentSlotGroup.LEGS, EquipmentSlotGroup.CHEST, EquipmentSlotGroup.HEAD,
+            EquipmentSlotGroup.HAND, EquipmentSlotGroup.ARMOR, EquipmentSlotGroup.BODY, EquipmentSlotGroup.ANY
+    };
 
     public ItemAttributeModifiersCategoryModel(ItemEditorModel editor) {
         super(ModTexts.ATTRIBUTE_MODIFIERS, editor);
@@ -35,44 +40,13 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
-        ItemAttributeModifiers comps = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
-        boolean any = false;
-        if (comps != null) {
-            any = true;
-            // Deduplicate by (attribute,id,amount,operation)
-            Set<String> seen = new HashSet<>();
-            EquipmentSlotGroup[] groups = new EquipmentSlotGroup[]{
-                    EquipmentSlotGroup.MAINHAND, EquipmentSlotGroup.OFFHAND,
-                    EquipmentSlotGroup.FEET, EquipmentSlotGroup.LEGS, EquipmentSlotGroup.CHEST, EquipmentSlotGroup.HEAD,
-                    EquipmentSlotGroup.HAND, EquipmentSlotGroup.ARMOR, EquipmentSlotGroup.BODY, EquipmentSlotGroup.ANY
-            };
-            for (EquipmentSlotGroup g : groups) {
-                comps.forEach(g, (attr, mod) -> {
-                    CompoundTag t = mod.save();
-                    String opKey = t.contains("operation", Tag.TAG_STRING) ? t.getString("operation") : (t.contains("Operation", Tag.TAG_INT) ? Integer.toString(t.getInt("Operation")) : "");
-                    UUID uuid = parseModifierUuid(t);
-                    if (uuid == null && mod.id() != null) {
-                        uuid = parseUuidString(mod.id().toString());
-                    }
-                    if (uuid == null) {
-                        uuid = deterministicModifierUuid(t);
-                    }
-                    String attrName = attr.unwrapKey().map(k -> k.location().toString()).orElse("");
-                    int opIndex = toOperationIndex(t);
-                    String slot = toSlotString(g);
-                    String key = attrName + "|" + uuid + "|" + mod.amount() + "|" + opKey;
-                    if (seen.add(key)) {
-                        getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, mod.amount(), uuid, this::addAttributeModifier));
-                    }
-                });
-            }
+        Set<String> seen = new HashSet<>();
+        boolean loaded = addEntriesFromModifiers(stack.get(DataComponents.ATTRIBUTE_MODIFIERS), seen);
+        if (!loaded) {
+            loaded = addEntriesFromLegacyNbt();
         }
-        if (!any) {
-            // Fallback to legacy NBT
-            getTag().getList("AttributeModifiers", Tag.TAG_COMPOUND).stream()
-                    .map(CompoundTag.class::cast)
-                    .map(this::createModifierEntry)
-                    .forEach(getEntries()::add);
+        if (!loaded) {
+            addEntriesFromDefaultModifiers(stack, seen);
         }
     }
 
@@ -89,6 +63,58 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     @Override
     public EntryModel createNewListEntry() {
         return createModifierEntry(null);
+    }
+
+    private boolean addEntriesFromModifiers(ItemAttributeModifiers modifiers, Set<String> seen) {
+        if (modifiers == null || modifiers.modifiers().isEmpty()) {
+            return false;
+        }
+        final boolean[] added = {false};
+        for (EquipmentSlotGroup group : DISPLAY_GROUPS) {
+            modifiers.forEach(group, (attr, mod) -> {
+                CompoundTag t = mod.save();
+                String opKey = t.contains("operation", Tag.TAG_STRING) ? t.getString("operation") : (t.contains("Operation", Tag.TAG_INT) ? Integer.toString(t.getInt("Operation")) : "");
+                UUID uuid = parseModifierUuid(t);
+                if (uuid == null && mod.id() != null) {
+                    uuid = parseUuidString(mod.id().toString());
+                }
+                if (uuid == null) {
+                    uuid = deterministicModifierUuid(t);
+                }
+                String attrName = attr.unwrapKey().map(k -> k.location().toString()).orElse("");
+                int opIndex = toOperationIndex(t);
+                String slot = toSlotString(group);
+                String key = attrName + "|" + uuid + "|" + mod.amount() + "|" + opKey;
+                if (seen.add(key)) {
+                    getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, mod.amount(), uuid, this::addAttributeModifier));
+                    added[0] = true;
+                }
+            });
+        }
+        return added[0];
+    }
+
+    private boolean addEntriesFromLegacyNbt() {
+        if (getTag() == null || !getTag().contains("AttributeModifiers", Tag.TAG_LIST)) {
+            return false;
+        }
+        ListTag list = getTag().getList("AttributeModifiers", Tag.TAG_COMPOUND);
+        if (list.isEmpty()) {
+            return false;
+        }
+        list.stream()
+                .map(CompoundTag.class::cast)
+                .map(this::createModifierEntry)
+                .forEach(getEntries()::add);
+        return true;
+    }
+
+    private boolean addEntriesFromDefaultModifiers(ItemStack stack, Set<String> seen) {
+        ItemAttributeModifiers defaults = stack.getItem().components().get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (defaults == null) {
+            defaults = ItemAttributeModifiers.EMPTY;
+        }
+        return addEntriesFromModifiers(defaults, seen);
     }
 
     private EntryModel createModifierEntry(CompoundTag tag) {
@@ -115,15 +141,18 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         // 1) Keep legacy NBT for compatibility with existing UI
         if (!newAttributeModifiers.isEmpty()) {
             getOrCreateTag().put("AttributeModifiers", newAttributeModifiers);
-        } else if (getOrCreateTag().contains("AttributeModifiers")) {
-            getOrCreateTag().remove("AttributeModifiers");
+        } else if (getTag() != null && getTag().contains("AttributeModifiers")) {
+            getTag().remove("AttributeModifiers");
         }
         // 2) Apply 1.21 Data Components to the actual stack
         ItemStack stack = getParent().getContext().getItemStack();
-        ItemAttributeModifiers mods = ItemAttributeModifiers.EMPTY;
+        if (newAttributeModifiers.isEmpty()) {
+            stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+        }
         var attrLookupOpt = ClientUtil.registryAccess().lookup(Registries.ATTRIBUTE);
         if (attrLookupOpt.isPresent()) {
             var attrLookup = attrLookupOpt.get();
+            ItemAttributeModifiers mods = ItemAttributeModifiers.EMPTY;
             for (Tag t : newAttributeModifiers) {
                 if (t instanceof CompoundTag tag) {
                     String attrName = tag.getString("AttributeName");
@@ -149,7 +178,11 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
                     }
                 }
             }
-            stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
+            if (mods.modifiers().isEmpty()) {
+                stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+            } else {
+                stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
+            }
         }
     }
 

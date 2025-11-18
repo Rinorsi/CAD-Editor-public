@@ -8,8 +8,6 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemStack;
@@ -38,10 +36,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         selectedFlags.clear();
         initial.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
         initial.addAll(readLegacyFlags(stack));
-        if (initial.isEmpty()) {
-            initial.addAll(readComponentVisibilityFallback(stack));
-        }
-        initial.addAll(readRemovedComponents(stack));
+        initial.addAll(readComponentVisibilityFallback(stack));
 
         for (HideFlag flag : HideFlag.values()) {
             boolean selected = initial.contains(flag);
@@ -120,10 +115,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         EnumSet<HideFlag> actual = EnumSet.noneOf(HideFlag.class);
         actual.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
         actual.addAll(readLegacyFlags(stack));
-        if (actual.isEmpty()) {
-            actual.addAll(readComponentVisibilityFallback(stack));
-        }
-        actual.addAll(readRemovedComponents(stack));
+        actual.addAll(readComponentVisibilityFallback(stack));
 
         selectedFlags.clear();
         selectedFlags.addAll(actual);
@@ -133,29 +125,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 flagEntry.syncValue(selectedFlags.contains(flagEntry.getHideFlag()));
             }
         }
-    }
-
-    private EnumSet<HideFlag> readRemovedComponents(ItemStack stack) {
-        Tag saved = stack.save(ClientUtil.registryAccess(), new CompoundTag());
-        CompoundTag root = saved instanceof CompoundTag compound ? compound : new CompoundTag();
-        if (!root.contains("components", Tag.TAG_COMPOUND)) {
-            return EnumSet.noneOf(HideFlag.class);
-        }
-        CompoundTag components = root.getCompound("components");
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        for (HideFlag flag : HideFlag.values()) {
-            if (flag == HideFlag.OTHER) continue;
-            for (DataComponentType<?> type : flag.hiddenComponents()) {
-                ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
-                if (id == null) continue;
-                String key = "!" + id;
-                if (components.contains(key)) {
-                    flags.add(flag);
-                    break;
-                }
-            }
-        }
-        return flags;
     }
 
     private void applyLegacyComponentVisibility(ItemStack stack, EnumSet<HideFlag> componentFlags, boolean hideTooltip) {

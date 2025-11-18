@@ -57,7 +57,6 @@ public class ItemEditorModel extends StandardEditorModel {
 
     private static final Set<String> DELETE_IF_ABSENT_KEYS = Set.of(
         "minecraft:hide_tooltip",
-        "minecraft:hide_additional_tooltip",
         "minecraft:tooltip_display",
         "minecraft:enchantment_glint_override",
         "minecraft:custom_name"
