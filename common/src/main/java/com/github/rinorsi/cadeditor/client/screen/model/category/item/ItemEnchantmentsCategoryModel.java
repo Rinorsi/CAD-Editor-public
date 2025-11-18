@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.item.Items;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     private ListTag newEnch;
+    private boolean editingStored;
 
     public ItemEnchantmentsCategoryModel(ItemEditorModel editor) {
         super(ModTexts.ENCHANTMENTS, editor);
@@ -36,25 +38,26 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getStack();
         ItemEnchantments ench = stack.get(DataComponents.ENCHANTMENTS);
         ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
+        editingStored = shouldEditStored(stack, ench, stored);
         boolean any = false;
+        ItemEnchantments target = editingStored ? stored : ench;
         //TODO 做个附魔冲突小提示
-        if (ench != null && !ench.isEmpty()) {
+        if (target != null && !target.isEmpty()) {
             any = true;
-            ench.entrySet().stream()
+            target.entrySet().stream()
                     .map(this::createEnchantment)
                     .forEach(getEntries()::add);
         }
-        if (stored != null && !stored.isEmpty()) {
-            any = true;
-            stored.entrySet().stream()
-                    .map(this::createEnchantment)
-                    .forEach(getEntries()::add);
-        }
-        if (!any && getData().contains("tag", Tag.TAG_COMPOUND) && getTag().contains("Enchantments", Tag.TAG_LIST)) {
-            getTag().getList("Enchantments", Tag.TAG_COMPOUND).stream()
+        if (!any && getData().contains("tag", Tag.TAG_COMPOUND)) {
+            String legacyKey = editingStored ? "StoredEnchantments" : "Enchantments";
+            CompoundTag legacy = getTag();
+            if (legacy.contains(legacyKey, Tag.TAG_LIST)) {
+                legacy.getList(legacyKey, Tag.TAG_COMPOUND).stream()
                     .map(CompoundTag.class::cast)
                     .map(this::createEnchantment)
                     .forEach(getEntries()::add);
+                any = true;
+            }
         }
     }
 
@@ -144,13 +147,25 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
                     }
                 }
             }
-            EnchantmentHelper.setEnchantments(stack, mutable.toImmutable());
+            ItemEnchantments result = mutable.toImmutable();
+            if (editingStored) {
+                if (result.isEmpty()) {
+                    stack.remove(DataComponents.STORED_ENCHANTMENTS);
+                } else {
+                    stack.set(DataComponents.STORED_ENCHANTMENTS, result);
+                }
+            } else {
+                EnchantmentHelper.setEnchantments(stack, result);
+            }
             clearLegacyEnchantments();
         } else {
             if (!newEnch.isEmpty()) {
-                getOrCreateTag().put("Enchantments", newEnch);
-            } else if (getData().contains("tag", Tag.TAG_COMPOUND) && getTag().contains("Enchantments")) {
-                getTag().remove("Enchantments");
+                getOrCreateTag().put(editingStored ? "StoredEnchantments" : "Enchantments", newEnch);
+            } else if (getData().contains("tag", Tag.TAG_COMPOUND)) {
+                String legacyKey = editingStored ? "StoredEnchantments" : "Enchantments";
+                if (getTag().contains(legacyKey)) {
+                    getTag().remove(legacyKey);
+                }
             }
         }
     }
@@ -162,9 +177,27 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     private void clearLegacyEnchantments() {
         if (getData().contains("tag", Tag.TAG_COMPOUND)) {
             CompoundTag tag = getTag();
-            if (tag.contains("Enchantments")) {
-                tag.remove("Enchantments");
+            String legacyKey = editingStored ? "StoredEnchantments" : "Enchantments";
+            if (tag.contains(legacyKey)) {
+                tag.remove(legacyKey);
             }
         }
+    }
+
+    private boolean shouldEditStored(ItemStack stack, ItemEnchantments ench, ItemEnchantments stored) {
+        if (stack.is(Items.ENCHANTED_BOOK)) {
+            return true;
+        }
+        if (stored != null && !stored.isEmpty()) {
+            return ench == null || ench.isEmpty();
+        }
+        if (getData().contains("tag", Tag.TAG_COMPOUND)) {
+            CompoundTag tag = getTag();
+            if (tag.contains("StoredEnchantments", Tag.TAG_LIST)
+                    && !tag.getList("StoredEnchantments", Tag.TAG_COMPOUND).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

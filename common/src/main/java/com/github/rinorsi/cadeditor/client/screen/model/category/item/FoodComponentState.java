@@ -229,8 +229,8 @@ public class FoodComponentState {
         }
 
         ItemStack sanitized = source.copy();
-        sanitized.setCount(1);
-        sanitized.remove(DataComponents.FOOD);
+        int count = Math.max(1, Math.min(64, sanitized.getCount()));
+        sanitized.setCount(count);
         DebugLog.infoKey("cadeditor.debug.food.convert_sanitize", describeStack(sanitized));
         return sanitized;
     }
