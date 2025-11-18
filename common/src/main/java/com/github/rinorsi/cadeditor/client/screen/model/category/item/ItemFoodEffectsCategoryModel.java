@@ -1,6 +1,8 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
+import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.FoodEffectEntryModel;
@@ -18,7 +20,11 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     private static final int MAX_DURATION_TICKS = 20 * 60 * 60;
@@ -45,6 +51,11 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     @Override
     public EntryModel createNewListEntry() {
         return createFoodEffectEntry(null);
+    }
+
+    @Override
+    public void addEntryInList() {
+        openEffectSelection();
     }
 
     @Override
@@ -91,6 +102,27 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         return new FoodEffectEntryModel(this, defaultId, 0, 1, false, true, true, 1.0f, this::addFoodEffect);
     }
 
+    private FoodEffectEntryModel createFoodEffectEntryFor(ResourceLocation id) {
+        var registryOpt = ClientUtil.registryAccess().lookup(Registries.MOB_EFFECT);
+        if (registryOpt.isPresent()) {
+            var holder = registryOpt.get().get(ResourceKey.create(Registries.MOB_EFFECT, id));
+            if (holder.isPresent()) {
+                MobEffectInstance instance = new MobEffectInstance(
+                        holder.get(),
+                        160,
+                        0,
+                        false,
+                        true,
+                        true
+                );
+                return (FoodEffectEntryModel) createFoodEffectEntry(new FoodEffectData(instance, 1.0f));
+            }
+        }
+        FoodEffectEntryModel entry = (FoodEffectEntryModel) createFoodEffectEntry(null);
+        entry.setValue(id.toString());
+        return entry;
+    }
+
     private void addFoodEffect(String id,
                                int amplifier,
                                int duration,
@@ -130,5 +162,64 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         }
 
         CompatFood.makeApplyEffect(instance, probability).ifPresent(list::add);
+    }
+
+    private void openEffectSelection() {
+        Set<ResourceLocation> current = collectEffectIds();
+        ModScreenHandler.openListSelectionScreen(
+                ModTexts.EFFECTS.copy(),
+                "",
+                ClientCache.getEffectSelectionItems(),
+                value -> {},
+                true,
+                this::applySelectedEffects,
+                current
+        );
+    }
+
+    private void applySelectedEffects(List<ResourceLocation> selected) {
+        Map<ResourceLocation, FoodEffectEntryModel> existing = new LinkedHashMap<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof FoodEffectEntryModel effectEntry) {
+                ResourceLocation id = ResourceLocation.tryParse(effectEntry.getValue());
+                if (id != null) {
+                    existing.putIfAbsent(id, effectEntry);
+                }
+            }
+        }
+        List<FoodEffectEntryModel> desired = new ArrayList<>();
+        if (selected != null) {
+            for (ResourceLocation id : selected) {
+                FoodEffectEntryModel entry = existing.remove(id);
+                if (entry == null) {
+                    entry = createFoodEffectEntryFor(id);
+                }
+                desired.add(entry);
+            }
+        }
+        replaceEffectEntries(desired);
+    }
+
+    private void replaceEffectEntries(List<FoodEffectEntryModel> entries) {
+        int start = getEntryListStart();
+        int endExclusive = getEntries().size() - (canAddEntryInList() ? 1 : 0);
+        for (int i = endExclusive - 1; i >= start; i--) {
+            getEntries().remove(i);
+        }
+        getEntries().addAll(start, entries);
+        updateEntryListIndexes();
+    }
+
+    private Set<ResourceLocation> collectEffectIds() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (EntryModel entry : getEntries()) {
+            if (entry instanceof FoodEffectEntryModel effectEntry) {
+                ResourceLocation id = ResourceLocation.tryParse(effectEntry.getValue());
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+        }
+        return ids;
     }
 }

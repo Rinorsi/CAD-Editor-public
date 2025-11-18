@@ -6,14 +6,21 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.HideFlagEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import com.mojang.serialization.Codec;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.AdventureModePredicate;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.JukeboxPlayable;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -21,7 +28,6 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -35,6 +41,17 @@ import java.util.stream.Collectors;
 public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
 
     private static final Logger LOGGER = LogManager.getLogger("CAD-Editor/HideFlags");
+    private static final Set<DataComponentType<?>> TOOLTIP_TOGGLE_COMPONENTS = Set.of(
+            DataComponents.ENCHANTMENTS,
+            DataComponents.STORED_ENCHANTMENTS,
+            DataComponents.ATTRIBUTE_MODIFIERS,
+            DataComponents.UNBREAKABLE,
+            DataComponents.CAN_BREAK,
+            DataComponents.CAN_PLACE_ON,
+            DataComponents.DYED_COLOR,
+            DataComponents.TRIM,
+            DataComponents.JUKEBOX_PLAYABLE
+    );
 
     private final EnumSet<HideFlag> selectedFlags = EnumSet.noneOf(HideFlag.class);
 
@@ -63,21 +80,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     private EnumSet<HideFlag> readLegacyFlags(ItemStack stack) {
         EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
         CompoundTag root = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
-        CompoundTag components = root.getCompound("components").orElse(null);
-        if (components != null) {
-            if (components.contains("minecraft:hide_tooltip")) {
-                flags.add(HideFlag.OTHER);
-                return flags;
-            }
-            if (components.contains("minecraft:hide_additional_tooltip")) {
-                for (HideFlag flag : HideFlag.values()) {
-                    if (flag != HideFlag.OTHER) {
-                        flags.add(flag);
-                    }
-                }
-                return flags;
-            }
-        }
         int mask = getTag() != null ? getTag().getIntOr("HideFlags", 0) : 0;
         if (mask != 0) {
             for (HideFlag flag : HideFlag.values()) {
@@ -148,30 +150,18 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
 
     private EnumSet<HideFlag> readComponentVisibility(ItemStack stack) {
         EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        try {
-            for (HideFlag flag : HideFlag.values()) {
-                if (flag == HideFlag.OTHER) continue;
-                for (DataComponentType<?> type : flag.hiddenComponents()) {
-                    Object value = stack.get(type);
-                    if (value == null) continue;
-                    boolean show = true;
-                    try {
-                        var getter = value.getClass().getMethod("showInTooltip");
-                        show = (boolean) getter.invoke(value);
-                    } catch (ReflectiveOperationException ignored) {
-                        try {
-                            var field = value.getClass().getDeclaredField("showInTooltip");
-                            field.setAccessible(true);
-                            show = field.getBoolean(value);
-                        } catch (ReflectiveOperationException ignored2) {}
-                    }
-                    if (!show) {
-                        flags.add(flag);
-                        break;
-                    }
+        for (HideFlag flag : HideFlag.values()) {
+            if (flag == HideFlag.OTHER) continue;
+            for (DataComponentType<?> type : flag.hiddenComponents()) {
+                Object value = stack.get(type);
+                if (value == null) continue;
+                Boolean visible = readShowFlag(type, value);
+                if (visible != null && !visible) {
+                    flags.add(flag);
+                    break;
                 }
             }
-        } catch (Exception ignored) {}
+        }
         return flags;
     }
 
@@ -213,8 +203,26 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
-    private static boolean applyKnownTooltipToggle(ItemStack stack, DataComponentType<?> type, Object value, boolean show) {
-        return false;
+    private static <T> boolean applyKnownTooltipToggle(ItemStack stack, DataComponentType<T> type, T value, boolean show) {
+        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(type)) {
+            return false;
+        }
+        Codec<T> codec = type.codec();
+        if (codec == null) {
+            return false;
+        }
+        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
+        Tag encoded = codec.encodeStart(ops, value).result().orElse(null);
+        if (!(encoded instanceof CompoundTag compound)) {
+            return false;
+        }
+        compound.putBoolean("show_in_tooltip", show);
+        T decoded = codec.parse(ops, compound).result().orElse(null);
+        if (decoded == null) {
+            return false;
+        }
+        stack.set(type, decoded);
+        return true;
     }
 
     private static void featureLog(String stage, String message) {
@@ -232,139 +240,14 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static void setShowInTooltip(ItemStack stack, DataComponentType type, boolean show) {
-        ensureToggleTarget(stack, type);
+    @SuppressWarnings("unchecked")
+    private static void setShowInTooltip(ItemStack stack, DataComponentType<?> rawType, boolean show) {
+        DataComponentType<Object> type = (DataComponentType<Object>) rawType;
         Object value = stack.get(type);
         if (value == null) {
-            featureLog("toggle.skip", () -> componentName(type) + " missing; cannot toggle");
             return;
         }
-        if (applyKnownTooltipToggle(stack, type, value, show)) {
-            featureLog("toggle.vanilla", () -> componentName(type) + " -> " + (show ? "show" : "hide") + " via withTooltip");
-            return;
-        }
-        try {
-            Class<?> clazz = value.getClass();
-            Boolean current = null;
-            try {
-                var getter = clazz.getMethod("showInTooltip");
-                current = (Boolean) getter.invoke(value);
-            } catch (NoSuchMethodException ignored) {
-                try {
-                    var field = clazz.getDeclaredField("showInTooltip");
-                    field.setAccessible(true);
-                    current = field.getBoolean(value);
-                } catch (NoSuchFieldException | IllegalAccessException ignored2) {}
-            }
-            if (current != null && current == show) {
-                featureLog("toggle.reflect.skip", () -> componentName(type) + " already " + (show ? "visible" : "hidden"));
-                return;
-            }
-
-            try {
-                var method = clazz.getDeclaredMethod("withTooltip", boolean.class);
-                method.setAccessible(true);
-                Object newVal = method.invoke(value, show);
-                if (newVal != null) {
-                    stack.set(type, newVal);
-                    featureLog("toggle.reflect.withTooltip", () -> componentName(type) + " -> " + (show ? "show" : "hide"));
-                    return;
-                }
-            } catch (NoSuchMethodException ignored) {
-                try {
-                    var method = clazz.getDeclaredMethod("withTooltip", Boolean.class);
-                    method.setAccessible(true);
-                    Object newVal = method.invoke(value, show);
-                    if (newVal != null) {
-                        stack.set(type, newVal);
-                        featureLog("toggle.reflect.withTooltip", () -> componentName(type) + " -> " + (show ? "show" : "hide"));
-                        return;
-                    }
-                } catch (NoSuchMethodException ignored2) {}
-            }
-
-            try {
-                var method = clazz.getMethod("withShowInTooltip", boolean.class);
-                if (clazz.isAssignableFrom(method.getReturnType())) {
-                    Object newVal = method.invoke(value, show);
-                    if (newVal != null) {
-                        stack.set(type, newVal);
-                        featureLog("toggle.reflect.direct", () -> componentName(type) + " -> " + (show ? "show" : "hide"));
-                        return;
-                    }
-                }
-            } catch (NoSuchMethodException ignored) {}
-
-            for (var method : clazz.getDeclaredMethods()) {
-                if (Modifier.isStatic(method.getModifiers())) {
-                    continue;
-                }
-                if (method.getParameterCount() != 1) {
-                    continue;
-                }
-                Class<?> paramType = method.getParameterTypes()[0];
-                if (paramType != boolean.class && paramType != Boolean.class) {
-                    continue;
-                }
-                if (!clazz.isAssignableFrom(method.getReturnType())) {
-                    continue;
-                }
-                try {
-                    method.setAccessible(true);
-                    Object newVal = method.invoke(value, show);
-                    if (newVal != null) {
-                        stack.set(type, newVal);
-                        featureLog("toggle.reflect.method", () -> componentName(type) + " -> " + (show ? "show" : "hide") + " via " + method.getName());
-                        return;
-                    }
-                } catch (ReflectiveOperationException ignored) {}
-            }
-
-            if (clazz.isRecord()) {
-                var components = clazz.getRecordComponents();
-                Object[] args = new Object[components.length];
-                Class<?>[] types = new Class<?>[components.length];
-                boolean hasShowField = false;
-                for (int i = 0; i < components.length; i++) {
-                    var rc = components[i];
-                    types[i] = rc.getType();
-                    Object arg = rc.getAccessor().invoke(value);
-                    if (rc.getName().equals("showInTooltip")
-                            && (types[i] == boolean.class || types[i] == Boolean.class)) {
-                        arg = show;
-                        hasShowField = true;
-                    }
-                    args[i] = arg;
-                }
-                if (hasShowField) {
-                    var ctor = clazz.getDeclaredConstructor(types);
-                    ctor.setAccessible(true);
-                    Object newVal = ctor.newInstance(args);
-                    stack.set(type, newVal);
-                    featureLog("toggle.reflect.record", () -> componentName(type) + " rebuilt via record ctor");
-                } else {
-                    featureLog("toggle.reflect.record.missing", () -> "Record " + clazz.getName() + " lacks showInTooltip field");
-                }
-            } else {
-                featureLog("toggle.reflect.unhandled", () -> "No setter path for " + clazz.getName());
-            }
-        } catch (ReflectiveOperationException ex) {
-            featureLog("toggle.reflect.error", () -> "Failed to toggle " + componentName(type) + ": " + ex.getMessage());
-        }
-    }
-
-    private static void ensureToggleTarget(ItemStack stack, DataComponentType<?> type) {
-        if (stack.get(type) != null) {
-            return;
-        }
-        if (type == DataComponents.ENCHANTMENTS) {
-            stack.set(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        } else if (type == DataComponents.STORED_ENCHANTMENTS) {
-            stack.set(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        } else if (type == DataComponents.ATTRIBUTE_MODIFIERS) {
-            stack.set(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        }
+        applyKnownTooltipToggle(stack, type, value, show);
     }
 
     public enum HideFlag {
@@ -415,32 +298,22 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         static final TooltipDisplaySupport INSTANCE = new TooltipDisplaySupport();
 
         private final DataComponentType<Object> type;
-        private final java.lang.reflect.Constructor<?> ctor;
-        private final java.lang.reflect.Method hideTooltipGetter;
-        private final java.lang.reflect.Method hiddenComponentsGetter;
 
         @SuppressWarnings("unchecked")
         private TooltipDisplaySupport() {
             DataComponentType<Object> t = null;
-            java.lang.reflect.Constructor<?> c = null;
-            java.lang.reflect.Method mHide = null;
-            java.lang.reflect.Method mHidden = null;
             try {
-                var field = DataComponents.class.getDeclaredField("TOOLTIP_DISPLAY");
-                t = (DataComponentType<Object>) field.get(null);
-                Class<?> displayClass = Class.forName("net.minecraft.world.item.component.TooltipDisplay");
-                c = displayClass.getDeclaredConstructor(boolean.class, Set.class);
-                mHide = displayClass.getMethod("hideTooltip");
-                mHidden = displayClass.getMethod("hiddenComponents");
-            } catch (ReflectiveOperationException ignored) {}
+                t = BuiltInRegistries.DATA_COMPONENT_TYPE
+                        .get(ResourceLocation.withDefaultNamespace("tooltip_display"))
+                        .map(Holder.Reference::value)
+                        .map(value -> (DataComponentType<Object>) value)
+                        .orElse(null);
+            } catch (Exception ignored) {}
             this.type = t;
-            this.ctor = c;
-            this.hideTooltipGetter = mHide;
-            this.hiddenComponentsGetter = mHidden;
         }
 
         private boolean available() {
-            return type != null && ctor != null && hideTooltipGetter != null && hiddenComponentsGetter != null;
+            return type != null && type.codec() != null;
         }
 
         private EnumSet<HideFlag> read(ItemStack stack) {
@@ -452,22 +325,29 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             if (value == null) {
                 return flags;
             }
-            try {
-                if ((boolean) hideTooltipGetter.invoke(value)) {
-                    flags.add(HideFlag.OTHER);
+            Codec<Object> codec = type.codec();
+            RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
+            Tag encoded = codec.encodeStart(ops, value).result().orElse(null);
+            if (!(encoded instanceof CompoundTag compound)) {
+                return flags;
+            }
+            if (compound.getBooleanOr("hide_tooltip", false)) {
+                flags.add(HideFlag.OTHER);
+            }
+            ListTag hiddenList = compound.getList("hidden_components").orElse(new ListTag());
+            for (Tag entry : hiddenList) {
+                if (!(entry instanceof StringTag stringTag)) continue;
+                ResourceLocation id = ResourceLocation.tryParse(stringTag.value());
+                if (id == null) continue;
+                DataComponentType<?> dc = BuiltInRegistries.DATA_COMPONENT_TYPE.get(id)
+                        .map(Holder.Reference::value)
+                        .orElse(null);
+                if (dc == null) continue;
+                HideFlag flag = HideFlag.fromComponent(dc);
+                if (flag != null) {
+                    flags.add(flag);
                 }
-                Object hidden = hiddenComponentsGetter.invoke(value);
-                if (hidden instanceof Iterable<?> it) {
-                    for (Object o : it) {
-                        if (o instanceof DataComponentType<?> dc) {
-                            HideFlag flag = HideFlag.fromComponent(dc);
-                            if (flag != null) {
-                                flags.add(flag);
-                            }
-                        }
-                    }
-                }
-            } catch (ReflectiveOperationException ignored) {}
+            }
             return flags;
         }
 
@@ -475,17 +355,30 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             if (!available()) {
                 return false;
             }
-            try {
-                if (!hideTooltip && components.isEmpty()) {
-                    stack.remove(type);
-                } else {
-                    Object value = ctor.newInstance(hideTooltip, Set.copyOf(components));
-                    stack.set(type, value);
-                }
+            Codec<Object> codec = type.codec();
+            RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
+            if (!hideTooltip && components.isEmpty()) {
+                stack.remove(type);
                 return true;
-            } catch (ReflectiveOperationException ignored) {
+            }
+            CompoundTag payload = new CompoundTag();
+            payload.putBoolean("hide_tooltip", hideTooltip);
+            if (!components.isEmpty()) {
+                ListTag hidden = new ListTag();
+                for (DataComponentType<?> component : components) {
+                    ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component);
+                    if (id != null) {
+                        hidden.add(StringTag.valueOf(id.toString()));
+                    }
+                }
+                payload.put("hidden_components", hidden);
+            }
+            Object parsed = codec.parse(ops, payload).result().orElse(null);
+            if (parsed == null) {
                 return false;
             }
+            stack.set(type, parsed);
+            return true;
         }
 
         private void clear(ItemStack stack) {
@@ -493,5 +386,26 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 stack.remove(type);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Boolean readShowFlag(DataComponentType<?> rawType, Object value) {
+        DataComponentType<Object> type = (DataComponentType<Object>) rawType;
+        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(type)) {
+            return null;
+        }
+        Codec<Object> codec = type.codec();
+        if (codec == null) {
+            return null;
+        }
+        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
+        Tag encoded = codec.encodeStart(ops, value).result().orElse(null);
+        if (!(encoded instanceof CompoundTag compound)) {
+            return null;
+        }
+        if (!compound.contains("show_in_tooltip")) {
+            return true;
+        }
+        return compound.getBooleanOr("show_in_tooltip", true);
     }
 }

@@ -43,34 +43,14 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
-        ItemAttributeModifiers comps = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
         modifierIds.clear();
-        if (comps != null) {
-            Set<String> seen = new HashSet<>();
-            for (ItemAttributeModifiers.Entry entry : comps.modifiers()) {
-                String attrName = entry.attribute().unwrapKey().map(k -> k.location().toString()).orElse("");
-                AttributeModifier modifier = entry.modifier();
-                UUID uuid = uuidFromResourceLocation(modifier.id());
-                modifierIds.put(uuid, modifier.id());
-                String slot = toSlotString(entry.slot());
-                int opIndex = operationToIndex(modifier.operation());
-                double amount = modifier.amount();
-                String key = attrName + "|" + uuid + "|" + amount + "|" + opIndex;
-                if (seen.add(key)) {
-                    getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, amount, uuid, this::addAttributeModifier));
-                }
-            }
-            if (!getEntries().isEmpty()) {
-                return;
-            }
+        boolean hasEntries = addComponentEntries(stack.get(DataComponents.ATTRIBUTE_MODIFIERS));
+        if (!hasEntries) {
+            hasEntries = addLegacyEntries();
         }
-        // Fallback to legacy NBT
-        CompoundTag root = getTag();
-        ListTag legacyList = root == null ? new ListTag() : NbtHelper.getListOrEmpty(root, "AttributeModifiers");
-        legacyList.stream()
-                .map(CompoundTag.class::cast)
-                .map(this::createModifierEntry)
-                .forEach(getEntries()::add);
+        if (!hasEntries) {
+            addDefaultEntries(stack);
+        }
     }
 
     @Override
@@ -113,13 +93,11 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     public void apply() {
         newAttributeModifiers = new ListTag();
         super.apply();
-        // 1) Keep legacy NBT for compatibility with existing UI
         if (!newAttributeModifiers.isEmpty()) {
             getOrCreateTag().put("AttributeModifiers", newAttributeModifiers);
         } else if (getOrCreateTag().contains("AttributeModifiers")) {
             getOrCreateTag().remove("AttributeModifiers");
         }
-        // 2) Apply 1.21 Data Components to the actual stack
         ItemStack stack = getParent().getContext().getItemStack();
         var attrLookupOpt = ClientUtil.registryAccess().lookup(Registries.ATTRIBUTE);
         if (attrLookupOpt.isEmpty()) {
@@ -153,10 +131,11 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
             modifierIds.put(uuid, modifierId);
             componentEntries.add(new ItemAttributeModifiers.Entry(holder, modifier, group));
         }
-        ItemAttributeModifiers mods = componentEntries.isEmpty()
-                ? ItemAttributeModifiers.EMPTY
-                : new ItemAttributeModifiers(componentEntries);
-        stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
+        if (componentEntries.isEmpty()) {
+            stack.set(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+        } else {
+            stack.set(DataComponents.ATTRIBUTE_MODIFIERS, new ItemAttributeModifiers(componentEntries));
+        }
     }
 
     private void addAttributeModifier(String attributeName, String slot, int operation, double amount, UUID uuid) {
@@ -296,5 +275,57 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
 
     private static int operationToIndex(AttributeModifier.Operation operation) {
         return operation.ordinal();
+    }
+
+    private boolean addComponentEntries(ItemAttributeModifiers comps) {
+        if (comps == null) {
+            return false;
+        }
+        if (comps.modifiers().isEmpty()) {
+            // Explicit override with no modifiers; make sure defaults are not reintroduced
+            return true;
+        }
+        boolean added = false;
+        Set<String> seen = new HashSet<>();
+        for (ItemAttributeModifiers.Entry entry : comps.modifiers()) {
+            added |= addModifierEntry(entry, seen);
+        }
+        return added;
+    }
+
+    private boolean addModifierEntry(ItemAttributeModifiers.Entry entry, Set<String> seen) {
+        String attrName = entry.attribute().unwrapKey().map(k -> k.location().toString()).orElse("");
+        AttributeModifier modifier = entry.modifier();
+        UUID uuid = uuidFromResourceLocation(modifier.id());
+        modifierIds.put(uuid, modifier.id());
+        String slot = toSlotString(entry.slot());
+        int opIndex = operationToIndex(modifier.operation());
+        double amount = modifier.amount();
+        String key = attrName + "|" + uuid + "|" + amount + "|" + opIndex + "|" + slot;
+        if (!seen.add(key)) {
+            return false;
+        }
+        getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, amount, uuid, this::addAttributeModifier));
+        return true;
+    }
+
+    private boolean addLegacyEntries() {
+        CompoundTag root = getTag();
+        ListTag legacyList = root == null ? new ListTag() : NbtHelper.getListOrEmpty(root, "AttributeModifiers");
+        boolean added = false;
+        for (Tag tag : legacyList) {
+            if (tag instanceof CompoundTag compound) {
+                getEntries().add(createModifierEntry(compound));
+                added = true;
+            }
+        }
+        return added;
+    }
+
+    private void addDefaultEntries(ItemStack stack) {
+        ItemAttributeModifiers defaults = stack.getItem().components().get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (defaults != null && !defaults.modifiers().isEmpty()) {
+            addComponentEntries(defaults);
+        }
     }
 }

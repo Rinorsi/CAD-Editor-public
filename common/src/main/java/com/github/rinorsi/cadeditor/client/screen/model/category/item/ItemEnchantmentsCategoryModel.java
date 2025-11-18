@@ -8,8 +8,8 @@ import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -17,16 +17,20 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
+    private static final Logger LOGGER = LogManager.getLogger();
     private ListTag newEnch;
+    private boolean editingStored;
 
     public ItemEnchantmentsCategoryModel(ItemEditorModel editor) {
         super(ModTexts.ENCHANTMENTS, editor);
@@ -35,31 +39,27 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     @Override
     protected void setupEntries() {
         ItemStack stack = getStack();
-        ItemEnchantments ench = stack.get(DataComponents.ENCHANTMENTS);
-        ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
+        editingStored = shouldEditStored(stack);
+        ItemEnchantments target = stack.get(editingStored ? DataComponents.STORED_ENCHANTMENTS : DataComponents.ENCHANTMENTS);
         boolean any = false;
-        //TODO 做个附魔冲突小提示
-        if (ench != null && !ench.isEmpty()) {
+        if (target != null && !target.isEmpty()) {
             any = true;
-            ench.entrySet().stream()
+            target.entrySet().stream()
                     .map(this::createEnchantment)
                     .forEach(getEntries()::add);
         }
-        if (stored != null && !stored.isEmpty()) {
-            any = true;
-            stored.entrySet().stream()
-                    .map(this::createEnchantment)
-                    .forEach(getEntries()::add);
-        }
-        CompoundTag data = getData();
-        CompoundTag legacyTag = data != null ? data.getCompound("tag").orElse(null) : null;
-        if (!any && legacyTag != null) {
-            ListTag enchantList = legacyTag.getList("Enchantments").orElse(null);
-            if (enchantList != null) {
-                enchantList.stream()
-                        .map(CompoundTag.class::cast)
-                        .map(this::createEnchantment)
-                        .forEach(getEntries()::add);
+        if (!any) {
+            CompoundTag data = getData();
+            CompoundTag legacyTag = data != null ? data.getCompound("tag").orElse(null) : null;
+            if (legacyTag != null) {
+                String legacyKey = editingStored ? "StoredEnchantments" : "Enchantments";
+                ListTag enchantList = legacyTag.getList(legacyKey).orElse(null);
+                if (enchantList != null) {
+                    enchantList.stream()
+                            .map(CompoundTag.class::cast)
+                            .map(this::createEnchantment)
+                            .forEach(getEntries()::add);
+                }
             }
         }
     }
@@ -134,37 +134,43 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         super.apply();
         ItemStack stack = getStack();
         var lookupOpt = ClientUtil.registryAccess().lookup(Registries.ENCHANTMENT);
-        if (lookupOpt.isPresent()) {
-            var lookup = lookupOpt.get();
-            ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
-            for (Tag tag : newEnch) {
-                if (tag instanceof CompoundTag compoundTag) {
-                    String id = NbtHelper.getString(compoundTag, "id", "");
-                    int lvl = compoundTag.getIntOr("lvl", 0);
-                    if (lvl > 0) {
-                        ResourceLocation rl = ResourceLocation.tryParse(id);
-                        if (rl != null) {
-                            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, rl);
-                            lookup.get(key).ifPresent(holder -> mutable.set(holder, lvl));
-                        }
-                    }
-                }
+        if (lookupOpt.isEmpty()) {
+            LOGGER.error("Missing enchantment registry; cannot apply enchantments to {}", stack);
+            return;
+        }
+        var lookup = lookupOpt.get();
+        ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (Tag tag : newEnch) {
+            if (!(tag instanceof CompoundTag compoundTag)) {
+                continue;
             }
-            EnchantmentHelper.setEnchantments(stack, mutable.toImmutable());
-            clearLegacyEnchantments();
+            String id = NbtHelper.getString(compoundTag, "id", "");
+            int lvl = compoundTag.getIntOr("lvl", 0);
+            if (lvl <= 0) {
+                continue;
+            }
+            ResourceLocation rl = ResourceLocation.tryParse(id);
+            if (rl == null) {
+                continue;
+            }
+            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, rl);
+            lookup.get(key).ifPresent(holder -> mutable.set(holder, lvl));
+        }
+        ItemEnchantments applied = mutable.toImmutable();
+        if (editingStored) {
+            if (applied.isEmpty()) {
+                stack.remove(DataComponents.STORED_ENCHANTMENTS);
+            } else {
+                stack.set(DataComponents.STORED_ENCHANTMENTS, applied);
+            }
         } else {
-            CompoundTag root = getOrCreateTag();
-            CompoundTag legacyTag = root.getCompound("tag").orElseGet(() -> {
-                CompoundTag created = new CompoundTag();
-                root.put("tag", created);
-                return created;
-            });
-            if (!newEnch.isEmpty()) {
-                legacyTag.put("Enchantments", newEnch);
-            } else if (legacyTag.contains("Enchantments")) {
-                legacyTag.remove("Enchantments");
+            if (applied.isEmpty()) {
+                stack.remove(DataComponents.ENCHANTMENTS);
+            } else {
+                stack.set(DataComponents.ENCHANTMENTS, applied);
             }
         }
+        clearLegacyEnchantments();
     }
 
     private ItemStack getStack() {
@@ -177,8 +183,21 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
             return;
         }
         CompoundTag tag = data.getCompound("tag").orElse(null);
-        if (tag != null && tag.contains("Enchantments")) {
-            tag.remove("Enchantments");
+        if (tag == null) {
+            return;
         }
+        String key = editingStored ? "StoredEnchantments" : "Enchantments";
+        if (tag.contains(key)) {
+            tag.remove(key);
+        }
+    }
+
+    private boolean shouldEditStored(ItemStack stack) {
+        if (stack.is(Items.ENCHANTED_BOOK)) {
+            return true;
+        }
+        ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
+        ItemEnchantments normal = stack.get(DataComponents.ENCHANTMENTS);
+        return stored != null && (normal == null || normal.isEmpty());
     }
 }

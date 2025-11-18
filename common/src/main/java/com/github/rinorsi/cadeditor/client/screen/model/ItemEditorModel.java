@@ -60,14 +60,12 @@ public class ItemEditorModel extends StandardEditorModel {
 
     private static final Set<String> DELETE_IF_ABSENT_KEYS = Set.of(
         "minecraft:hide_tooltip",
-        "minecraft:hide_additional_tooltip",
         "minecraft:tooltip_display",
         "minecraft:enchantment_glint_override",
         "minecraft:custom_name"
     );
     private static final String TOOLTIP_DISPLAY_COMPONENT_KEY = "minecraft:tooltip_display";
     private static final String HIDE_TOOLTIP_COMPONENT_KEY = "minecraft:hide_tooltip";
-    private static final String HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY = "minecraft:hide_additional_tooltip";
     private static final String SHOW_IN_TOOLTIP_FIELD = "show_in_tooltip";
     private static final String LEVELS_FIELD = "levels";
     private static final Set<String> COMPONENTS_WITH_TOOLTIP_BOOLEAN = Set.of(
@@ -81,8 +79,6 @@ public class ItemEditorModel extends StandardEditorModel {
             "minecraft:trim",
             "minecraft:jukebox_playable"
     );
-    private static final Map<String, ItemHideFlagsCategoryModel.HideFlag> COMPONENT_KEY_TO_HIDE_FLAG =
-            buildHideFlagComponentMap();
     private static final Set<String> TOMBSTONE_COMPONENT_IDS = Set.of(
             "minecraft:lore",
             "minecraft:attribute_modifiers",
@@ -696,27 +692,14 @@ public class ItemEditorModel extends StandardEditorModel {
                 hideTooltip = true;
                 components.remove(HIDE_TOOLTIP_COMPONENT_KEY);
             }
-            if (components.contains(HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY)) {
-                for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
-                    if (flag != ItemHideFlagsCategoryModel.HideFlag.OTHER) {
-                        hiddenFlags.add(flag);
-                    }
-                }
-                components.remove(HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY);
-            }
             List<String> keys = List.copyOf(components.keySet());
             for (String key : keys) {
                 if (!key.startsWith(TOMBSTONE_PREFIX)) {
                     continue;
                 }
                 String target = key.substring(1);
-                ItemHideFlagsCategoryModel.HideFlag flag = COMPONENT_KEY_TO_HIDE_FLAG.get(target);
-                if (flag != null) {
-                    hiddenFlags.add(flag);
-                    components.remove(key);
-                } else if (TOOLTIP_DISPLAY_COMPONENT_KEY.equals(target)
+                if (TOOLTIP_DISPLAY_COMPONENT_KEY.equals(target)
                         || HIDE_TOOLTIP_COMPONENT_KEY.equals(target)
-                        || HIDE_ADDITIONAL_TOOLTIP_COMPONENT_KEY.equals(target)
                         || TOMBSTONE_COMPONENT_IDS.contains(target)) {
                     components.remove(key);
                 }
@@ -809,22 +792,6 @@ public class ItemEditorModel extends StandardEditorModel {
                 comp.putBoolean(SHOW_IN_TOOLTIP_FIELD, false);
             }
         });
-    }
-
-    private static Map<String, ItemHideFlagsCategoryModel.HideFlag> buildHideFlagComponentMap() {
-        Map<String, ItemHideFlagsCategoryModel.HideFlag> map = new HashMap<>();
-        for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
-            if (flag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
-                continue;
-            }
-            for (DataComponentType<?> type : flag.hiddenComponents()) {
-                String id = componentId(type);
-                if (id != null) {
-                    map.put(id, flag);
-                }
-            }
-        }
-        return Map.copyOf(map);
     }
 
     private static String componentId(DataComponentType<?> type) {

@@ -366,15 +366,19 @@ public class FoodComponentState {
         originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, usingConvertsToId);
     }
 
+    private static final int MIN_CONVERT_COUNT = 1;
+    private static final int MAX_CONVERT_COUNT = 64;
+
     private ItemStack prepareConvertStack(ItemStack source) {
         if (source == null || source.isEmpty()) {
             return ItemStack.EMPTY;
         }
         ItemStack sanitized = source.copy();
-        sanitized.setCount(1);
-        sanitized.remove(DataComponents.FOOD);
-        sanitized.remove(DataComponents.CONSUMABLE);
-        sanitized.remove(DataComponents.USE_REMAINDER);
+        int count = sanitized.getCount();
+        if (count < MIN_CONVERT_COUNT || count > MAX_CONVERT_COUNT) {
+            count = Math.min(Math.max(count, MIN_CONVERT_COUNT), MAX_CONVERT_COUNT);
+        }
+        sanitized.setCount(count);
         DebugLog.infoKey("cadeditor.debug.food.convert_sanitize", describeStack(sanitized));
         return sanitized;
     }
