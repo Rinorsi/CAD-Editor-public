@@ -7,7 +7,7 @@
 "0.2.0": {
 "type": "release",
 "date": "2025-11-01",
-"changelog": "1.21.4版本迁移"
+"changelog": "1.21.4版本迁移，修复若干Bug"
 },
 "0.1.0": {
 "type": "release",
