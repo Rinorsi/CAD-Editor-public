@@ -27,6 +27,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
     private static final int TOKEN_ADVANCE_PADDING = 2;
+    private static final int LINE_SPACING = 2;
 
     private final SyntaxHighlightingTextArea node;
     private final MultilineTextField textField;
@@ -65,6 +66,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         int caretY = getY() + innerPadding();
         int lineY = getY() + innerPadding();
         int baseX = getX() + innerPadding();
+        int lineHeightWithSpacing = font.lineHeight + LINE_SPACING;
 
         Iterable<?> visualLines = textField.iterateLines();
         for (Object view : visualLines) {
@@ -85,7 +87,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                 }
                 caretY = lineY;
             }
-            lineY += font.lineHeight;
+            lineY += lineHeightWithSpacing;
         }
 
         if (shouldBlink && !cursorInText && withinContentAreaTopBottom(caretY, caretY + font.lineHeight)) {
@@ -102,7 +104,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
             for (Object line : textField.iterateLines()) {
                 if (beginIndex(selected) > endIndex(line)) {
-                    selectionY += font.lineHeight;
+                    selectionY += lineHeightWithSpacing;
                     continue;
                 }
                 if (beginIndex(line) > endIndex(selected)) {
@@ -122,7 +124,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                     }
                     graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
                 }
-                selectionY += font.lineHeight;
+                selectionY += lineHeightWithSpacing;
             }
         }
     }
