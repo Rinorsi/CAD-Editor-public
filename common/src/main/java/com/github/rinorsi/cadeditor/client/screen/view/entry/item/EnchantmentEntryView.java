@@ -25,9 +25,9 @@ public class EnchantmentEntryView extends SelectionEntryView {
         super.build();
         getTextField().setPlaceholder(ModTexts.ENCHANTMENT);
         previewBox = hBox(preview -> {
-            preview.add(previewItemView = itemView());
+            preview.add(previewItemView = itemView().prefSize(16, 16));
             preview.add(previewLabel = label().prefHeight(16));
-            preview.align(CENTER_LEFT).spacing(4);
+            preview.align(CENTER_LEFT).prefHeight(16).spacing(4);
         });
         setPreview(previewBox);
         setPreviewVisible(false);

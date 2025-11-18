@@ -45,12 +45,11 @@ public class SelectionEntryView extends StringEntryView {
         }
         var children = selectionBox.getChildren();
         boolean contains = children.contains(previewNode);
-        if (visible && !contains) {
-            int index = children.indexOf(selectionScreenButton);
-            if (index == -1) {
-                index = children.size();
+        if (visible) {
+            if (contains) {
+                children.remove(previewNode);
             }
-            children.add(index + 1, previewNode);
+            children.add(0, previewNode);
         } else if (!visible && contains) {
             children.remove(previewNode);
         }

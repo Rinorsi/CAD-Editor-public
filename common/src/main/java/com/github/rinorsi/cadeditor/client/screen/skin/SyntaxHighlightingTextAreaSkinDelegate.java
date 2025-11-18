@@ -25,7 +25,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
-    private static final int SELECTION_TEXT_COLOR = 0xFF2D7BFF;
+    private static final int LINE_SPACING = 2;
     private static final int TOKEN_ADVANCE_PADDING = 2;
 
     private final SyntaxHighlightingTextArea node;
@@ -46,6 +46,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         String fullText = textField.value();
         SNBTSyntaxHighlighter highlighter = node.getHighlighter();
         highlighter.setSource(fullText);
+        List<Token> tokens = highlighter.getTokens();
         SyntaxHighlightingPalette palette = SyntaxHighlightingPreset.resolveCurrent().palette();
 
         if (fullText.isEmpty() && !isFocused()) {
@@ -65,6 +66,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         int caretY = getY() + innerPadding();
         int lineY = getY() + innerPadding();
         int baseX = getX() + innerPadding();
+        int lineHeightWithSpacing = getLineHeightWithSpacing();
 
         Iterable<?> visualLines = textField.iterateLines();
         for (Object view : visualLines) {
@@ -74,18 +76,18 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
             if (shouldBlink && cursorInText && cursorIndex >= lineStart && cursorIndex <= lineEnd) {
                 if (visible) {
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, lineStart, cursorIndex, baseX, lineY);
+                    caretX = drawSegment(graphics, fullText, tokens, palette, lineStart, cursorIndex, baseX, lineY);
                     graphics.fill(caretX, lineY - 1, caretX + CURSOR_INSERT_WIDTH, lineY + 1 + font.lineHeight, CURSOR_INSERT_COLOR);
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, cursorIndex, lineEnd, caretX, lineY);
+                    caretX = drawSegment(graphics, fullText, tokens, palette, cursorIndex, lineEnd, caretX, lineY);
                     caretY = lineY;
                 }
             } else {
                 if (visible) {
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, lineStart, lineEnd, baseX, lineY);
+                    caretX = drawSegment(graphics, fullText, tokens, palette, lineStart, lineEnd, baseX, lineY);
                 }
                 caretY = lineY;
             }
-            lineY += font.lineHeight;
+            lineY += lineHeightWithSpacing;
         }
 
         if (shouldBlink && !cursorInText && withinContentAreaTopBottom(caretY, caretY + font.lineHeight)) {
@@ -102,7 +104,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
             for (Object line : textField.iterateLines()) {
                 if (beginIndex(selected) > endIndex(line)) {
-                    selectionY += font.lineHeight;
+                    selectionY += lineHeightWithSpacing;
                     continue;
                 }
                 if (beginIndex(line) > endIndex(selected)) {
@@ -123,11 +125,8 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                         endX = selectionTextEndX;
                     }
                     graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
-                    if (!selectedText.isEmpty()) {
-                        graphics.drawString(font, selectedText, startX, selectionY, SELECTION_TEXT_COLOR);
-                    }
                 }
-                selectionY += font.lineHeight;
+                selectionY += lineHeightWithSpacing;
             }
         }
     }
@@ -140,10 +139,9 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
     }
 
-    private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
+    private int drawSegment(GuiGraphics graphics, String fullText, List<Token> tokens, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
         int cursor = x;
         int index = start;
-        List<Token> tokens = highlighter.getTokens();
 
         for (Token token : tokens) {
             if (token.end() <= start) {
@@ -168,6 +166,10 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
             cursor = drawPlain(graphics, fullText.substring(index, end), cursor, y);
         }
         return cursor;
+    }
+
+    private int getLineHeightWithSpacing() {
+        return font.lineHeight + LINE_SPACING;
     }
 
     private int drawPlain(GuiGraphics graphics, String text, int x, int y) {
