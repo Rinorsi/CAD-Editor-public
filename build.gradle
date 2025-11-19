@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath localGroovy()
+    }
+}
+
 plugins {
     id "architectury-plugin" version "3.4.162"
     id "dev.architectury.loom" version "1.10.433" apply false
@@ -5,12 +11,6 @@ plugins {
     id "com.github.breadmoirai.github-release" version "2.4.1"
     id "maven-publish"
     id "java"
-}
-
-buildscript {
-    dependencies {
-        classpath localGroovy()
-    }
 }
 //TODO 记得补上自动变更日志和矩阵发布脚本。
 
