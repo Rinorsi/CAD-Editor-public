@@ -10,6 +10,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ItemExtraComponentsCategoryModel extends ItemEditorCategoryModel {
+    private static final ItemExtraToggle[] DISPLAY_ORDER = new ItemExtraToggle[]{
+            ItemExtraToggle.EQUIPPABLE,
+            ItemExtraToggle.TOOL,
+            ItemExtraToggle.ENCHANTMENTS,
+            ItemExtraToggle.FOOD,
+            ItemExtraToggle.CONSUMABLE,
+            ItemExtraToggle.ATTRIBUTE_MODIFIERS,
+            ItemExtraToggle.DEATH_PROTECTION,
+            ItemExtraToggle.CUSTOM_MODEL_DATA
+    };
+
     private final Map<ItemExtraToggle, BooleanEntryModel> toggleEntries = new LinkedHashMap<>();
 
     public ItemExtraComponentsCategoryModel(ItemEditorModel editor) {
@@ -19,7 +30,7 @@ public class ItemExtraComponentsCategoryModel extends ItemEditorCategoryModel {
     @Override
     protected void setupEntries() {
         toggleEntries.clear();
-        for (ItemExtraToggle toggle : ItemExtraToggle.values()) {
+        for (ItemExtraToggle toggle : DISPLAY_ORDER) {
             boolean enabled = getParent().isExtraComponentEnabled(toggle);
             BooleanEntryModel entry = new BooleanEntryModel(
                     this,

@@ -34,6 +34,7 @@ import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.DeathProtection;
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.consume_effects.ConsumeEffect;
@@ -96,6 +97,7 @@ public class ItemEditorModel extends StandardEditorModel {
     private final FoodComponentState foodState = new FoodComponentState();
     private final EnumMap<ItemExtraToggle, Boolean> extraComponentStates = new EnumMap<>(ItemExtraToggle.class);
     private boolean desiredFoodEnabled;
+    private boolean desiredConsumableEnabled;
     private boolean shouldSyncExtraComponentsFromStack = true;
 
     private ItemGeneralCategoryModel generalCategory;
@@ -125,35 +127,65 @@ public class ItemEditorModel extends StandardEditorModel {
             shouldSyncExtraComponentsFromStack = false;
         }
 
-        generalCategory = new ItemGeneralCategoryModel(this);
-        getCategories().add(generalCategory);
+        desiredFoodEnabled = isExtraComponentEnabled(ItemExtraToggle.FOOD);
+        desiredConsumableEnabled = isExtraComponentEnabled(ItemExtraToggle.CONSUMABLE);
+        foodState.loadFrom(stack);
+        foodState.setEnabled(desiredFoodEnabled);
+        foodState.setConsumableStandaloneEnabled(desiredConsumableEnabled);
 
         extraComponentsCategory = new ItemExtraComponentsCategoryModel(this);
         getCategories().add(extraComponentsCategory);
 
-        if (isExtraComponentEnabled(ItemExtraToggle.EQUIPPABLE)) {
-            getCategories().add(new ItemEquippableCategoryModel(this));
-        }
+        generalCategory = new ItemGeneralCategoryModel(this);
+        getCategories().add(generalCategory);
+
+        getCategories().add(new ItemDisplayCategoryModel(this));
         if (isExtraComponentEnabled(ItemExtraToggle.CUSTOM_MODEL_DATA)) {
             getCategories().add(new ItemCustomModelDataCategoryModel(this));
         }
-        getCategories().add(new ItemDisplayCategoryModel(this));
+        if (isExtraComponentEnabled(ItemExtraToggle.EQUIPPABLE)) {
+            getCategories().add(new ItemEquippableCategoryModel(this));
+        }
+        boolean showToolCategory = isExtraComponentEnabled(ItemExtraToggle.TOOL)
+                && (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE));
+        if (showToolCategory) {
+            getCategories().add(new ItemToolCategoryModel(this));
+        }
         if (isExtraComponentEnabled(ItemExtraToggle.ENCHANTMENTS)) {
             getCategories().add(new ItemEnchantmentsCategoryModel(this));
         }
+
+        getCategories().add(new ItemEquipmentTraitsCategoryModel(this));
+
+        if (desiredFoodEnabled) {
+            getCategories().add(new ItemFoodPropertiesCategoryModel(this));
+            getCategories().add(new ItemFoodEffectsCategoryModel(this));
+        }
+
+        getCategories().add(new ItemHideFlagsCategoryModel(this));
+
         if (isExtraComponentEnabled(ItemExtraToggle.ATTRIBUTE_MODIFIERS)) {
             getCategories().add(new ItemAttributeModifiersCategoryModel(this));
         }
-        getCategories().add(new ItemHideFlagsCategoryModel(this));
+
+        if (isExtraComponentEnabled(ItemExtraToggle.DEATH_PROTECTION)) {
+            getCategories().add(new ItemDeathProtectionCategoryModel(this));
+        }
+
+        if (desiredFoodEnabled || desiredConsumableEnabled) {
+            getCategories().add(new ItemConsumableCategoryModel(this));
+        }
+
+        if (item instanceof BlockItem) {
+            getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_PLACE_ON, this, "CanPlaceOn"));
+        }
+        getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_DESTROY, this, "CanDestroy"));
+
         if (stack.is(ItemTags.DYEABLE) || stack.has(DataComponents.DYED_COLOR)) {
             getCategories().add(new ItemDyeableCategoryModel(this));
         }
         if (item instanceof SpawnEggItem spawnEgg) {
             getCategories().add(new ItemSpawnEggCategoryModel(this, spawnEgg));
-        }
-        if (isExtraComponentEnabled(ItemExtraToggle.TOOL)
-                && (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE))) {
-            getCategories().add(new ItemToolCategoryModel(this));
         }
         if (item instanceof MapItem || stack.has(DataComponents.MAP_ID) || stack.has(DataComponents.MAP_COLOR)
                 || stack.has(DataComponents.MAP_DECORATIONS) || stack.has(DataComponents.MAP_POST_PROCESSING)) {
@@ -179,12 +211,12 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof BlockItem bi) {
             var block = bi.getBlock();
             isContainerBlockItem =
-                block instanceof net.minecraft.world.level.block.ShulkerBoxBlock ||
-                block instanceof net.minecraft.world.level.block.ChestBlock ||
-                block instanceof net.minecraft.world.level.block.BarrelBlock ||
-                block instanceof net.minecraft.world.level.block.DispenserBlock ||
-                block instanceof net.minecraft.world.level.block.DropperBlock ||
-                block instanceof net.minecraft.world.level.block.HopperBlock;
+                    block instanceof net.minecraft.world.level.block.ShulkerBoxBlock
+                            || block instanceof net.minecraft.world.level.block.ChestBlock
+                            || block instanceof net.minecraft.world.level.block.BarrelBlock
+                            || block instanceof net.minecraft.world.level.block.DispenserBlock
+                            || block instanceof net.minecraft.world.level.block.DropperBlock
+                            || block instanceof net.minecraft.world.level.block.HopperBlock;
         }
         if (stack.has(DataComponents.CONTAINER) || isContainerBlockItem) {
             getCategories().add(new ItemContainerGridCategoryModel(this));
@@ -208,10 +240,6 @@ public class ItemEditorModel extends StandardEditorModel {
         if (stack.has(DataComponents.POT_DECORATIONS) || item == Items.DECORATED_POT) {
             getCategories().add(new ItemPotDecorationsCategoryModel(this));
         }
-        // Temporarily disable the note block sound editor until the backend supports it reliably.
-        // if (stack.has(DataComponents.NOTE_BLOCK_SOUND) || item == Items.NOTE_BLOCK) {
-        //     getCategories().add(new ItemNoteBlockCategoryModel(this));
-        // }
         if (stack.has(DataComponents.FIREWORK_EXPLOSION) || item == Items.FIREWORK_STAR) {
             getCategories().add(new ItemFireworkStarCategoryModel(this));
         }
@@ -227,21 +255,8 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item == Items.WRITABLE_BOOK) {
             getCategories().add(new ItemWritableBookPagesCategoryModel(this));
         }
-        getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_DESTROY, this, "CanDestroy"));
-        foodState.loadFrom(stack);
-        desiredFoodEnabled = isExtraComponentEnabled(ItemExtraToggle.FOOD);
-        foodState.setEnabled(desiredFoodEnabled);
-
         if (item instanceof PotionItem || item instanceof TippedArrowItem) {
             getCategories().add(new ItemPotionEffectsCategoryModel(this));
-        }
-        if (desiredFoodEnabled) {
-            getCategories().add(new ItemConsumableCategoryModel(this));
-            getCategories().add(new ItemFoodPropertiesCategoryModel(this));
-            getCategories().add(new ItemFoodEffectsCategoryModel(this));
-        }
-        if (item instanceof BlockItem) {
-            getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_PLACE_ON, this, "CanPlaceOn"));
         }
     }
         //TODO 方块状态、调试棒、直接Damage写入这些比较小众的功能可以考虑放到一个“实验性”分类里
@@ -286,6 +301,24 @@ public class ItemEditorModel extends StandardEditorModel {
                 desiredFoodEnabled = enabled;
             }
             applyFoodComponent();
+        } else if (toggle == ItemExtraToggle.DEATH_PROTECTION) {
+            ItemStack stack = getContext().getItemStack();
+            if (enabled) {
+                if (stack.get(DataComponents.DEATH_PROTECTION) == null) {
+                    stack.set(DataComponents.DEATH_PROTECTION, DeathProtection.TOTEM_OF_UNDYING);
+                }
+            } else {
+                stack.remove(DataComponents.DEATH_PROTECTION);
+                removeComponentFromDataTag("minecraft:death_protection");
+            }
+        } else if (toggle == ItemExtraToggle.EQUIPPABLE && !enabled) {
+            ItemStack stack = getContext().getItemStack();
+            stack.remove(DataComponents.EQUIPPABLE);
+            removeComponentFromDataTag("minecraft:equippable");
+        } else if (toggle == ItemExtraToggle.CONSUMABLE) {
+            desiredConsumableEnabled = enabled;
+            foodState.setConsumableStandaloneEnabled(desiredConsumableEnabled);
+            applyFoodComponent();
         }
         rebuildCategoriesPreservingSelection(null);
     }
@@ -328,14 +361,21 @@ public class ItemEditorModel extends StandardEditorModel {
         if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE)) {
             extraComponentStates.put(ItemExtraToggle.TOOL, true);
         }
-        if (stack.has(DataComponents.FOOD) || stack.has(DataComponents.CONSUMABLE) || stack.has(DataComponents.USE_REMAINDER)) {
+        if (stack.has(DataComponents.DEATH_PROTECTION)) {
+            extraComponentStates.put(ItemExtraToggle.DEATH_PROTECTION, true);
+        }
+        if (stack.has(DataComponents.FOOD)) {
             extraComponentStates.put(ItemExtraToggle.FOOD, true);
+        }
+        if (stack.has(DataComponents.CONSUMABLE) || stack.has(DataComponents.USE_REMAINDER)) {
+            extraComponentStates.put(ItemExtraToggle.CONSUMABLE, true);
         }
     }
 
     public void applyFoodComponent() {
         ItemStack stack = getContext().getItemStack();
         foodState.setEnabled(desiredFoodEnabled);
+        foodState.setConsumableStandaloneEnabled(desiredConsumableEnabled);
         boolean wantsFood = desiredFoodEnabled;
         boolean wantsConsumable = wantsConsumableComponent();
         if (wantsFood) {
@@ -877,7 +917,7 @@ public class ItemEditorModel extends StandardEditorModel {
     }
 
     private boolean wantsConsumableComponent() {
-        return desiredFoodEnabled || foodState.isConsumableStandaloneEnabled();
+        return desiredFoodEnabled || desiredConsumableEnabled;
     }
 
     private Set<String> suppressedComponentKeys() {
@@ -889,6 +929,24 @@ public class ItemEditorModel extends StandardEditorModel {
             suppressed.add(CONSUMABLE_COMPONENT_KEY);
             suppressed.add(USE_REMAINDER_COMPONENT_KEY);
         }
+        if (!isExtraComponentEnabled(ItemExtraToggle.DEATH_PROTECTION)) {
+            suppressed.add("minecraft:death_protection");
+        }
         return suppressed;
+    }
+
+    public void removeComponentFromDataTag(String componentId) {
+        var context = getContext();
+        CompoundTag data = context.getTag();
+        if (data == null) {
+            return;
+        }
+        data.getCompound(KEY_COMPONENTS).ifPresent(components -> {
+            components.remove(componentId);
+            if (components.isEmpty()) {
+                data.remove(KEY_COMPONENTS);
+            }
+        });
+        context.setTag(data);
     }
 }

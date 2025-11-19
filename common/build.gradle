@@ -43,16 +43,22 @@ dependencies {
     annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
     annotationProcessor "com.google.code.gson:gson:2.10.1"
     annotationProcessor "com.google.guava:guava:33.2.1-jre"
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+            dependencies {
+                implementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
+                runtimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
+            }
+        }
+    }
 }
 
 loom {
     accessWidenerPath = file("src/main/resources/cadeditor.accesswidener")
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
 }
 
 publishing {

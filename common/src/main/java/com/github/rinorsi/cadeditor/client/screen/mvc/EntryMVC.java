@@ -39,6 +39,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
         return switch (model.getType()) {
             case STRING ->
                     MVC.createViewAndBind((StringEntryModel) model, StringEntryView::new, StringEntryController::new);
+            case STRING_WITH_ACTIONS ->
+                    MVC.createViewAndBind((StringWithActionsEntryModel) model, StringWithActionsEntryView::new, StringWithActionsEntryController::new);
             case NUMBER ->
                     MVC.createViewAndBind((NumberEntryModel<?>) model, NumberEntryView::new, NumberEntryController::new);
             case TEXT -> MVC.createViewAndBind((TextEntryModel) model, TextEntryView::new, TextEntryController::new);

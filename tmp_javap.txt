@@ -1,0 +1,1126 @@
+Classfile jar:file:///E:/Code/project/minecraft/CAD-Editor-dev/.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-37a2469469/1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2/minecraft-merged-37a2469469-1.21.8-loom.mappings.1_21_8.layered+hash.40359-v2.jar!/net/minecraft/world/item/component/BlocksAttacks.class
+  Last modified 2025Äê11ÔÂ12ÈÕ; size 14401 bytes
+  SHA-256 checksum 0e47fa8eb3288d3bf1f0b9eb8434091924e1f514786c0746b3ba6479623f3387
+  Compiled from "BlocksAttacks.java"
+public final class net.minecraft.world.item.component.BlocksAttacks extends java.lang.Record
+  minor version: 0
+  major version: 65
+  flags: (0x0031) ACC_PUBLIC, ACC_FINAL, ACC_SUPER
+  this_class: #2                          // net/minecraft/world/item/component/BlocksAttacks
+  super_class: #4                         // java/lang/Record
+  interfaces: 0, fields: 9, methods: 21, attributes: 5
+Constant pool:
+    #1 = Utf8               net/minecraft/world/item/component/BlocksAttacks
+    #2 = Class              #1            // net/minecraft/world/item/component/BlocksAttacks
+    #3 = Utf8               java/lang/Record
+    #4 = Class              #3            // java/lang/Record
+    #5 = Utf8               BlocksAttacks.java
+    #6 = Utf8               net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction
+    #7 = Class              #6            // net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction
+    #8 = Utf8               net/minecraft/world/item/component/BlocksAttacks$DamageReduction
+    #9 = Class              #8            // net/minecraft/world/item/component/BlocksAttacks$DamageReduction
+   #10 = Utf8               ItemDamageFunction
+   #11 = Utf8               DamageReduction
+   #12 = Utf8               com/mojang/serialization/codecs/RecordCodecBuilder$Instance
+   #13 = Class              #12           // com/mojang/serialization/codecs/RecordCodecBuilder$Instance
+   #14 = Utf8               com/mojang/serialization/codecs/RecordCodecBuilder
+   #15 = Class              #14           // com/mojang/serialization/codecs/RecordCodecBuilder
+   #16 = Utf8               Instance
+   #17 = Utf8               com/mojang/datafixers/Products$P7
+   #18 = Class              #17           // com/mojang/datafixers/Products$P7
+   #19 = Utf8               com/mojang/datafixers/Products
+   #20 = Class              #19           // com/mojang/datafixers/Products
+   #21 = Utf8               P7
+   #22 = Utf8               net/minecraft/network/codec/StreamCodec$CodecOperation
+   #23 = Class              #22           // net/minecraft/network/codec/StreamCodec$CodecOperation
+   #24 = Utf8               net/minecraft/network/codec/StreamCodec
+   #25 = Class              #24           // net/minecraft/network/codec/StreamCodec
+   #26 = Utf8               CodecOperation
+   #27 = Utf8               java/lang/invoke/MethodHandles$Lookup
+   #28 = Class              #27           // java/lang/invoke/MethodHandles$Lookup
+   #29 = Utf8               java/lang/invoke/MethodHandles
+   #30 = Class              #29           // java/lang/invoke/MethodHandles
+   #31 = Utf8               Lookup
+   #32 = Utf8               blockDelaySeconds
+   #33 = Utf8               F
+   #34 = Utf8               disableCooldownScale
+   #35 = Utf8               damageReductions
+   #36 = Utf8               Ljava/util/List;
+   #37 = Utf8               Ljava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;
+   #38 = Utf8               itemDamage
+   #39 = Utf8               Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+   #40 = Utf8               bypassedBy
+   #41 = Utf8               Ljava/util/Optional;
+   #42 = Utf8               Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;
+   #43 = Utf8               blockSound
+   #44 = Utf8               Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+   #45 = Utf8               disableSound
+   #46 = Utf8               CODEC
+   #47 = Utf8               Lcom/mojang/serialization/Codec;
+   #48 = Utf8               Lcom/mojang/serialization/Codec<Lnet/minecraft/world/item/component/BlocksAttacks;>;
+   #49 = Utf8               STREAM_CODEC
+   #50 = Utf8               Lnet/minecraft/network/codec/StreamCodec;
+   #51 = Utf8               Lnet/minecraft/network/codec/StreamCodec<Lnet/minecraft/network/RegistryFriendlyByteBuf;Lnet/minecraft/world/item/component/BlocksAttacks;>;
+   #52 = Utf8               <init>
+   #53 = Utf8               (FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+   #54 = Utf8               (FFLjava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;)V
+   #55 = Utf8               f
+   #56 = Utf8               g
+   #57 = Utf8               list
+   #58 = Utf8               itemDamageFunction
+   #59 = Utf8               optional
+   #60 = Utf8               optional2
+   #61 = Utf8               optional3
+   #62 = Utf8               ()V
+   #63 = NameAndType        #52:#62       // "<init>":()V
+   #64 = Methodref          #4.#63        // java/lang/Record."<init>":()V
+   #65 = NameAndType        #32:#33       // blockDelaySeconds:F
+   #66 = Fieldref           #2.#65        // net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:F
+   #67 = NameAndType        #34:#33       // disableCooldownScale:F
+   #68 = Fieldref           #2.#67        // net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:F
+   #69 = NameAndType        #35:#36       // damageReductions:Ljava/util/List;
+   #70 = Fieldref           #2.#69        // net/minecraft/world/item/component/BlocksAttacks.damageReductions:Ljava/util/List;
+   #71 = NameAndType        #38:#39       // itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+   #72 = Fieldref           #2.#71        // net/minecraft/world/item/component/BlocksAttacks.itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+   #73 = NameAndType        #40:#41       // bypassedBy:Ljava/util/Optional;
+   #74 = Fieldref           #2.#73        // net/minecraft/world/item/component/BlocksAttacks.bypassedBy:Ljava/util/Optional;
+   #75 = NameAndType        #43:#41       // blockSound:Ljava/util/Optional;
+   #76 = Fieldref           #2.#75        // net/minecraft/world/item/component/BlocksAttacks.blockSound:Ljava/util/Optional;
+   #77 = NameAndType        #45:#41       // disableSound:Ljava/util/Optional;
+   #78 = Fieldref           #2.#77        // net/minecraft/world/item/component/BlocksAttacks.disableSound:Ljava/util/Optional;
+   #79 = Utf8               this
+   #80 = Utf8               Lnet/minecraft/world/item/component/BlocksAttacks;
+   #81 = Utf8               onBlocked
+   #82 = Utf8               (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V
+   #83 = Utf8               serverLevel
+   #84 = Utf8               livingEntity
+   #85 = Utf8               (Ljava/lang/Object;)V
+   #86 = MethodType         #85           //  (Ljava/lang/Object;)V
+   #87 = Utf8               method_67205
+   #88 = Utf8               (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+   #89 = NameAndType        #87:#88       // method_67205:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+   #90 = Methodref          #2.#89        // net/minecraft/world/item/component/BlocksAttacks.method_67205:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+   #91 = MethodHandle       6:#90         // REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67205:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+   #92 = Utf8               (Lnet/minecraft/core/Holder;)V
+   #93 = MethodType         #92           //  (Lnet/minecraft/core/Holder;)V
+   #94 = Utf8               java/lang/invoke/LambdaMetafactory
+   #95 = Class              #94           // java/lang/invoke/LambdaMetafactory
+   #96 = Utf8               metafactory
+   #97 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #98 = NameAndType        #96:#97       // metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #99 = Methodref          #95.#98       // java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #100 = MethodHandle       6:#99         // REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #101 = Utf8               accept
+  #102 = Utf8               (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+  #103 = NameAndType        #101:#102     // accept:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+  #104 = InvokeDynamic      #0:#103       // #0:accept:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+  #105 = Utf8               java/util/Optional
+  #106 = Class              #105          // java/util/Optional
+  #107 = Utf8               ifPresent
+  #108 = Utf8               (Ljava/util/function/Consumer;)V
+  #109 = NameAndType        #107:#108     // ifPresent:(Ljava/util/function/Consumer;)V
+  #110 = Methodref          #106.#109     // java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+  #111 = Utf8               Lnet/minecraft/server/level/ServerLevel;
+  #112 = Utf8               Lnet/minecraft/world/entity/LivingEntity;
+  #113 = Utf8               disable
+  #114 = Utf8               (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;FLnet/minecraft/world/item/ItemStack;)V
+  #115 = Utf8               itemStack
+  #116 = Utf8               disableBlockingForTicks
+  #117 = Utf8               (F)I
+  #118 = NameAndType        #116:#117     // disableBlockingForTicks:(F)I
+  #119 = Methodref          #2.#118       // net/minecraft/world/item/component/BlocksAttacks.disableBlockingForTicks:(F)I
+  #120 = Utf8               net/minecraft/world/entity/player/Player
+  #121 = Class              #120          // net/minecraft/world/entity/player/Player
+  #122 = Utf8               getCooldowns
+  #123 = Utf8               ()Lnet/minecraft/world/item/ItemCooldowns;
+  #124 = NameAndType        #122:#123     // getCooldowns:()Lnet/minecraft/world/item/ItemCooldowns;
+  #125 = Methodref          #121.#124     // net/minecraft/world/entity/player/Player.getCooldowns:()Lnet/minecraft/world/item/ItemCooldowns;
+  #126 = Utf8               net/minecraft/world/item/ItemCooldowns
+  #127 = Class              #126          // net/minecraft/world/item/ItemCooldowns
+  #128 = Utf8               addCooldown
+  #129 = Utf8               (Lnet/minecraft/world/item/ItemStack;I)V
+  #130 = NameAndType        #128:#129     // addCooldown:(Lnet/minecraft/world/item/ItemStack;I)V
+  #131 = Methodref          #127.#130     // net/minecraft/world/item/ItemCooldowns.addCooldown:(Lnet/minecraft/world/item/ItemStack;I)V
+  #132 = Utf8               net/minecraft/world/entity/LivingEntity
+  #133 = Class              #132          // net/minecraft/world/entity/LivingEntity
+  #134 = Utf8               stopUsingItem
+  #135 = NameAndType        #134:#62      // stopUsingItem:()V
+  #136 = Methodref          #133.#135     // net/minecraft/world/entity/LivingEntity.stopUsingItem:()V
+  #137 = Utf8               method_67201
+  #138 = NameAndType        #137:#88      // method_67201:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+  #139 = Methodref          #2.#138       // net/minecraft/world/item/component/BlocksAttacks.method_67201:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+  #140 = MethodHandle       6:#139        // REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67201:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+  #141 = InvokeDynamic      #1:#103       // #1:accept:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+  #142 = Utf8               Lnet/minecraft/world/item/ItemStack;
+  #143 = Utf8               i
+  #144 = Utf8               I
+  #145 = Utf8               player
+  #146 = Utf8               Lnet/minecraft/world/entity/player/Player;
+  #147 = Utf8               hurtBlockingItem
+  #148 = Utf8               (Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/InteractionHand;F)V
+  #149 = Utf8               level
+  #150 = Utf8               interactionHand
+  #151 = Utf8               net/minecraft/world/level/Level
+  #152 = Class              #151          // net/minecraft/world/level/Level
+  #153 = Utf8               net/minecraft/world/item/ItemStack
+  #154 = Class              #153          // net/minecraft/world/item/ItemStack
+  #155 = Utf8               net/minecraft/world/InteractionHand
+  #156 = Class              #155          // net/minecraft/world/InteractionHand
+  #157 = Utf8               isClientSide
+  #158 = Utf8               Z
+  #159 = NameAndType        #157:#158     // isClientSide:Z
+  #160 = Fieldref           #152.#159     // net/minecraft/world/level/Level.isClientSide:Z
+  #161 = Utf8               net/minecraft/stats/Stats
+  #162 = Class              #161          // net/minecraft/stats/Stats
+  #163 = Utf8               ITEM_USED
+  #164 = Utf8               Lnet/minecraft/stats/StatType;
+  #165 = NameAndType        #163:#164     // ITEM_USED:Lnet/minecraft/stats/StatType;
+  #166 = Fieldref           #162.#165     // net/minecraft/stats/Stats.ITEM_USED:Lnet/minecraft/stats/StatType;
+  #167 = Utf8               getItem
+  #168 = Utf8               ()Lnet/minecraft/world/item/Item;
+  #169 = NameAndType        #167:#168     // getItem:()Lnet/minecraft/world/item/Item;
+  #170 = Methodref          #154.#169     // net/minecraft/world/item/ItemStack.getItem:()Lnet/minecraft/world/item/Item;
+  #171 = Utf8               net/minecraft/stats/StatType
+  #172 = Class              #171          // net/minecraft/stats/StatType
+  #173 = Utf8               get
+  #174 = Utf8               (Ljava/lang/Object;)Lnet/minecraft/stats/Stat;
+  #175 = NameAndType        #173:#174     // get:(Ljava/lang/Object;)Lnet/minecraft/stats/Stat;
+  #176 = Methodref          #172.#175     // net/minecraft/stats/StatType.get:(Ljava/lang/Object;)Lnet/minecraft/stats/Stat;
+  #177 = Utf8               awardStat
+  #178 = Utf8               (Lnet/minecraft/stats/Stat;)V
+  #179 = NameAndType        #177:#178     // awardStat:(Lnet/minecraft/stats/Stat;)V
+  #180 = Methodref          #121.#179     // net/minecraft/world/entity/player/Player.awardStat:(Lnet/minecraft/stats/Stat;)V
+  #181 = Utf8               apply
+  #182 = NameAndType        #181:#117     // apply:(F)I
+  #183 = Methodref          #7.#182       // net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.apply:(F)I
+  #184 = Utf8               getSlotForHand
+  #185 = Utf8               (Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/entity/EquipmentSlot;
+  #186 = NameAndType        #184:#185     // getSlotForHand:(Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/entity/EquipmentSlot;
+  #187 = Methodref          #133.#186     // net/minecraft/world/entity/LivingEntity.getSlotForHand:(Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/entity/EquipmentSlot;
+  #188 = Utf8               hurtAndBreak
+  #189 = Utf8               (ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V
+  #190 = NameAndType        #188:#189     // hurtAndBreak:(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V
+  #191 = Methodref          #154.#190     // net/minecraft/world/item/ItemStack.hurtAndBreak:(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V
+  #192 = Utf8               Lnet/minecraft/world/level/Level;
+  #193 = Utf8               Lnet/minecraft/world/InteractionHand;
+  #194 = Float              20.0f
+  #195 = Utf8               java/lang/Math
+  #196 = Class              #195          // java/lang/Math
+  #197 = Utf8               round
+  #198 = NameAndType        #197:#117     // round:(F)I
+  #199 = Methodref          #196.#198     // java/lang/Math.round:(F)I
+  #200 = Utf8               blockDelayTicks
+  #201 = Utf8               ()I
+  #202 = Utf8               resolveBlockedDamage
+  #203 = Utf8               (Lnet/minecraft/world/damagesource/DamageSource;FD)F
+  #204 = Utf8               damageSource
+  #205 = Utf8               d
+  #206 = Utf8               java/util/List
+  #207 = Class              #206          // java/util/List
+  #208 = Utf8               iterator
+  #209 = Utf8               ()Ljava/util/Iterator;
+  #210 = NameAndType        #208:#209     // iterator:()Ljava/util/Iterator;
+  #211 = InterfaceMethodref #207.#210     // java/util/List.iterator:()Ljava/util/Iterator;
+  #212 = Utf8               net/minecraft/world/damagesource/DamageSource
+  #213 = Class              #212          // net/minecraft/world/damagesource/DamageSource
+  #214 = Utf8               java/util/Iterator
+  #215 = Class              #214          // java/util/Iterator
+  #216 = Utf8               hasNext
+  #217 = Utf8               ()Z
+  #218 = NameAndType        #216:#217     // hasNext:()Z
+  #219 = InterfaceMethodref #215.#218     // java/util/Iterator.hasNext:()Z
+  #220 = Utf8               next
+  #221 = Utf8               ()Ljava/lang/Object;
+  #222 = NameAndType        #220:#221     // next:()Ljava/lang/Object;
+  #223 = InterfaceMethodref #215.#222     // java/util/Iterator.next:()Ljava/lang/Object;
+  #224 = Utf8               resolve
+  #225 = NameAndType        #224:#203     // resolve:(Lnet/minecraft/world/damagesource/DamageSource;FD)F
+  #226 = Methodref          #9.#225       // net/minecraft/world/item/component/BlocksAttacks$DamageReduction.resolve:(Lnet/minecraft/world/damagesource/DamageSource;FD)F
+  #227 = Utf8               net/minecraft/util/Mth
+  #228 = Class              #227          // net/minecraft/util/Mth
+  #229 = Utf8               clamp
+  #230 = Utf8               (FFF)F
+  #231 = NameAndType        #229:#230     // clamp:(FFF)F
+  #232 = Methodref          #228.#231     // net/minecraft/util/Mth.clamp:(FFF)F
+  #233 = Utf8               Lnet/minecraft/world/damagesource/DamageSource;
+  #234 = Utf8               D
+  #235 = Utf8               damageReduction
+  #236 = Utf8               Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;
+  #237 = Utf8               toString
+  #238 = Utf8               ()Ljava/lang/String;
+  #239 = Utf8               blockDelaySeconds;disableCooldownScale;damageReductions;itemDamage;bypassedBy;blockSound;disableSound
+  #240 = String             #239          // blockDelaySeconds;disableCooldownScale;damageReductions;itemDamage;bypassedBy;blockSound;disableSound
+  #241 = MethodHandle       1:#66         // REF_getField net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:F
+  #242 = MethodHandle       1:#68         // REF_getField net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:F
+  #243 = MethodHandle       1:#70         // REF_getField net/minecraft/world/item/component/BlocksAttacks.damageReductions:Ljava/util/List;
+  #244 = MethodHandle       1:#72         // REF_getField net/minecraft/world/item/component/BlocksAttacks.itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #245 = MethodHandle       1:#74         // REF_getField net/minecraft/world/item/component/BlocksAttacks.bypassedBy:Ljava/util/Optional;
+  #246 = MethodHandle       1:#76         // REF_getField net/minecraft/world/item/component/BlocksAttacks.blockSound:Ljava/util/Optional;
+  #247 = MethodHandle       1:#78         // REF_getField net/minecraft/world/item/component/BlocksAttacks.disableSound:Ljava/util/Optional;
+  #248 = Utf8               java/lang/runtime/ObjectMethods
+  #249 = Class              #248          // java/lang/runtime/ObjectMethods
+  #250 = Utf8               bootstrap
+  #251 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;
+  #252 = NameAndType        #250:#251     // bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;
+  #253 = Methodref          #249.#252     // java/lang/runtime/ObjectMethods.bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;
+  #254 = MethodHandle       6:#253        // REF_invokeStatic java/lang/runtime/ObjectMethods.bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;
+  #255 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/String;
+  #256 = NameAndType        #237:#255     // toString:(Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/String;
+  #257 = InvokeDynamic      #2:#256       // #2:toString:(Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/String;
+  #258 = Utf8               hashCode
+  #259 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)I
+  #260 = NameAndType        #258:#259     // hashCode:(Lnet/minecraft/world/item/component/BlocksAttacks;)I
+  #261 = InvokeDynamic      #2:#260       // #2:hashCode:(Lnet/minecraft/world/item/component/BlocksAttacks;)I
+  #262 = Utf8               equals
+  #263 = Utf8               (Ljava/lang/Object;)Z
+  #264 = Utf8               object
+  #265 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;Ljava/lang/Object;)Z
+  #266 = NameAndType        #262:#265     // equals:(Lnet/minecraft/world/item/component/BlocksAttacks;Ljava/lang/Object;)Z
+  #267 = InvokeDynamic      #2:#266       // #2:equals:(Lnet/minecraft/world/item/component/BlocksAttacks;Ljava/lang/Object;)Z
+  #268 = Utf8               Ljava/lang/Object;
+  #269 = Utf8               ()F
+  #270 = Utf8               ()Ljava/util/List;
+  #271 = Utf8               ()Ljava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;
+  #272 = Utf8               ()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #273 = Utf8               ()Ljava/util/Optional;
+  #274 = Utf8               ()Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;
+  #275 = Utf8               ()Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+  #276 = Utf8               holder
+  #277 = Utf8               getX
+  #278 = Utf8               ()D
+  #279 = NameAndType        #277:#278     // getX:()D
+  #280 = Methodref          #133.#279     // net/minecraft/world/entity/LivingEntity.getX:()D
+  #281 = Utf8               getY
+  #282 = NameAndType        #281:#278     // getY:()D
+  #283 = Methodref          #133.#282     // net/minecraft/world/entity/LivingEntity.getY:()D
+  #284 = Utf8               getZ
+  #285 = NameAndType        #284:#278     // getZ:()D
+  #286 = Methodref          #133.#285     // net/minecraft/world/entity/LivingEntity.getZ:()D
+  #287 = Utf8               getSoundSource
+  #288 = Utf8               ()Lnet/minecraft/sounds/SoundSource;
+  #289 = NameAndType        #287:#288     // getSoundSource:()Lnet/minecraft/sounds/SoundSource;
+  #290 = Methodref          #133.#289     // net/minecraft/world/entity/LivingEntity.getSoundSource:()Lnet/minecraft/sounds/SoundSource;
+  #291 = Float              0.8f
+  #292 = Utf8               net/minecraft/server/level/ServerLevel
+  #293 = Class              #292          // net/minecraft/server/level/ServerLevel
+  #294 = Utf8               random
+  #295 = Utf8               Lnet/minecraft/util/RandomSource;
+  #296 = NameAndType        #294:#295     // random:Lnet/minecraft/util/RandomSource;
+  #297 = Fieldref           #293.#296     // net/minecraft/server/level/ServerLevel.random:Lnet/minecraft/util/RandomSource;
+  #298 = Utf8               net/minecraft/util/RandomSource
+  #299 = Class              #298          // net/minecraft/util/RandomSource
+  #300 = Utf8               nextFloat
+  #301 = NameAndType        #300:#269     // nextFloat:()F
+  #302 = InterfaceMethodref #299.#301     // net/minecraft/util/RandomSource.nextFloat:()F
+  #303 = Float              0.4f
+  #304 = Utf8               playSound
+  #305 = Utf8               (Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FF)V
+  #306 = NameAndType        #304:#305     // playSound:(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FF)V
+  #307 = Methodref          #293.#306     // net/minecraft/server/level/ServerLevel.playSound:(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FF)V
+  #308 = Utf8               Lnet/minecraft/core/Holder;
+  #309 = Utf8               method_67203
+  #310 = Utf8               (Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  #311 = Utf8               instance
+  #312 = Utf8               net/minecraft/util/ExtraCodecs
+  #313 = Class              #312          // net/minecraft/util/ExtraCodecs
+  #314 = Utf8               NON_NEGATIVE_FLOAT
+  #315 = NameAndType        #314:#47      // NON_NEGATIVE_FLOAT:Lcom/mojang/serialization/Codec;
+  #316 = Fieldref           #313.#315     // net/minecraft/util/ExtraCodecs.NON_NEGATIVE_FLOAT:Lcom/mojang/serialization/Codec;
+  #317 = Utf8               block_delay_seconds
+  #318 = String             #317          // block_delay_seconds
+  #319 = Utf8               java/lang/Float
+  #320 = Class              #319          // java/lang/Float
+  #321 = Utf8               valueOf
+  #322 = Utf8               (F)Ljava/lang/Float;
+  #323 = NameAndType        #321:#322     // valueOf:(F)Ljava/lang/Float;
+  #324 = Methodref          #320.#323     // java/lang/Float.valueOf:(F)Ljava/lang/Float;
+  #325 = Utf8               com/mojang/serialization/Codec
+  #326 = Class              #325          // com/mojang/serialization/Codec
+  #327 = Utf8               optionalFieldOf
+  #328 = Utf8               (Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;
+  #329 = NameAndType        #327:#328     // optionalFieldOf:(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;
+  #330 = InterfaceMethodref #326.#329     // com/mojang/serialization/Codec.optionalFieldOf:(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;
+  #331 = Utf8               (Ljava/lang/Object;)Ljava/lang/Object;
+  #332 = MethodType         #331          //  (Ljava/lang/Object;)Ljava/lang/Object;
+  #333 = NameAndType        #32:#269      // blockDelaySeconds:()F
+  #334 = Methodref          #2.#333       // net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:()F
+  #335 = MethodHandle       5:#334        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:()F
+  #336 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/Float;
+  #337 = MethodType         #336          //  (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/Float;
+  #338 = Utf8               ()Ljava/util/function/Function;
+  #339 = NameAndType        #181:#338     // apply:()Ljava/util/function/Function;
+  #340 = InvokeDynamic      #3:#339       // #3:apply:()Ljava/util/function/Function;
+  #341 = Utf8               com/mojang/serialization/MapCodec
+  #342 = Class              #341          // com/mojang/serialization/MapCodec
+  #343 = Utf8               forGetter
+  #344 = Utf8               (Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;
+  #345 = NameAndType        #343:#344     // forGetter:(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;
+  #346 = Methodref          #342.#345     // com/mojang/serialization/MapCodec.forGetter:(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;
+  #347 = Utf8               disable_cooldown_scale
+  #348 = String             #347          // disable_cooldown_scale
+  #349 = NameAndType        #34:#269      // disableCooldownScale:()F
+  #350 = Methodref          #2.#349       // net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:()F
+  #351 = MethodHandle       5:#350        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:()F
+  #352 = InvokeDynamic      #4:#339       // #4:apply:()Ljava/util/function/Function;
+  #353 = NameAndType        #46:#47       // CODEC:Lcom/mojang/serialization/Codec;
+  #354 = Fieldref           #9.#353       // net/minecraft/world/item/component/BlocksAttacks$DamageReduction.CODEC:Lcom/mojang/serialization/Codec;
+  #355 = Utf8               listOf
+  #356 = Utf8               ()Lcom/mojang/serialization/Codec;
+  #357 = NameAndType        #355:#356     // listOf:()Lcom/mojang/serialization/Codec;
+  #358 = InterfaceMethodref #326.#357     // com/mojang/serialization/Codec.listOf:()Lcom/mojang/serialization/Codec;
+  #359 = Utf8               damage_reductions
+  #360 = String             #359          // damage_reductions
+  #361 = Float              90.0f
+  #362 = Utf8               empty
+  #363 = NameAndType        #362:#273     // empty:()Ljava/util/Optional;
+  #364 = Methodref          #106.#363     // java/util/Optional.empty:()Ljava/util/Optional;
+  #365 = Utf8               (FLjava/util/Optional;FF)V
+  #366 = NameAndType        #52:#365      // "<init>":(FLjava/util/Optional;FF)V
+  #367 = Methodref          #9.#366       // net/minecraft/world/item/component/BlocksAttacks$DamageReduction."<init>":(FLjava/util/Optional;FF)V
+  #368 = Utf8               of
+  #369 = Utf8               (Ljava/lang/Object;)Ljava/util/List;
+  #370 = NameAndType        #368:#369     // of:(Ljava/lang/Object;)Ljava/util/List;
+  #371 = InterfaceMethodref #207.#370     // java/util/List.of:(Ljava/lang/Object;)Ljava/util/List;
+  #372 = NameAndType        #35:#270      // damageReductions:()Ljava/util/List;
+  #373 = Methodref          #2.#372       // net/minecraft/world/item/component/BlocksAttacks.damageReductions:()Ljava/util/List;
+  #374 = MethodHandle       5:#373        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.damageReductions:()Ljava/util/List;
+  #375 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/List;
+  #376 = MethodType         #375          //  (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/List;
+  #377 = InvokeDynamic      #5:#339       // #5:apply:()Ljava/util/function/Function;
+  #378 = Fieldref           #7.#353       // net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.CODEC:Lcom/mojang/serialization/Codec;
+  #379 = Utf8               item_damage
+  #380 = String             #379          // item_damage
+  #381 = Utf8               DEFAULT
+  #382 = NameAndType        #381:#39      // DEFAULT:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #383 = Fieldref           #7.#382       // net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.DEFAULT:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #384 = NameAndType        #38:#272      // itemDamage:()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #385 = Methodref          #2.#384       // net/minecraft/world/item/component/BlocksAttacks.itemDamage:()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #386 = MethodHandle       5:#385        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.itemDamage:()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #387 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #388 = MethodType         #387          //  (Lnet/minecraft/world/item/component/BlocksAttacks;)Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  #389 = InvokeDynamic      #6:#339       // #6:apply:()Ljava/util/function/Function;
+  #390 = Utf8               net/minecraft/core/registries/Registries
+  #391 = Class              #390          // net/minecraft/core/registries/Registries
+  #392 = Utf8               DAMAGE_TYPE
+  #393 = Utf8               Lnet/minecraft/resources/ResourceKey;
+  #394 = NameAndType        #392:#393     // DAMAGE_TYPE:Lnet/minecraft/resources/ResourceKey;
+  #395 = Fieldref           #391.#394     // net/minecraft/core/registries/Registries.DAMAGE_TYPE:Lnet/minecraft/resources/ResourceKey;
+  #396 = Utf8               net/minecraft/tags/TagKey
+  #397 = Class              #396          // net/minecraft/tags/TagKey
+  #398 = Utf8               hashedCodec
+  #399 = Utf8               (Lnet/minecraft/resources/ResourceKey;)Lcom/mojang/serialization/Codec;
+  #400 = NameAndType        #398:#399     // hashedCodec:(Lnet/minecraft/resources/ResourceKey;)Lcom/mojang/serialization/Codec;
+  #401 = Methodref          #397.#400     // net/minecraft/tags/TagKey.hashedCodec:(Lnet/minecraft/resources/ResourceKey;)Lcom/mojang/serialization/Codec;
+  #402 = Utf8               bypassed_by
+  #403 = String             #402          // bypassed_by
+  #404 = Utf8               (Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;
+  #405 = NameAndType        #327:#404     // optionalFieldOf:(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;
+  #406 = InterfaceMethodref #326.#405     // com/mojang/serialization/Codec.optionalFieldOf:(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;
+  #407 = NameAndType        #40:#273      // bypassedBy:()Ljava/util/Optional;
+  #408 = Methodref          #2.#407       // net/minecraft/world/item/component/BlocksAttacks.bypassedBy:()Ljava/util/Optional;
+  #409 = MethodHandle       5:#408        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.bypassedBy:()Ljava/util/Optional;
+  #410 = Utf8               (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/Optional;
+  #411 = MethodType         #410          //  (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/Optional;
+  #412 = InvokeDynamic      #7:#339       // #7:apply:()Ljava/util/function/Function;
+  #413 = Utf8               net/minecraft/sounds/SoundEvent
+  #414 = Class              #413          // net/minecraft/sounds/SoundEvent
+  #415 = Fieldref           #414.#353     // net/minecraft/sounds/SoundEvent.CODEC:Lcom/mojang/serialization/Codec;
+  #416 = Utf8               block_sound
+  #417 = String             #416          // block_sound
+  #418 = NameAndType        #43:#273      // blockSound:()Ljava/util/Optional;
+  #419 = Methodref          #2.#418       // net/minecraft/world/item/component/BlocksAttacks.blockSound:()Ljava/util/Optional;
+  #420 = MethodHandle       5:#419        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.blockSound:()Ljava/util/Optional;
+  #421 = InvokeDynamic      #8:#339       // #8:apply:()Ljava/util/function/Function;
+  #422 = Utf8               disabled_sound
+  #423 = String             #422          // disabled_sound
+  #424 = NameAndType        #45:#273      // disableSound:()Ljava/util/Optional;
+  #425 = Methodref          #2.#424       // net/minecraft/world/item/component/BlocksAttacks.disableSound:()Ljava/util/Optional;
+  #426 = MethodHandle       5:#425        // REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.disableSound:()Ljava/util/Optional;
+  #427 = InvokeDynamic      #9:#339       // #9:apply:()Ljava/util/function/Function;
+  #428 = Utf8               group
+  #429 = Utf8               (Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;)Lcom/mojang/datafixers/Products$P7;
+  #430 = NameAndType        #428:#429     // group:(Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;)Lcom/mojang/datafixers/Products$P7;
+  #431 = Methodref          #13.#430      // com/mojang/serialization/codecs/RecordCodecBuilder$Instance.group:(Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;Lcom/mojang/datafixers/kinds/App;)Lcom/mojang/datafixers/Products$P7;
+  #432 = Utf8               (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+  #433 = MethodType         #432          //  (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+  #434 = NameAndType        #52:#53       // "<init>":(FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+  #435 = Methodref          #2.#434       // net/minecraft/world/item/component/BlocksAttacks."<init>":(FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+  #436 = MethodHandle       8:#435        // REF_newInvokeSpecial net/minecraft/world/item/component/BlocksAttacks."<init>":(FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+  #437 = Utf8               (Ljava/lang/Float;Ljava/lang/Float;Ljava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)Lnet/minecraft/world/item/component/BlocksAttacks;
+  #438 = MethodType         #437          //  (Ljava/lang/Float;Ljava/lang/Float;Ljava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)Lnet/minecraft/world/item/component/BlocksAttacks;
+  #439 = Utf8               ()Lcom/mojang/datafixers/util/Function7;
+  #440 = NameAndType        #181:#439     // apply:()Lcom/mojang/datafixers/util/Function7;
+  #441 = InvokeDynamic      #10:#440      // #10:apply:()Lcom/mojang/datafixers/util/Function7;
+  #442 = Utf8               (Lcom/mojang/datafixers/kinds/Applicative;Lcom/mojang/datafixers/util/Function7;)Lcom/mojang/datafixers/kinds/App;
+  #443 = NameAndType        #181:#442     // apply:(Lcom/mojang/datafixers/kinds/Applicative;Lcom/mojang/datafixers/util/Function7;)Lcom/mojang/datafixers/kinds/App;
+  #444 = Methodref          #18.#443      // com/mojang/datafixers/Products$P7.apply:(Lcom/mojang/datafixers/kinds/Applicative;Lcom/mojang/datafixers/util/Function7;)Lcom/mojang/datafixers/kinds/App;
+  #445 = Utf8               Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;
+  #446 = Utf8               <clinit>
+  #447 = NameAndType        #309:#310     // method_67203:(Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  #448 = Methodref          #2.#447       // net/minecraft/world/item/component/BlocksAttacks.method_67203:(Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  #449 = MethodHandle       6:#448        // REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67203:(Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  #450 = MethodType         #310          //  (Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  #451 = InvokeDynamic      #11:#339      // #11:apply:()Ljava/util/function/Function;
+  #452 = Utf8               create
+  #453 = Utf8               (Ljava/util/function/Function;)Lcom/mojang/serialization/Codec;
+  #454 = NameAndType        #452:#453     // create:(Ljava/util/function/Function;)Lcom/mojang/serialization/Codec;
+  #455 = Methodref          #15.#454      // com/mojang/serialization/codecs/RecordCodecBuilder.create:(Ljava/util/function/Function;)Lcom/mojang/serialization/Codec;
+  #456 = Fieldref           #2.#353       // net/minecraft/world/item/component/BlocksAttacks.CODEC:Lcom/mojang/serialization/Codec;
+  #457 = Utf8               net/minecraft/network/codec/ByteBufCodecs
+  #458 = Class              #457          // net/minecraft/network/codec/ByteBufCodecs
+  #459 = Utf8               FLOAT
+  #460 = NameAndType        #459:#50      // FLOAT:Lnet/minecraft/network/codec/StreamCodec;
+  #461 = Fieldref           #458.#460     // net/minecraft/network/codec/ByteBufCodecs.FLOAT:Lnet/minecraft/network/codec/StreamCodec;
+  #462 = NameAndType        #49:#50       // STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+  #463 = Fieldref           #9.#462       // net/minecraft/world/item/component/BlocksAttacks$DamageReduction.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+  #464 = Utf8               ()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+  #465 = NameAndType        #57:#464      // list:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+  #466 = InterfaceMethodref #458.#465     // net/minecraft/network/codec/ByteBufCodecs.list:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+  #467 = Utf8               (Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+  #468 = NameAndType        #181:#467     // apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+  #469 = InterfaceMethodref #25.#468      // net/minecraft/network/codec/StreamCodec.apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+  #470 = Fieldref           #7.#462       // net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+  #471 = Utf8               streamCodec
+  #472 = Utf8               (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/network/codec/StreamCodec;
+  #473 = NameAndType        #471:#472     // streamCodec:(Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/network/codec/StreamCodec;
+  #474 = Methodref          #397.#473     // net/minecraft/tags/TagKey.streamCodec:(Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/network/codec/StreamCodec;
+  #475 = Utf8               (Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+  #476 = MethodType         #475          //  (Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+  #477 = NameAndType        #59:#475      // optional:(Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+  #478 = InterfaceMethodref #458.#477     // net/minecraft/network/codec/ByteBufCodecs.optional:(Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+  #479 = MethodHandle       6:#478        // REF_invokeStatic net/minecraft/network/codec/ByteBufCodecs.optional:(Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+  #480 = NameAndType        #181:#464     // apply:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+  #481 = InvokeDynamic      #12:#480      // #12:apply:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+  #482 = Fieldref           #414.#462     // net/minecraft/sounds/SoundEvent.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+  #483 = Utf8               composite
+  #484 = Utf8               (Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function7;)Lnet/minecraft/network/codec/StreamCodec;
+  #485 = NameAndType        #483:#484     // composite:(Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function7;)Lnet/minecraft/network/codec/StreamCodec;
+  #486 = InterfaceMethodref #25.#485      // net/minecraft/network/codec/StreamCodec.composite:(Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function7;)Lnet/minecraft/network/codec/StreamCodec;
+  #487 = Fieldref           #2.#462       // net/minecraft/world/item/component/BlocksAttacks.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+  #488 = Utf8               Signature
+  #489 = Utf8               Code
+  #490 = Utf8               LineNumberTable
+  #491 = Utf8               LocalVariableTable
+  #492 = Utf8               LocalVariableTypeTable
+  #493 = Utf8               MethodParameters
+  #494 = Utf8               StackMapTable
+  #495 = Utf8               InnerClasses
+  #496 = Utf8               SourceFile
+  #497 = Utf8               BootstrapMethods
+  #498 = Utf8               NestMembers
+  #499 = Utf8               Record
+{
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.component.BlocksAttacks> CODEC;
+    descriptor: Lcom/mojang/serialization/Codec;
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    Signature: #48                          // Lcom/mojang/serialization/Codec<Lnet/minecraft/world/item/component/BlocksAttacks;>;
+
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.world.item.component.BlocksAttacks> STREAM_CODEC;
+    descriptor: Lnet/minecraft/network/codec/StreamCodec;
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    Signature: #51                          // Lnet/minecraft/network/codec/StreamCodec<Lnet/minecraft/network/RegistryFriendlyByteBuf;Lnet/minecraft/world/item/component/BlocksAttacks;>;
+
+  public net.minecraft.world.item.component.BlocksAttacks(float, float, java.util.List<net.minecraft.world.item.component.BlocksAttacks$DamageReduction>, net.minecraft.world.item.component.BlocksAttacks$ItemDamageFunction, java.util.Optional<net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType>>, java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>>, java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>>);
+    descriptor: (FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=2, locals=8, args_size=8
+         0: aload_0
+         1: invokespecial #64                 // Method java/lang/Record."<init>":()V
+         4: aload_0
+         5: fload_1
+         6: putfield      #66                 // Field blockDelaySeconds:F
+         9: aload_0
+        10: fload_2
+        11: putfield      #68                 // Field disableCooldownScale:F
+        14: aload_0
+        15: aload_3
+        16: putfield      #70                 // Field damageReductions:Ljava/util/List;
+        19: aload_0
+        20: aload         4
+        22: putfield      #72                 // Field itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+        25: aload_0
+        26: aload         5
+        28: putfield      #74                 // Field bypassedBy:Ljava/util/Optional;
+        31: aload_0
+        32: aload         6
+        34: putfield      #76                 // Field blockSound:Ljava/util/Optional;
+        37: aload_0
+        38: aload         7
+        40: putfield      #78                 // Field disableSound:Ljava/util/Optional;
+        43: return
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      44     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0      44     1     f   F
+            0      44     2     g   F
+            0      44     3  list   Ljava/util/List;
+            0      44     4 itemDamageFunction   Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+            0      44     5 optional   Ljava/util/Optional;
+            0      44     6 optional2   Ljava/util/Optional;
+            0      44     7 optional3   Ljava/util/Optional;
+      LocalVariableTypeTable:
+        Start  Length  Slot  Name   Signature
+            0      44     3  list   Ljava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;
+            0      44     5 optional   Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;
+            0      44     6 optional2   Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+            0      44     7 optional3   Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+    Signature: #54                          // (FFLjava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;)V
+    MethodParameters:
+      Name                           Flags
+      f
+      g
+      list
+      itemDamageFunction
+      optional
+      optional2
+      optional3
+
+  public void onBlocked(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.LivingEntity);
+    descriptor: (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=3, args_size=3
+         0: aload_0
+         1: getfield      #76                 // Field blockSound:Ljava/util/Optional;
+         4: aload_1
+         5: aload_2
+         6: invokedynamic #104,  0            // InvokeDynamic #0:accept:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+        11: invokevirtual #110                // Method java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+        14: return
+      LineNumberTable:
+        line 61: 0
+        line 64: 14
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      15     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0      15     1 serverLevel   Lnet/minecraft/server/level/ServerLevel;
+            0      15     2 livingEntity   Lnet/minecraft/world/entity/LivingEntity;
+    MethodParameters:
+      Name                           Flags
+      serverLevel
+      livingEntity
+
+  public void disable(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.LivingEntity, float, net.minecraft.world.item.ItemStack);
+    descriptor: (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;FLnet/minecraft/world/item/ItemStack;)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=7, args_size=5
+         0: aload_0
+         1: fload_3
+         2: invokevirtual #119                // Method disableBlockingForTicks:(F)I
+         5: istore        5
+         7: iload         5
+         9: ifle          55
+        12: aload_2
+        13: instanceof    #121                // class net/minecraft/world/entity/player/Player
+        16: ifeq          37
+        19: aload_2
+        20: checkcast     #121                // class net/minecraft/world/entity/player/Player
+        23: astore        6
+        25: aload         6
+        27: invokevirtual #125                // Method net/minecraft/world/entity/player/Player.getCooldowns:()Lnet/minecraft/world/item/ItemCooldowns;
+        30: aload         4
+        32: iload         5
+        34: invokevirtual #131                // Method net/minecraft/world/item/ItemCooldowns.addCooldown:(Lnet/minecraft/world/item/ItemStack;I)V
+        37: aload_2
+        38: invokevirtual #136                // Method net/minecraft/world/entity/LivingEntity.stopUsingItem:()V
+        41: aload_0
+        42: getfield      #78                 // Field disableSound:Ljava/util/Optional;
+        45: aload_1
+        46: aload_2
+        47: invokedynamic #141,  0            // InvokeDynamic #1:accept:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/function/Consumer;
+        52: invokevirtual #110                // Method java/util/Optional.ifPresent:(Ljava/util/function/Consumer;)V
+        55: return
+      StackMapTable: number_of_entries = 2
+        frame_type = 249 /* chop */
+          offset_delta = 37
+        frame_type = 248 /* chop */
+          offset_delta = 17
+      LineNumberTable:
+        line 67: 0
+        line 68: 7
+        line 69: 12
+        line 70: 25
+        line 72: 37
+        line 73: 41
+        line 77: 55
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      56     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0      56     1 serverLevel   Lnet/minecraft/server/level/ServerLevel;
+            0      56     2 livingEntity   Lnet/minecraft/world/entity/LivingEntity;
+            0      56     3     f   F
+            0      56     4 itemStack   Lnet/minecraft/world/item/ItemStack;
+            7      49     5     i   I
+           25      12     6 player   Lnet/minecraft/world/entity/player/Player;
+    MethodParameters:
+      Name                           Flags
+      serverLevel
+      livingEntity
+      f
+      itemStack
+
+  public void hurtBlockingItem(net.minecraft.world.level.Level, net.minecraft.world.item.ItemStack, net.minecraft.world.entity.LivingEntity, net.minecraft.world.InteractionHand, float);
+    descriptor: (Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/InteractionHand;F)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=4, locals=8, args_size=6
+         0: aload_3
+         1: instanceof    #121                // class net/minecraft/world/entity/player/Player
+         4: ifeq          16
+         7: aload_3
+         8: checkcast     #121                // class net/minecraft/world/entity/player/Player
+        11: astore        6
+        13: goto          17
+        16: return
+        17: aload_1
+        18: getfield      #160                // Field net/minecraft/world/level/Level.isClientSide:Z
+        21: ifne          39
+        24: aload         6
+        26: getstatic     #166                // Field net/minecraft/stats/Stats.ITEM_USED:Lnet/minecraft/stats/StatType;
+        29: aload_2
+        30: invokevirtual #170                // Method net/minecraft/world/item/ItemStack.getItem:()Lnet/minecraft/world/item/Item;
+        33: invokevirtual #176                // Method net/minecraft/stats/StatType.get:(Ljava/lang/Object;)Lnet/minecraft/stats/Stat;
+        36: invokevirtual #180                // Method net/minecraft/world/entity/player/Player.awardStat:(Lnet/minecraft/stats/Stat;)V
+        39: aload_0
+        40: getfield      #72                 // Field itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+        43: fload         5
+        45: invokevirtual #183                // Method net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.apply:(F)I
+        48: istore        7
+        50: iload         7
+        52: ifle          67
+        55: aload_2
+        56: iload         7
+        58: aload_3
+        59: aload         4
+        61: invokestatic  #187                // Method net/minecraft/world/entity/LivingEntity.getSlotForHand:(Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/entity/EquipmentSlot;
+        64: invokevirtual #191                // Method net/minecraft/world/item/ItemStack.hurtAndBreak:(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V
+        67: return
+      StackMapTable: number_of_entries = 4
+        frame_type = 255 /* full_frame */
+          offset_delta = 16
+          locals = []
+          stack = []
+        frame_type = 255 /* full_frame */
+          offset_delta = 0
+          locals = [ class net/minecraft/world/item/component/BlocksAttacks, class net/minecraft/world/level/Level, class net/minecraft/world/item/ItemStack, class net/minecraft/world/entity/LivingEntity, class net/minecraft/world/InteractionHand, float, class net/minecraft/world/entity/player/Player ]
+          stack = []
+        frame_type = 255 /* full_frame */
+          offset_delta = 21
+          locals = [ class net/minecraft/world/item/component/BlocksAttacks, top, class net/minecraft/world/item/ItemStack, class net/minecraft/world/entity/LivingEntity, class net/minecraft/world/InteractionHand, float ]
+          stack = []
+        frame_type = 255 /* full_frame */
+          offset_delta = 27
+          locals = []
+          stack = []
+      LineNumberTable:
+        line 81: 0
+        line 82: 16
+        line 85: 17
+        line 86: 24
+        line 89: 39
+        line 90: 50
+        line 91: 55
+        line 93: 67
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      68     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0      68     1 level   Lnet/minecraft/world/level/Level;
+            0      68     2 itemStack   Lnet/minecraft/world/item/ItemStack;
+            0      68     3 livingEntity   Lnet/minecraft/world/entity/LivingEntity;
+            0      68     4 interactionHand   Lnet/minecraft/world/InteractionHand;
+            0      68     5     f   F
+           13       3     6 player   Lnet/minecraft/world/entity/player/Player;
+           17      51     6 player   Lnet/minecraft/world/entity/player/Player;
+           50      18     7     i   I
+    MethodParameters:
+      Name                           Flags
+      level
+      itemStack
+      livingEntity
+      interactionHand
+      f
+
+  public int blockDelayTicks();
+    descriptor: ()I
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #66                 // Field blockDelaySeconds:F
+         4: ldc           #194                // float 20.0f
+         6: fmul
+         7: invokestatic  #199                // Method java/lang/Math.round:(F)I
+        10: ireturn
+      LineNumberTable:
+        line 104: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      11     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public float resolveBlockedDamage(net.minecraft.world.damagesource.DamageSource, float, double);
+    descriptor: (Lnet/minecraft/world/damagesource/DamageSource;FD)F
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=6, locals=8, args_size=4
+         0: fconst_0
+         1: fstore        5
+         3: aload_0
+         4: getfield      #70                 // Field damageReductions:Ljava/util/List;
+         7: invokeinterface #211,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        12: astore        6
+        14: aload         6
+        16: invokeinterface #219,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+        21: ifeq          52
+        24: aload         6
+        26: invokeinterface #223,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        31: checkcast     #9                  // class net/minecraft/world/item/component/BlocksAttacks$DamageReduction
+        34: astore        7
+        36: fload         5
+        38: aload         7
+        40: aload_1
+        41: fload_2
+        42: dload_3
+        43: invokevirtual #226                // Method net/minecraft/world/item/component/BlocksAttacks$DamageReduction.resolve:(Lnet/minecraft/world/damagesource/DamageSource;FD)F
+        46: fadd
+        47: fstore        5
+        49: goto          14
+        52: fload         5
+        54: fconst_0
+        55: fload_2
+        56: invokestatic  #232                // Method net/minecraft/util/Mth.clamp:(FFF)F
+        59: freturn
+      StackMapTable: number_of_entries = 2
+        frame_type = 255 /* full_frame */
+          offset_delta = 14
+          locals = [ top, class net/minecraft/world/damagesource/DamageSource, float, double, float, class java/util/Iterator ]
+          stack = []
+        frame_type = 255 /* full_frame */
+          offset_delta = 37
+          locals = [ top, top, float, top, top, float ]
+          stack = []
+      LineNumberTable:
+        line 108: 0
+        line 109: 3
+        line 110: 36
+        line 111: 49
+        line 112: 52
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      60     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0      60     1 damageSource   Lnet/minecraft/world/damagesource/DamageSource;
+            0      60     2     f   F
+            0      60     3     d   D
+            3      57     5     g   F
+           36      13     7 damageReduction   Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;
+    MethodParameters:
+      Name                           Flags
+      damageSource
+      f
+      d
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+    flags: (0x0011) ACC_PUBLIC, ACC_FINAL
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokedynamic #257,  0            // InvokeDynamic #2:toString:(Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/String;
+         6: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       7     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public final int hashCode();
+    descriptor: ()I
+    flags: (0x0011) ACC_PUBLIC, ACC_FINAL
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokedynamic #261,  0            // InvokeDynamic #2:hashCode:(Lnet/minecraft/world/item/component/BlocksAttacks;)I
+         6: ireturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       7     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+    flags: (0x0011) ACC_PUBLIC, ACC_FINAL
+    Code:
+      stack=2, locals=2, args_size=2
+         0: aload_0
+         1: aload_1
+         2: invokedynamic #267,  0            // InvokeDynamic #2:equals:(Lnet/minecraft/world/item/component/BlocksAttacks;Ljava/lang/Object;)Z
+         7: ireturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       8     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+            0       8     1 object   Ljava/lang/Object;
+    MethodParameters:
+      Name                           Flags
+      object
+
+  public float blockDelaySeconds();
+    descriptor: ()F
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #66                 // Field blockDelaySeconds:F
+         4: freturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public float disableCooldownScale();
+    descriptor: ()F
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #68                 // Field disableCooldownScale:F
+         4: freturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public java.util.List<net.minecraft.world.item.component.BlocksAttacks$DamageReduction> damageReductions();
+    descriptor: ()Ljava/util/List;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #70                 // Field damageReductions:Ljava/util/List;
+         4: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+    Signature: #271                         // ()Ljava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;
+
+  public net.minecraft.world.item.component.BlocksAttacks$ItemDamageFunction itemDamage();
+    descriptor: ()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #72                 // Field itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+         4: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+
+  public java.util.Optional<net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType>> bypassedBy();
+    descriptor: ()Ljava/util/Optional;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #74                 // Field bypassedBy:Ljava/util/Optional;
+         4: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+    Signature: #274                         // ()Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;
+
+  public java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>> blockSound();
+    descriptor: ()Ljava/util/Optional;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #76                 // Field blockSound:Ljava/util/Optional;
+         4: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+    Signature: #275                         // ()Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+
+  public java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>> disableSound();
+    descriptor: ()Ljava/util/Optional;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #78                 // Field disableSound:Ljava/util/Optional;
+         4: areturn
+      LineNumberTable:
+        line 31: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lnet/minecraft/world/item/component/BlocksAttacks;
+    Signature: #275                         // ()Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+
+  static {};
+    descriptor: ()V
+    flags: (0x0008) ACC_STATIC
+    Code:
+      stack=15, locals=0, args_size=0
+         0: invokedynamic #451,  0            // InvokeDynamic #11:apply:()Ljava/util/function/Function;
+         5: invokestatic  #455                // Method com/mojang/serialization/codecs/RecordCodecBuilder.create:(Ljava/util/function/Function;)Lcom/mojang/serialization/Codec;
+         8: putstatic     #456                // Field CODEC:Lcom/mojang/serialization/Codec;
+        11: getstatic     #461                // Field net/minecraft/network/codec/ByteBufCodecs.FLOAT:Lnet/minecraft/network/codec/StreamCodec;
+        14: invokedynamic #340,  0            // InvokeDynamic #3:apply:()Ljava/util/function/Function;
+        19: getstatic     #461                // Field net/minecraft/network/codec/ByteBufCodecs.FLOAT:Lnet/minecraft/network/codec/StreamCodec;
+        22: invokedynamic #352,  0            // InvokeDynamic #4:apply:()Ljava/util/function/Function;
+        27: getstatic     #463                // Field net/minecraft/world/item/component/BlocksAttacks$DamageReduction.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+        30: invokestatic  #466                // InterfaceMethod net/minecraft/network/codec/ByteBufCodecs.list:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+        33: invokeinterface #469,  2          // InterfaceMethod net/minecraft/network/codec/StreamCodec.apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+        38: invokedynamic #377,  0            // InvokeDynamic #5:apply:()Ljava/util/function/Function;
+        43: getstatic     #470                // Field net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+        46: invokedynamic #389,  0            // InvokeDynamic #6:apply:()Ljava/util/function/Function;
+        51: getstatic     #395                // Field net/minecraft/core/registries/Registries.DAMAGE_TYPE:Lnet/minecraft/resources/ResourceKey;
+        54: invokestatic  #474                // Method net/minecraft/tags/TagKey.streamCodec:(Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/network/codec/StreamCodec;
+        57: invokedynamic #481,  0            // InvokeDynamic #12:apply:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+        62: invokeinterface #469,  2          // InterfaceMethod net/minecraft/network/codec/StreamCodec.apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+        67: invokedynamic #412,  0            // InvokeDynamic #7:apply:()Ljava/util/function/Function;
+        72: getstatic     #482                // Field net/minecraft/sounds/SoundEvent.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+        75: invokedynamic #481,  0            // InvokeDynamic #12:apply:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+        80: invokeinterface #469,  2          // InterfaceMethod net/minecraft/network/codec/StreamCodec.apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+        85: invokedynamic #421,  0            // InvokeDynamic #8:apply:()Ljava/util/function/Function;
+        90: getstatic     #482                // Field net/minecraft/sounds/SoundEvent.STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+        93: invokedynamic #481,  0            // InvokeDynamic #12:apply:()Lnet/minecraft/network/codec/StreamCodec$CodecOperation;
+        98: invokeinterface #469,  2          // InterfaceMethod net/minecraft/network/codec/StreamCodec.apply:(Lnet/minecraft/network/codec/StreamCodec$CodecOperation;)Lnet/minecraft/network/codec/StreamCodec;
+       103: invokedynamic #427,  0            // InvokeDynamic #9:apply:()Ljava/util/function/Function;
+       108: invokedynamic #441,  0            // InvokeDynamic #10:apply:()Lcom/mojang/datafixers/util/Function7;
+       113: invokestatic  #486                // InterfaceMethod net/minecraft/network/codec/StreamCodec.composite:(Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function7;)Lnet/minecraft/network/codec/StreamCodec;
+       116: putstatic     #487                // Field STREAM_CODEC:Lnet/minecraft/network/codec/StreamCodec;
+       119: return
+      LineNumberTable:
+        line 40: 0
+        line 49: 11
+        line 52: 30
+        line 54: 54
+        line 55: 80
+        line 56: 98
+        line 49: 113
+}
+InnerClasses:
+  public static final #10= #7 of #2;      // ItemDamageFunction=class net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction of class net/minecraft/world/item/component/BlocksAttacks
+  public static final #11= #9 of #2;      // DamageReduction=class net/minecraft/world/item/component/BlocksAttacks$DamageReduction of class net/minecraft/world/item/component/BlocksAttacks
+  public static final #16= #13 of #15;    // Instance=class com/mojang/serialization/codecs/RecordCodecBuilder$Instance of class com/mojang/serialization/codecs/RecordCodecBuilder
+  public static final #21= #18 of #20;    // P7=class com/mojang/datafixers/Products$P7 of class com/mojang/datafixers/Products
+  public static #26= #23 of #25;          // CodecOperation=class net/minecraft/network/codec/StreamCodec$CodecOperation of class net/minecraft/network/codec/StreamCodec
+  public static final #31= #28 of #30;    // Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+SourceFile: "BlocksAttacks.java"
+BootstrapMethods:
+  0: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #86 (Ljava/lang/Object;)V
+      #91 REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67205:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+      #93 (Lnet/minecraft/core/Holder;)V
+  1: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #86 (Ljava/lang/Object;)V
+      #140 REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67201:(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/Holder;)V
+      #93 (Lnet/minecraft/core/Holder;)V
+  2: #254 REF_invokeStatic java/lang/runtime/ObjectMethods.bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;
+    Method arguments:
+      #2 net/minecraft/world/item/component/BlocksAttacks
+      #240 blockDelaySeconds;disableCooldownScale;damageReductions;itemDamage;bypassedBy;blockSound;disableSound
+      #241 REF_getField net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:F
+      #242 REF_getField net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:F
+      #243 REF_getField net/minecraft/world/item/component/BlocksAttacks.damageReductions:Ljava/util/List;
+      #244 REF_getField net/minecraft/world/item/component/BlocksAttacks.itemDamage:Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+      #245 REF_getField net/minecraft/world/item/component/BlocksAttacks.bypassedBy:Ljava/util/Optional;
+      #246 REF_getField net/minecraft/world/item/component/BlocksAttacks.blockSound:Ljava/util/Optional;
+      #247 REF_getField net/minecraft/world/item/component/BlocksAttacks.disableSound:Ljava/util/Optional;
+  3: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #335 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.blockDelaySeconds:()F
+      #337 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/Float;
+  4: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #351 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.disableCooldownScale:()F
+      #337 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/lang/Float;
+  5: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #374 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.damageReductions:()Ljava/util/List;
+      #376 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/List;
+  6: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #386 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.itemDamage:()Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+      #388 (Lnet/minecraft/world/item/component/BlocksAttacks;)Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+  7: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #409 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.bypassedBy:()Ljava/util/Optional;
+      #411 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/Optional;
+  8: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #420 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.blockSound:()Ljava/util/Optional;
+      #411 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/Optional;
+  9: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #426 REF_invokeVirtual net/minecraft/world/item/component/BlocksAttacks.disableSound:()Ljava/util/Optional;
+      #411 (Lnet/minecraft/world/item/component/BlocksAttacks;)Ljava/util/Optional;
+  10: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #433 (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      #436 REF_newInvokeSpecial net/minecraft/world/item/component/BlocksAttacks."<init>":(FFLjava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+      #438 (Ljava/lang/Float;Ljava/lang/Float;Ljava/util/List;Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)Lnet/minecraft/world/item/component/BlocksAttacks;
+  11: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #332 (Ljava/lang/Object;)Ljava/lang/Object;
+      #449 REF_invokeStatic net/minecraft/world/item/component/BlocksAttacks.method_67203:(Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+      #450 (Lcom/mojang/serialization/codecs/RecordCodecBuilder$Instance;)Lcom/mojang/datafixers/kinds/App;
+  12: #100 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #476 (Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+      #479 REF_invokeStatic net/minecraft/network/codec/ByteBufCodecs.optional:(Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+      #476 (Lnet/minecraft/network/codec/StreamCodec;)Lnet/minecraft/network/codec/StreamCodec;
+NestMembers:
+  net/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction
+  net/minecraft/world/item/component/BlocksAttacks$DamageReduction
+Record:
+  float blockDelaySeconds;
+    descriptor: F
+
+  float disableCooldownScale;
+    descriptor: F
+
+  java.util.List<net.minecraft.world.item.component.BlocksAttacks$DamageReduction> damageReductions;
+    descriptor: Ljava/util/List;
+    Signature: #37                          // Ljava/util/List<Lnet/minecraft/world/item/component/BlocksAttacks$DamageReduction;>;
+
+  net.minecraft.world.item.component.BlocksAttacks$ItemDamageFunction itemDamage;
+    descriptor: Lnet/minecraft/world/item/component/BlocksAttacks$ItemDamageFunction;
+
+  java.util.Optional<net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType>> bypassedBy;
+    descriptor: Ljava/util/Optional;
+    Signature: #42                          // Ljava/util/Optional<Lnet/minecraft/tags/TagKey<Lnet/minecraft/world/damagesource/DamageType;>;>;
+
+  java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>> blockSound;
+    descriptor: Ljava/util/Optional;
+    Signature: #44                          // Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+
+  java.util.Optional<net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>> disableSound;
+    descriptor: Ljava/util/Optional;
+    Signature: #44                          // Ljava/util/Optional<Lnet/minecraft/core/Holder<Lnet/minecraft/sounds/SoundEvent;>;>;
+

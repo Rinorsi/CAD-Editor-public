@@ -49,6 +49,8 @@ public final class ClientCache {
     private static List<String> blockSuggestions;
     private static List<ItemListSelectionElementModel> blockSelectionItems;
     private static List<TagListSelectionElementModel> blockTagSelectionItems;
+    private static List<TagListSelectionElementModel> itemTagSelectionItems;
+    private static List<TagListSelectionElementModel> damageTypeTagSelectionItems;
     private static List<String> enchantmentSuggestions;
     private static List<EnchantmentListSelectionElementModel> enchantmentSelectionItems;
     private static List<String> attributeSuggestions;
@@ -85,6 +87,8 @@ public final class ClientCache {
         blockSuggestions = null;
         blockSelectionItems = null;
         blockTagSelectionItems = null;
+        itemTagSelectionItems = null;
+        damageTypeTagSelectionItems = null;
         enchantmentSuggestions = null;
         enchantmentSelectionItems = null;
         attributeSuggestions = null;
@@ -134,6 +138,13 @@ public final class ClientCache {
 
     public static List<TagListSelectionElementModel> getBlockTagSelectionItems() {
         return blockTagSelectionItems == null ? blockTagSelectionItems = buildBlockTagSelectionItems() : blockTagSelectionItems;
+    }
+    public static List<TagListSelectionElementModel> getItemTagSelectionItems() {
+        return itemTagSelectionItems == null ? itemTagSelectionItems = buildItemTagSelectionItems() : itemTagSelectionItems;
+    }
+
+    public static List<TagListSelectionElementModel> getDamageTypeTagSelectionItems() {
+        return damageTypeTagSelectionItems == null ? damageTypeTagSelectionItems = buildDamageTypeTagSelectionItems() : damageTypeTagSelectionItems;
     }
 
     public static List<String> getBlockEntityTypeSuggestions() {
@@ -463,7 +474,7 @@ public final class ClientCache {
 
     private static List<ItemListSelectionElementModel> buildItemSelectionItems() {
         return BuiltInRegistries.ITEM.entrySet().stream()
-                .map(e -> new ItemListSelectionElementModel(
+                .map(e -> (ItemListSelectionElementModel) new SelectableItemListSelectionElementModel(
                         e.getValue().getDescriptionId(),
                         e.getKey().location(),
                         () -> new ItemStack(e.getValue())))
@@ -471,7 +482,19 @@ public final class ClientCache {
     }
 
     private static List<TagListSelectionElementModel> buildBlockTagSelectionItems() {
-        return registryAccess().lookup(Registries.BLOCK)
+        return buildTagSelectionItems(Registries.BLOCK);
+    }
+
+    private static List<TagListSelectionElementModel> buildItemTagSelectionItems() {
+        return buildTagSelectionItems(Registries.ITEM);
+    }
+
+    private static List<TagListSelectionElementModel> buildDamageTypeTagSelectionItems() {
+        return buildTagSelectionItems(Registries.DAMAGE_TYPE);
+    }
+
+    private static <T> List<TagListSelectionElementModel> buildTagSelectionItems(ResourceKey<Registry<T>> registryKey) {
+        return registryAccess().lookup(registryKey)
                 .map(lookup -> lookup.listTags()
                         .map(named -> (TagListSelectionElementModel) new SelectableTagListSelectionElementModel(named.key().location()))
                         .sorted()
