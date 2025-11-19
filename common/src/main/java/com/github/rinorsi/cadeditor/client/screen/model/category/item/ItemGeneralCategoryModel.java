@@ -19,7 +19,6 @@ import net.minecraft.world.item.component.DamageResistant;
 
 public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private static final DamageResistant FIRE_DAMAGE_RESISTANCE = new DamageResistant(DamageTypeTags.IS_FIRE);
-    private BooleanEntryModel foodToggleEntry;
     public ItemGeneralCategoryModel(ItemEditorModel editor) {
         super(ModTexts.GENERAL, editor);
     }
@@ -43,8 +42,6 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("glint_override"), getGlintOverride(stack), this::setGlintOverride));
         getEntries().add(new BooleanEntryModel(this, ModTexts.FIRE_RESISTANT, isFireResistant(stack), this::setFireResistant));
         getEntries().add(new BooleanEntryModel(this, ModTexts.INTANGIBLE_PROJECTILE, stack.has(DataComponents.INTANGIBLE_PROJECTILE), this::setIntangibleProjectile));
-        foodToggleEntry = new BooleanEntryModel(this, ModTexts.gui("food_enabled"), getParent().getFoodState().isEnabled(), this::setFoodEnabled);
-        getEntries().add(foodToggleEntry);
         // Creative slot lock (1.21 data component has no effect, disabled for now)
     }
 
@@ -248,22 +245,4 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         context.setTag(root);
     }
 
-    private void setFoodEnabled(boolean value) {
-        if (value) {
-            getParent().enableFoodComponent();
-        } else {
-            getParent().disableFoodComponent();
-        }
-    }
-
-    public void syncFoodToggle() {
-        if (foodToggleEntry == null) {
-            return;
-        }
-        boolean enabled = getParent().getFoodState().isEnabled();
-        foodToggleEntry.setValue(enabled);
-        if (foodToggleEntry.valueChangedProperty().getValue()) {
-            foodToggleEntry.apply();
-        }
-    }
 }

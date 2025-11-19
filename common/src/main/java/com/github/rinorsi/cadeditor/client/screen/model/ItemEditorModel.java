@@ -2,6 +2,7 @@ package com.github.rinorsi.cadeditor.client.screen.model;
 
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.context.ItemEditorContext;
+import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.*;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.common.ModTexts;
@@ -93,13 +94,17 @@ public class ItemEditorModel extends StandardEditorModel {
     private static final int MAX_AMPLIFIER = 255;
 
     private final FoodComponentState foodState = new FoodComponentState();
+    private final EnumMap<ItemExtraToggle, Boolean> extraComponentStates = new EnumMap<>(ItemExtraToggle.class);
     private boolean desiredFoodEnabled;
+    private boolean shouldSyncExtraComponentsFromStack = true;
 
     private ItemGeneralCategoryModel generalCategory;
-    private ItemFoodPropertiesCategoryModel foodPropertiesCategory;
-    private ItemFoodEffectsCategoryModel foodEffectsCategory;
+    private ItemExtraComponentsCategoryModel extraComponentsCategory;
 
-    public ItemEditorModel(ItemEditorContext context) { super(context); }
+    public ItemEditorModel(ItemEditorContext context) {
+        super(context);
+        resetExtraComponentStates();
+    }
 
     @Override
     public ItemEditorContext getContext() { return (ItemEditorContext) super.getContext(); }
@@ -112,15 +117,33 @@ public class ItemEditorModel extends StandardEditorModel {
 
     @Override
     protected void setupCategories() {
-        generalCategory = new ItemGeneralCategoryModel(this);
-        getCategories().add(generalCategory);
-        getCategories().add(new ItemCustomModelDataCategoryModel(this));
-        getCategories().add(new ItemConsumableCategoryModel(this));
-        getCategories().add(new ItemDisplayCategoryModel(this));
-        getCategories().add(new ItemEnchantmentsCategoryModel(this));
         ItemStack stack = getContext().getItemStack();
         Item item = stack.getItem();
-        getCategories().add(new ItemAttributeModifiersCategoryModel(this));
+
+        if (shouldSyncExtraComponentsFromStack) {
+            syncExtraComponentStatesFromStack(stack);
+            shouldSyncExtraComponentsFromStack = false;
+        }
+
+        generalCategory = new ItemGeneralCategoryModel(this);
+        getCategories().add(generalCategory);
+
+        extraComponentsCategory = new ItemExtraComponentsCategoryModel(this);
+        getCategories().add(extraComponentsCategory);
+
+        if (isExtraComponentEnabled(ItemExtraToggle.EQUIPPABLE)) {
+            getCategories().add(new ItemEquippableCategoryModel(this));
+        }
+        if (isExtraComponentEnabled(ItemExtraToggle.CUSTOM_MODEL_DATA)) {
+            getCategories().add(new ItemCustomModelDataCategoryModel(this));
+        }
+        getCategories().add(new ItemDisplayCategoryModel(this));
+        if (isExtraComponentEnabled(ItemExtraToggle.ENCHANTMENTS)) {
+            getCategories().add(new ItemEnchantmentsCategoryModel(this));
+        }
+        if (isExtraComponentEnabled(ItemExtraToggle.ATTRIBUTE_MODIFIERS)) {
+            getCategories().add(new ItemAttributeModifiersCategoryModel(this));
+        }
         getCategories().add(new ItemHideFlagsCategoryModel(this));
         if (stack.is(ItemTags.DYEABLE) || stack.has(DataComponents.DYED_COLOR)) {
             getCategories().add(new ItemDyeableCategoryModel(this));
@@ -128,7 +151,8 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item instanceof SpawnEggItem spawnEgg) {
             getCategories().add(new ItemSpawnEggCategoryModel(this, spawnEgg));
         }
-        if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE)) {
+        if (isExtraComponentEnabled(ItemExtraToggle.TOOL)
+                && (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE))) {
             getCategories().add(new ItemToolCategoryModel(this));
         }
         if (item instanceof MapItem || stack.has(DataComponents.MAP_ID) || stack.has(DataComponents.MAP_COLOR)
@@ -205,12 +229,17 @@ public class ItemEditorModel extends StandardEditorModel {
         }
         getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_DESTROY, this, "CanDestroy"));
         foodState.loadFrom(stack);
-        desiredFoodEnabled = foodState.isEnabled();
+        desiredFoodEnabled = isExtraComponentEnabled(ItemExtraToggle.FOOD);
+        foodState.setEnabled(desiredFoodEnabled);
 
         if (item instanceof PotionItem || item instanceof TippedArrowItem) {
             getCategories().add(new ItemPotionEffectsCategoryModel(this));
         }
-        if (desiredFoodEnabled) attachFoodCategories();
+        if (desiredFoodEnabled) {
+            getCategories().add(new ItemConsumableCategoryModel(this));
+            getCategories().add(new ItemFoodPropertiesCategoryModel(this));
+            getCategories().add(new ItemFoodEffectsCategoryModel(this));
+        }
         if (item instanceof BlockItem) {
             getCategories().add(new ItemBlockListCategoryModel(ModTexts.CAN_PLACE_ON, this, "CanPlaceOn"));
         }
@@ -239,21 +268,69 @@ public class ItemEditorModel extends StandardEditorModel {
 
     public FoodComponentState getFoodState() { return foodState; }
 
+    public boolean isExtraComponentEnabled(ItemExtraToggle toggle) {
+        return extraComponentStates.getOrDefault(toggle, defaultExtraComponentState(toggle));
+    }
+
+    public void setExtraComponentEnabled(ItemExtraToggle toggle, boolean enabled) {
+        boolean current = isExtraComponentEnabled(toggle);
+        if (current == enabled) return;
+        extraComponentStates.put(toggle, enabled);
+        if (toggle == ItemExtraToggle.FOOD) {
+            if (enabled && !desiredFoodEnabled) {
+                foodState.prepareForInitialEnable(getContext().getItemStack());
+                desiredFoodEnabled = true;
+            } else if (!enabled && desiredFoodEnabled) {
+                desiredFoodEnabled = false;
+            } else {
+                desiredFoodEnabled = enabled;
+            }
+            applyFoodComponent();
+        }
+        rebuildCategoriesPreservingSelection(null);
+    }
+
     public void enableFoodComponent() {
-        if (desiredFoodEnabled) return;
-        foodState.prepareForInitialEnable(getContext().getItemStack());
-        desiredFoodEnabled = true;
-        applyFoodComponent();
-        attachFoodCategories();
-        if (generalCategory != null) generalCategory.syncFoodToggle();
+        setExtraComponentEnabled(ItemExtraToggle.FOOD, true);
     }
 
     public void disableFoodComponent() {
-        if (!desiredFoodEnabled) return;
-        desiredFoodEnabled = false;
-        applyFoodComponent();
-        detachFoodCategories();
-        if (generalCategory != null) generalCategory.syncFoodToggle();
+        setExtraComponentEnabled(ItemExtraToggle.FOOD, false);
+    }
+
+    private void resetExtraComponentStates() {
+        extraComponentStates.clear();
+        for (ItemExtraToggle toggle : ItemExtraToggle.values()) {
+            extraComponentStates.put(toggle, defaultExtraComponentState(toggle));
+        }
+    }
+
+    private boolean defaultExtraComponentState(ItemExtraToggle toggle) {
+        return switch (toggle) {
+            case ATTRIBUTE_MODIFIERS, TOOL, ENCHANTMENTS -> true;
+            default -> false;
+        };
+    }
+
+    private void syncExtraComponentStatesFromStack(ItemStack stack) {
+        if (stack.has(DataComponents.EQUIPPABLE)) {
+            extraComponentStates.put(ItemExtraToggle.EQUIPPABLE, true);
+        }
+        if (stack.has(DataComponents.CUSTOM_MODEL_DATA)) {
+            extraComponentStates.put(ItemExtraToggle.CUSTOM_MODEL_DATA, true);
+        }
+        if (stack.has(DataComponents.ATTRIBUTE_MODIFIERS)) {
+            extraComponentStates.put(ItemExtraToggle.ATTRIBUTE_MODIFIERS, true);
+        }
+        if (stack.has(DataComponents.ENCHANTMENTS) || stack.has(DataComponents.STORED_ENCHANTMENTS)) {
+            extraComponentStates.put(ItemExtraToggle.ENCHANTMENTS, true);
+        }
+        if (stack.has(DataComponents.TOOL) || stack.is(ItemTags.MINING_ENCHANTABLE)) {
+            extraComponentStates.put(ItemExtraToggle.TOOL, true);
+        }
+        if (stack.has(DataComponents.FOOD) || stack.has(DataComponents.CONSUMABLE) || stack.has(DataComponents.USE_REMAINDER)) {
+            extraComponentStates.put(ItemExtraToggle.FOOD, true);
+        }
     }
 
     public void applyFoodComponent() {
@@ -414,20 +491,26 @@ public class ItemEditorModel extends StandardEditorModel {
     public void handleStackReplaced(ItemStack newStack) {
         ItemStack stack = newStack == null ? ItemStack.EMPTY : newStack.copy();
         syncContextSnapshot(stack);
-        desiredFoodEnabled = foodState.isEnabled();
+        resetExtraComponentStates();
+        shouldSyncExtraComponentsFromStack = true;
+        rebuildCategoriesPreservingSelection(null);
+    }
 
-        var previousSelection = getSelectedCategory();
-        Class<?> previousCategoryClass = previousSelection == null ? null : previousSelection.getClass();
+    private void rebuildCategoriesPreservingSelection(Class<?> preferredCategoryClass) {
+        CategoryModel previousSelection = getSelectedCategory();
+        Class<?> targetClass = preferredCategoryClass != null
+                ? preferredCategoryClass
+                : (previousSelection == null ? null : previousSelection.getClass());
 
         getCategories().clear();
         setupCategories();
-        getCategories().forEach(category -> category.initalize());
+        getCategories().forEach(CategoryModel::initalize);
 
         if (!getCategories().isEmpty()) {
-            var toSelect = getCategories().get(0);
-            if (previousCategoryClass != null) {
-                for (var category : getCategories()) {
-                    if (category.getClass() == previousCategoryClass) {
+            CategoryModel toSelect = getCategories().get(0);
+            if (targetClass != null) {
+                for (CategoryModel category : getCategories()) {
+                    if (category.getClass() == targetClass) {
                         toSelect = category;
                         break;
                     }
@@ -435,37 +518,6 @@ public class ItemEditorModel extends StandardEditorModel {
             }
             setSelectedCategory(toSelect);
         }
-
-        if (generalCategory != null) {
-            generalCategory.syncFoodToggle();
-        }
-    }
-
-    private void attachFoodCategories() {
-        detachFoodCategories();
-        foodPropertiesCategory = new ItemFoodPropertiesCategoryModel(this);
-        foodEffectsCategory = new ItemFoodEffectsCategoryModel(this);
-        int insertIndex = findFoodInsertIndex();
-        getCategories().add(insertIndex, foodPropertiesCategory);
-        getCategories().add(insertIndex + 1, foodEffectsCategory);
-        foodPropertiesCategory.initalize();
-        foodEffectsCategory.initalize();
-    }
-
-    private void detachFoodCategories() {
-        boolean wasSelected = getSelectedCategory() == foodPropertiesCategory || getSelectedCategory() == foodEffectsCategory;
-        if (foodPropertiesCategory != null) getCategories().remove(foodPropertiesCategory);
-        if (foodEffectsCategory != null) getCategories().remove(foodEffectsCategory);
-        if (wasSelected && !getCategories().isEmpty()) setSelectedCategory(getCategories().get(0));
-        foodPropertiesCategory = null;
-        foodEffectsCategory = null;
-    }
-
-    private int findFoodInsertIndex() {
-        for (int i = 0; i < getCategories().size(); i++) {
-            if (getCategories().get(i).getName().equals(ModTexts.CAN_PLACE_ON)) return i;
-        }
-        return getCategories().size();
     }
 
     private void syncContextSnapshot(ItemStack stack) {

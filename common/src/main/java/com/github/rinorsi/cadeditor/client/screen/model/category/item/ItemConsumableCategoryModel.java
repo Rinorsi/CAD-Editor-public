@@ -22,8 +22,6 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     protected void setupEntries() {
-        getEntries().add(new BooleanEntryModel(this, ModTexts.gui("consumable_enabled"),
-                state.isConsumableStandaloneEnabled(), this::setStandaloneEnabled));
         getEntries().add(new FloatEntryModel(this, ModTexts.gui("consume_seconds"),
                 state.getConsumeSeconds(), state::setConsumeSeconds));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("consume_particles"),
@@ -55,11 +53,6 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
     @Override
     public void apply() {
         super.apply();
-        getParent().applyFoodComponent();
-    }
-
-    private void setStandaloneEnabled(boolean value) {
-        state.setConsumableStandaloneEnabled(value);
         getParent().applyFoodComponent();
     }
 

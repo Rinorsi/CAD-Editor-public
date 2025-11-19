@@ -27,6 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.trim.TrimMaterial;
 import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -40,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public final class ClientCache {
     private static List<String> itemSuggestions;
@@ -70,6 +72,9 @@ public final class ClientCache {
     private static List<String> soundEventSuggestions;
     private static List<SoundEventListSelectionElementModel> soundEventSelectionItems;
     private static List<ListSelectionFilter> soundEventFilters;
+    private static List<String> equipmentAssetSuggestions;
+    private static List<ListSelectionElementModel> equipmentAssetSelectionItems;
+    private static final List<ResourceLocation> BUILTIN_EQUIPMENT_ASSETS = buildBuiltinEquipmentAssets();
     private static List<String> blockEntityTypeSuggestions;
     private static List<String> lootTableSuggestions;
     private static List<String> componentTypeIds;
@@ -103,6 +108,8 @@ public final class ClientCache {
         soundEventSuggestions = null;
         soundEventSelectionItems = null;
         soundEventFilters = null;
+        equipmentAssetSuggestions = null;
+        equipmentAssetSelectionItems = null;
         blockEntityTypeSuggestions = null;
         lootTableSuggestions = null;
         componentTypeIds = null;
@@ -291,6 +298,14 @@ public final class ClientCache {
 
     public static List<String> getEntitySuggestions() {
         return entitySuggestions == null ? entitySuggestions = buildSuggestions(BuiltInRegistries.ENTITY_TYPE) : entitySuggestions;
+    }
+
+    public static List<String> getEquipmentAssetSuggestions() {
+        return equipmentAssetSuggestions == null ? equipmentAssetSuggestions = buildEquipmentAssetSuggestions() : equipmentAssetSuggestions;
+    }
+
+    public static List<ListSelectionElementModel> getEquipmentAssetSelectionItems() {
+        return equipmentAssetSelectionItems == null ? equipmentAssetSelectionItems = buildEquipmentAssetSelectionItems() : equipmentAssetSelectionItems;
     }
 
     public static List<EntityListSelectionElementModel> getEntitySelectionItems() {
@@ -715,6 +730,51 @@ public final class ClientCache {
                 .map(entry -> new SoundEventListSelectionElementModel(entry.getKey().location(), entry.getValue()))
                 .sorted()
                 .toList();
+    }
+
+    private static List<String> buildEquipmentAssetSuggestions() {
+        return registryAccess().lookup(EquipmentAssets.ROOT_ID)
+                .map(lookup -> lookup.listElements()
+                        .map(element -> element.key().location().toString())
+                        .sorted()
+                        .toList())
+                .orElse(BUILTIN_EQUIPMENT_ASSETS.stream()
+                        .map(ResourceLocation::toString)
+                        .collect(Collectors.toUnmodifiableList()));
+    }
+
+    private static List<ListSelectionElementModel> buildEquipmentAssetSelectionItems() {
+        return registryAccess().lookup(EquipmentAssets.ROOT_ID)
+                .map(lookup -> lookup.listElements()
+                        .map(element -> (ListSelectionElementModel) new EquipmentAssetListSelectionElementModel(element.key().location()))
+                        .sorted()
+                        .toList())
+                .orElse(BUILTIN_EQUIPMENT_ASSETS.stream()
+                        .map(id -> (ListSelectionElementModel) new EquipmentAssetListSelectionElementModel(id))
+                        .collect(Collectors.toUnmodifiableList()));
+    }
+
+    private static List<ResourceLocation> buildBuiltinEquipmentAssets() {
+        List<ResourceLocation> ids = new ArrayList<>();
+        ids.add(ResourceLocation.withDefaultNamespace("leather"));
+        ids.add(ResourceLocation.withDefaultNamespace("chainmail"));
+        ids.add(ResourceLocation.withDefaultNamespace("iron"));
+        ids.add(ResourceLocation.withDefaultNamespace("gold"));
+        ids.add(ResourceLocation.withDefaultNamespace("diamond"));
+        ids.add(ResourceLocation.withDefaultNamespace("turtle_scute"));
+        ids.add(ResourceLocation.withDefaultNamespace("netherite"));
+        ids.add(ResourceLocation.withDefaultNamespace("armadillo_scute"));
+        ids.add(ResourceLocation.withDefaultNamespace("elytra"));
+        ids.add(ResourceLocation.withDefaultNamespace("saddle"));
+        ids.add(ResourceLocation.withDefaultNamespace("trader_llama"));
+        for (String color : List.of(
+                "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+                "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+        )) {
+            ids.add(ResourceLocation.withDefaultNamespace("carpet_" + color));
+            ids.add(ResourceLocation.withDefaultNamespace("harness_" + color));
+        }
+        return List.copyOf(ids);
     }
 
     private static List<ListSelectionFilter> buildSoundEventFilters() {

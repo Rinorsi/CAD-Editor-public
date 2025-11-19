@@ -179,6 +179,7 @@ public final class ModTexts {
     public static final MutableComponent SNBT_PREVIEW = translated("cadeditor.gui.snbt_preview");
     public static final MutableComponent SNBT_PREVIEW_INVALID = translated("cadeditor.gui.snbt_preview_invalid").withStyle(ChatFormatting.RED);
     public static final MutableComponent SNBT_PREVIEW_TOGGLE = translated("cadeditor.gui.snbt_preview_toggle");
+    public static final MutableComponent EQUIPMENT_ASSET = translated("cadeditor.gui.equipment_asset");
     public static final MutableComponent PERMISSION_LEVEL = translated("cadeditor.gui.permission_level");
     public static final MutableComponent CREATIVE_ONLY = translated("cadeditor.gui.creative_only");
     public static final MutableComponent BLOCK_STATE = translated("cadeditor.gui.block_state");
@@ -370,6 +371,10 @@ public final class ModTexts {
 
     public static MutableComponent useAnimationOption(ItemUseAnimation animation) {
         return translated("cadeditor.gui.use_animation.option." + animation.getSerializedName());
+    }
+
+    public static MutableComponent equipmentSlot(net.minecraft.world.entity.EquipmentSlot slot) {
+        return translated("cadeditor.gui.equipment_slot." + slot.getName());
     }
 
     public static MutableComponent gui(String s) {
