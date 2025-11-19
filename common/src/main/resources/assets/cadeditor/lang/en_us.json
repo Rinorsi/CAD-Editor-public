@@ -474,6 +474,7 @@
   "cadeditor.message.copied_clipboard": "%s command copied to clipboard.",
   "cadeditor.message.copied_give_clipboard": "/give command copied. If chat rejects it, paste it into a command block.",
   "cadeditor.message.crossbow_projectile_help": "Enter each projectile in SNBT, e.g. {id:\"minecraft:arrow\",Count:1}. Use the + button to add more.",
+  "cadeditor.message.snbt_invalid_cannot_apply": "Raw data contains syntax errors. Fix the SNBT before leaving or saving.",
   "cadeditor.message.error_generic": "An error occurred. Check logs and report to the author.",
   "cadeditor.message.error_permission_denied": "You don't have the required permission to edit this %s.",
   "cadeditor.message.error_server_mod": "CAD Editor must also be installed on the server to edit this %s.",

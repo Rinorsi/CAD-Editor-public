@@ -72,6 +72,7 @@ public final class ClientCache {
     private static List<ListSelectionFilter> soundEventFilters;
     private static List<String> blockEntityTypeSuggestions;
     private static List<String> lootTableSuggestions;
+    private static List<String> componentTypeIds;
 
     public static void invalidate() {
         itemSuggestions = null;
@@ -104,6 +105,7 @@ public final class ClientCache {
         soundEventFilters = null;
         blockEntityTypeSuggestions = null;
         lootTableSuggestions = null;
+        componentTypeIds = null;
     }
 
     public static List<String> getItemSuggestions() {
@@ -188,6 +190,29 @@ public final class ClientCache {
             return true;
         }
         return holderSetContainsItem(definition.supportedItems(), item, registry);
+    }
+
+    public static List<String> getComponentTypeIds() {
+        if (componentTypeIds == null) {
+            List<String> ids = new ArrayList<>(BuiltInRegistries.DATA_COMPONENT_TYPE.keySet().size());
+            for (ResourceLocation id : BuiltInRegistries.DATA_COMPONENT_TYPE.keySet()) {
+                ids.add(id.toString());
+            }
+            ids.sort(String::compareTo);
+            componentTypeIds = List.copyOf(ids);
+        }
+        return componentTypeIds;
+    }
+
+    public static boolean isComponentIdKnown(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        ResourceLocation id = ResourceLocation.tryParse(value);
+        if (id == null) {
+            return false;
+        }
+        return BuiltInRegistries.DATA_COMPONENT_TYPE.containsKey(id);
     }
 
     private static boolean holderSetContainsItem(HolderSet<Item> holders, Item item, Optional<? extends HolderLookup.RegistryLookup<Item>> registry) {

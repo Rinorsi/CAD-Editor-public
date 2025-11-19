@@ -478,6 +478,7 @@
   "cadeditor.message.copied_clipboard": "%s 命令已复制到剪贴板",
   "cadeditor.message.copied_give_clipboard": "/give 指令已复制，如果在聊天框内无法生成请尝试复制到命令方块内。",
   "cadeditor.message.crossbow_projectile_help": "每条使用 SNBT 描述弹药，例如 {id:\"minecraft:arrow\",Count:1}。点击 + 可以添加更多。",
+  "cadeditor.message.snbt_invalid_cannot_apply": "SNBT 存在语法错误，请修复后再离开或保存。",
   "cadeditor.message.error_generic": "发生错误，请查看日志并向作者反馈",
   "cadeditor.message.error_permission_denied": "你没有 %s 所需的权限",
   "cadeditor.message.error_server_mod": "需要服务器也安装 CAD 编辑器才能修改 %s",

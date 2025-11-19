@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultilineTextField;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
@@ -26,8 +27,8 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
     private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
-    private static final int TOKEN_ADVANCE_PADDING = 2;
     private static final int LINE_SPACING = 2;
+    private static final int SYNTAX_ERROR_COLOR = 0xFFFF6A6A;
 
     private final SyntaxHighlightingTextArea node;
     private final MultilineTextField textField;
@@ -67,6 +68,7 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         int lineY = getY() + innerPadding();
         int baseX = getX() + innerPadding();
         int lineHeightWithSpacing = font.lineHeight + LINE_SPACING;
+        int errorOffset = highlighter.getSyntaxErrorOffset();
 
         Iterable<?> visualLines = textField.iterateLines();
         for (Object view : visualLines) {
@@ -76,14 +78,14 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
             if (shouldBlink && cursorInText && cursorIndex >= lineStart && cursorIndex <= lineEnd) {
                 if (visible) {
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, lineStart, cursorIndex, baseX, lineY);
+                    caretX = drawSegment(graphics, fullText, palette, lineStart, cursorIndex, baseX, lineY, errorOffset);
                     graphics.fill(caretX, lineY - 1, caretX + CURSOR_INSERT_WIDTH, lineY + 1 + font.lineHeight, CURSOR_INSERT_COLOR);
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, cursorIndex, lineEnd, caretX, lineY);
+                    caretX = drawSegment(graphics, fullText, palette, cursorIndex, lineEnd, caretX, lineY, errorOffset);
                     caretY = lineY;
                 }
             } else {
                 if (visible) {
-                    caretX = drawSegment(graphics, fullText, highlighter, palette, lineStart, lineEnd, baseX, lineY);
+                    caretX = drawSegment(graphics, fullText, palette, lineStart, lineEnd, baseX, lineY, errorOffset);
                 }
                 caretY = lineY;
             }
@@ -137,10 +139,10 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
     }
 
-    private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
+    private int drawSegment(GuiGraphics graphics, String fullText, SyntaxHighlightingPalette palette, int start, int end, int x, int y, int errorOffset) {
         int cursor = x;
         int index = start;
-        List<Token> tokens = highlighter.getTokens();
+        List<Token> tokens = node.getHighlighter().getTokens();
 
         for (Token token : tokens) {
             if (token.end() <= start) {
@@ -151,40 +153,46 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
             }
             if (index < Math.min(token.start(), end)) {
                 int plainEnd = Math.min(token.start(), end);
-                cursor = drawPlain(graphics, fullText.substring(index, plainEnd), cursor, y);
+                cursor = drawPlain(graphics, fullText, index, plainEnd, cursor, y, errorOffset);
                 index = plainEnd;
             }
             int colouredStart = Math.max(token.start(), start);
             int colouredEnd = Math.min(token.end(), end);
             if (colouredEnd > colouredStart) {
-                cursor = drawColored(graphics, fullText.substring(colouredStart, colouredEnd), cursor, y, palette.colour(token.type()));
+                cursor = drawColored(graphics, fullText, colouredStart, colouredEnd, cursor, y, palette.colour(token.type()), errorOffset);
                 index = colouredEnd;
             }
         }
         if (index < end) {
-            cursor = drawPlain(graphics, fullText.substring(index, end), cursor, y);
+            cursor = drawPlain(graphics, fullText, index, end, cursor, y, errorOffset);
         }
         return cursor;
     }
 
-    private int drawPlain(GuiGraphics graphics, String text, int x, int y) {
-        if (text.isEmpty()) {
-            return x;
-        }
-        graphics.drawString(font, text, x, y, RenderHelper.ensureOpaqueColor(TEXT_COLOR));
-        int renderedEnd = x + font.width(text);
-        return clampCursorPosition(x, renderedEnd);
+    private int drawPlain(GuiGraphics graphics, String fullText, int start, int end, int x, int y, int errorOffset) {
+        return drawWithColour(graphics, fullText, start, end, x, y, RenderHelper.ensureOpaqueColor(TEXT_COLOR), errorOffset);
     }
 
-    private int drawColored(GuiGraphics graphics, String text, int x, int y, ChatFormatting colour) {
-        if (text.isEmpty()) {
-            return x;
-        }
+    private int drawColored(GuiGraphics graphics, String fullText, int start, int end, int x, int y, ChatFormatting colour, int errorOffset) {
         Integer rgb = colour.getColor();
         int colourValue = RenderHelper.ensureOpaqueColor(rgb != null ? rgb : TEXT_COLOR);
-        graphics.drawString(font, text, x, y, colourValue);
-        int renderedEnd = x + font.width(text);
-        return clampCursorPosition(x, renderedEnd);
+        return drawWithColour(graphics, fullText, start, end, x, y, colourValue, errorOffset);
+    }
+
+    private int drawWithColour(GuiGraphics graphics, String fullText, int start, int end, int x, int y, int colour, int errorOffset) {
+        if (start >= end) {
+            return x;
+        }
+        if (errorOffset >= 0 && end > errorOffset) {
+            if (start < errorOffset) {
+                x = drawWithColour(graphics, fullText, start, errorOffset, x, y, colour, -1);
+                start = errorOffset;
+            }
+            return drawWithColour(graphics, fullText, start, end, x, y, RenderHelper.ensureOpaqueColor(SYNTAX_ERROR_COLOR), -1);
+        }
+        String slice = fullText.substring(start, end);
+        graphics.drawString(font, slice, x, y, colour);
+        return x + font.width(slice);
     }
 
     @Override
@@ -195,15 +203,72 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         }
     }
 
-    private int clampCursorPosition(int start, int renderedEnd) {
-        int adjusted = renderedEnd - 3 + TOKEN_ADVANCE_PADDING;
-        int maxX = getX() + getWidth() - innerPadding();
-        if (adjusted > maxX) {
-            adjusted = maxX;
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isPointInsideContentArea(mouseX, mouseY) && button == 0) {
+            textField.setSelecting(Screen.hasShiftDown());
+            seekCursorWithSpacing(mouseX, mouseY);
+            return true;
         }
-        if (adjusted < start) {
-            adjusted = start;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+            return true;
         }
-        return adjusted;
+        if (isPointInsideContentArea(mouseX, mouseY) && button == 0) {
+            textField.setSelecting(true);
+            seekCursorWithSpacing(mouseX, mouseY);
+            textField.setSelecting(Screen.hasShiftDown());
+            return true;
+        }
+        return false;
+    }
+
+    private void seekCursorWithSpacing(double mouseX, double mouseY) {
+        double localX = mouseX - (double) getX() - (double) innerPadding();
+        double visualY = mouseY - (double) getY() - (double) innerPadding() + scrollAmount();
+        double logicalY = convertVisualYToLogical(visualY);
+        textField.seekCursorToPoint(localX, logicalY);
+    }
+
+    private double convertVisualYToLogical(double visualY) {
+        if (LINE_SPACING <= 0) {
+            return visualY;
+        }
+        double perLine = font.lineHeight + LINE_SPACING;
+        if (perLine <= 0) {
+            return visualY;
+        }
+        double clamped = Math.max(0.0, visualY);
+        int lineIndex = (int) (clamped / perLine);
+        double offset = clamped - lineIndex * perLine;
+        offset = Math.min(offset, font.lineHeight);
+        return lineIndex * font.lineHeight + offset;
+    }
+
+    private boolean isPointInsideContentArea(double mouseX, double mouseY) {
+        int innerLeft = getX() + innerPadding();
+        int innerTop = getY() + innerPadding();
+        int innerRight = innerLeft + (getWidth() - totalInnerPadding());
+        int innerBottom = innerTop + Math.max(getInnerHeight(), 0);
+        return mouseX >= innerLeft && mouseX < innerRight && mouseY >= innerTop && mouseY < innerBottom;
+    }
+
+    @Override
+    public int getInnerHeight() {
+        if (textField == null) {
+            return super.getInnerHeight();
+        }
+        int lines = Math.max(1, textField.getLineCount());
+        int spacing = Math.max(0, lines - 1) * LINE_SPACING;
+        return lines * font.lineHeight + spacing;
+    }
+
+    @Override
+    public double scrollRate() {
+        return (double) (font.lineHeight + LINE_SPACING) / 2.0;
     }
 }

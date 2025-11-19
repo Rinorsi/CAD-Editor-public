@@ -364,6 +364,7 @@
   "cadeditor.message.copied_clipboard": "Команда %s скопирована в буфер обмена!",
   "cadeditor.message.copied_give_clipboard": "Команда /give скопирована! Если она не выполняется в чате, попробуйте вставить её в командный блок.",
   "cadeditor.message.crossbow_projectile_help": "Указывайте каждый снаряд в SNBT, напр. {id:\"minecraft:arrow\",Count:1}. Нажмите +, чтобы добавить ещё.",
+  "cadeditor.message.snbt_invalid_cannot_apply": "В сыром SNBT есть ошибки. Исправьте их прежде, чем выходить или сохранять.",
   "cadeditor.message.container_loot_hint": "Нестандартные компоненты предмета копируются в сущность блока при установке.",
   "cadeditor.message.container_loot_example": "Пример: minecraft:chests/simple_dungeon (пространство имён обычно minecraft/ID вашего мода)",
   "cadeditor.message.error_generic": "Произошла ошибка. Пожалуйста, проверьте логи для получения более подробной информации и сообщите о проблеме автору мода.",

@@ -503,6 +503,10 @@ public final class ModTexts {
             return prefixed(translated("cadeditor.message.container_loot_example")).withStyle(ChatFormatting.YELLOW);
         }
 
+        public static MutableComponent snbtInvalidCannotApply() {
+            return prefixed(translated("cadeditor.message.snbt_invalid_cannot_apply")).withStyle(ChatFormatting.RED);
+        }
+
         public static MutableComponent potDecorationInvalid() {
             return prefixed(translated("cadeditor.message.pot_decoration_invalid")).withStyle(ChatFormatting.RED);
         }

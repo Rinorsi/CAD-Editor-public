@@ -10,6 +10,9 @@ public final class SyntaxHighlightingPalette {
     private final ChatFormatting nullColor;
     private final ChatFormatting symbol;
     private final ChatFormatting separator;
+    private final ChatFormatting component;
+    private final ChatFormatting componentError;
+    private final ChatFormatting syntaxError;
 
     public SyntaxHighlightingPalette(ChatFormatting key,
                                      ChatFormatting string,
@@ -17,7 +20,10 @@ public final class SyntaxHighlightingPalette {
                                      ChatFormatting bool,
                                      ChatFormatting nullColor,
                                      ChatFormatting symbol,
-                                     ChatFormatting separator) {
+                                     ChatFormatting separator,
+                                     ChatFormatting component,
+                                     ChatFormatting componentError,
+                                     ChatFormatting syntaxError) {
         this.key = key;
         this.string = string;
         this.number = number;
@@ -25,6 +31,9 @@ public final class SyntaxHighlightingPalette {
         this.nullColor = nullColor;
         this.symbol = symbol;
         this.separator = separator;
+        this.component = component;
+        this.componentError = componentError;
+        this.syntaxError = syntaxError;
     }
 
     public ChatFormatting colour(SNBTSyntaxHighlighter.TokenType type) {
@@ -36,6 +45,9 @@ public final class SyntaxHighlightingPalette {
             case NULL -> nullColor;
             case SYMBOL -> symbol;
             case SEPARATOR -> separator;
+            case COMPONENT_KEY -> component;
+            case COMPONENT_ERROR -> componentError;
+            case ERROR -> syntaxError;
         };
     }
 }
