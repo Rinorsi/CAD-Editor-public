@@ -14,7 +14,8 @@
     "EditBoxMixin",
     "MultiLineEditBoxMixin",
     "MultilineTextFieldMixin",
-    "MultilineTextFieldStringViewAccessor"
+    "MultilineTextFieldStringViewAccessor",
+    "InventoryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

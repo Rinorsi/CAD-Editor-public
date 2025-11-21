@@ -6,17 +6,19 @@ import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultItemListSelectionElementModel;
+import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.GiveVaultItemPacket;
 import com.github.rinorsi.cadeditor.common.network.NetworkManager;
 import com.github.rinorsi.cadeditor.mixin.AbstractContainerScreenMixin;
+import com.github.rinorsi.cadeditor.mixin.InventoryAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -27,8 +29,37 @@ import java.util.Map;
 
 public final class ClientVaultActionLogic {
     public static void giveVaultItem(int slot, ItemStack itemStack) {
-        DebugLog.infoKey("cadeditor.debug.vault.give", slot, itemStack.getDisplayName().getString());
-        NetworkManager.sendToServer(NetworkManager.GIVE_VAULT_ITEM, new GiveVaultItemPacket(slot, itemStack));
+        int normalizedSlot = normalizeInventorySlot(slot);
+        DebugLog.infoKey("cadeditor.debug.vault.give", normalizedSlot, itemStack.getDisplayName().getString());
+        NetworkManager.sendToServer(NetworkManager.GIVE_VAULT_ITEM, new GiveVaultItemPacket(normalizedSlot, itemStack));
+    }
+
+    public static void giveToSelectedHotbar(ItemStack stack) {
+        Minecraft mc = Minecraft.getInstance();
+        Player player = mc.player;
+        if (player == null) {
+            return;
+        }
+        Inventory inventory = player.getInventory();
+        ItemStack copy = stack.copy();
+        int selected = ((InventoryAccessor) inventory).cadeditor$getSelectedSlot();
+        if (ClientContext.isModInstalledOnServer()) {
+            DebugLog.infoKey("cadeditor.debug.vault.send", selected);
+            giveVaultItem(selected, copy);
+            return;
+        }
+        if (!player.isCreative()) {
+            ClientUtil.showMessage(ModTexts.Messages.errorServerModRequired(ModTexts.VAULT));
+            DebugLog.infoKey("cadeditor.debug.vault.server_required");
+            return;
+        }
+        int creativeSlot = selected + Inventory.INVENTORY_SIZE;
+        mc.player.connection.send(new ServerboundSetCreativeModeSlotPacket(creativeSlot, copy));
+        ((InventoryAccessor) inventory).cadeditor$getItems().set(selected, copy);
+        player.getInventory().setChanged();
+        player.containerMenu.broadcastChanges();
+        CommonUtil.showVaultItemGiveSuccess(player);
+        DebugLog.infoKey("cadeditor.debug.vault.apply_creative", selected);
     }
 
     public static boolean openVaultSelection(AbstractContainerScreen<?> screen) {
@@ -57,36 +88,27 @@ public final class ClientVaultActionLogic {
             return false;
         }
 
-        int slotIndex = hoveredSlot.getContainerSlot();
-        if (screen instanceof CreativeModeInventoryScreen creative) {
-            if (creative.isInventoryOpen()) {
-                slotIndex = ClientUtil.convertCreativeInventorySlot(slotIndex);
-            }
-        }
-
-        int targetSlot = slotIndex;
-        Slot slotRef = hoveredSlot;
         ModScreenHandler.openListSelectionScreen(ModTexts.VAULT, "vault_item", elements, selectedId -> {
             ItemStack chosen = stacksById.get(selectedId);
             if (chosen == null) {
                 return;
             }
             DebugLog.infoKey("cadeditor.debug.vault.choice", chosen.getHoverName().getString());
-            ItemStack copy = chosen.copy();
-            if (ClientContext.isModInstalledOnServer()) {
-                DebugLog.infoKey("cadeditor.debug.vault.send", targetSlot);
-                giveVaultItem(targetSlot, copy);
-            } else if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.isCreative()) {
-                int slotToUpdate = targetSlot + Inventory.INVENTORY_SIZE;
-                Minecraft.getInstance().player.connection.send(new ServerboundSetCreativeModeSlotPacket(slotToUpdate, copy));
-                slotRef.set(copy);
-                slotRef.setChanged();
-                DebugLog.infoKey("cadeditor.debug.vault.apply_creative", targetSlot);
-            } else {
-                ClientUtil.showMessage(ModTexts.Messages.errorServerModRequired(ModTexts.VAULT));
-                DebugLog.infoKey("cadeditor.debug.vault.server_required");
-            }
+            giveToSelectedHotbar(chosen);
         });
         return true;
+    }
+
+    private static int normalizeInventorySlot(int slot) {
+        int corrected = slot;
+        if (corrected >= Inventory.INVENTORY_SIZE) {
+            corrected -= Inventory.INVENTORY_SIZE;
+        }
+        if (corrected < 0) {
+            corrected = 0;
+        } else if (corrected >= Inventory.INVENTORY_SIZE) {
+            corrected = Inventory.INVENTORY_SIZE - 1;
+        }
+        return corrected;
     }
 }

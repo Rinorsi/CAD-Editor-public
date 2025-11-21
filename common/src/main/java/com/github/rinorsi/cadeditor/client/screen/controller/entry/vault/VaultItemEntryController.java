@@ -9,10 +9,8 @@ import com.github.rinorsi.cadeditor.client.logic.ClientVaultActionLogic;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.EntryController;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultItemEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.vault.VaultItemEntryView;
-import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.world.item.ItemStack;
 
 public class VaultItemEntryController extends EntryController<VaultItemEntryModel, VaultItemEntryView> {
@@ -28,15 +26,10 @@ public class VaultItemEntryController extends EntryController<VaultItemEntryMode
         view.getButtonBox().getChildren().remove(view.getResetButton());
         view.getGiveItemButton().setDisable(!(Minecraft.getInstance().player.isCreative() || ClientContext.isModInstalledOnServer()));
         view.getGiveItemButton().onAction(() -> {
-            int slot = ClientUtil.findSlot(model.getItemStack());
-            if (Minecraft.getInstance().player.isCreative()) {
-                Minecraft.getInstance().player.connection.send(new ServerboundSetCreativeModeSlotPacket(slot, model.getItemStack()));
-                //Minecraft.getInstance().player.getInventory().setItem(slot, model.getItemStack());
-                CommonUtil.showVaultItemGiveSuccess(Minecraft.getInstance().player);
-            } else if (ClientContext.isModInstalledOnServer()) {
-                ClientVaultActionLogic.giveVaultItem(slot, model.getItemStack());
-            } else return;
-            Guapi.getScreenHandler().hideScene();
+            ClientVaultActionLogic.giveToSelectedHotbar(model.getItemStack());
+            if (Minecraft.getInstance().player.isCreative() || ClientContext.isModInstalledOnServer()) {
+                Guapi.getScreenHandler().hideScene();
+            }
         });
         view.getOpenEditorButton().onAction(() -> openEditor(EditorType.STANDARD));
         view.getOpenNBTEditorButton().onAction(() -> openEditor(EditorType.NBT));
