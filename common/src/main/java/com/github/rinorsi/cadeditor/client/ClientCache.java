@@ -297,7 +297,7 @@ public final class ClientCache {
     public static List<TrimPatternSelectionElementModel> getTrimPatternSelectionItems() {
         if (trimPatternSelectionItems == null) {
             trimPatternSelectionItems = registryAccess().lookup(Registries.TRIM_PATTERN)
-                    .map(ClientCache::buildTrimPatternSelectionItems)
+                    .<List<TrimPatternSelectionElementModel>>map(ClientCache::buildTrimPatternSelectionItems)
                     .orElseGet(List::of);
         }
         return trimPatternSelectionItems;
@@ -315,7 +315,7 @@ public final class ClientCache {
     public static List<TrimMaterialSelectionElementModel> getTrimMaterialSelectionItems() {
         if (trimMaterialSelectionItems == null) {
             trimMaterialSelectionItems = registryAccess().lookup(Registries.TRIM_MATERIAL)
-                    .map(ClientCache::buildTrimMaterialSelectionItems)
+                    .<List<TrimMaterialSelectionElementModel>>map(ClientCache::buildTrimMaterialSelectionItems)
                     .orElseGet(List::of);
         }
         return trimMaterialSelectionItems;
