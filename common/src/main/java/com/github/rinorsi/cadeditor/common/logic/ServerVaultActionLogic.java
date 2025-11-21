@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerPlayer;
 public class ServerVaultActionLogic {
     public static void onGiveVaultItem(ServerPlayer player, GiveVaultItemPacket response) {
         player.getInventory().setItem(response.slot(), response.itemStack());
+        player.getInventory().setChanged();
+        player.inventoryMenu.broadcastChanges();
         CommonUtil.showVaultItemGiveSuccess(player);
     }
 }
