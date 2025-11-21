@@ -97,6 +97,7 @@ public class SNBTEditorModel implements EditorModel {
     }
 
     public static class ParseException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
         public ParseException(Throwable cause) {
             super(cause);
         }

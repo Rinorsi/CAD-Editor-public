@@ -61,6 +61,10 @@ allprojects {
         options.release.set((rootProject.hasProperty("java_version") ? rootProject.java_version : "21") as Integer)
     }
 
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+
     ext {
         def slurper = new JsonSlurper()
         def versionsFile = rootProject.file("versions.json")
