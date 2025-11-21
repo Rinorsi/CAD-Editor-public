@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.widget;
 
+import com.github.franckyi.databindings.api.IntegerProperty;
 import com.github.franckyi.guapi.api.node.Node;
 import com.github.franckyi.guapi.api.theme.Skin;
 import com.github.franckyi.guapi.base.node.TextAreaImpl;
@@ -12,6 +13,7 @@ import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter
  */
 public class SyntaxHighlightingTextArea extends TextAreaImpl {
     private final SNBTSyntaxHighlighter highlighter = new SNBTSyntaxHighlighter();
+    private final IntegerProperty errorCursorProperty = IntegerProperty.create(-1);
 
     public SyntaxHighlightingTextArea() {
         this("");
@@ -32,5 +34,13 @@ public class SyntaxHighlightingTextArea extends TextAreaImpl {
 
     public SNBTSyntaxHighlighter getHighlighter() {
         return highlighter;
+    }
+
+    public IntegerProperty errorCursorProperty() {
+        return errorCursorProperty;
+    }
+
+    public int getErrorCursor() {
+        return errorCursorProperty.getValue();
     }
 }

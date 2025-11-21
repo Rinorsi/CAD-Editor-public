@@ -24,7 +24,8 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     private static final String CURSOR_APPEND_CHARACTER = "_";
     private static final int TEXT_COLOR = -2039584;
     private static final int PLACEHOLDER_TEXT_COLOR = 0xCCFFFFFF;
-    private static final int SELECTION_BACKGROUND_COLOR = 0x66FFFFFF;
+    private static final int SELECTION_COLOR = 0x66FFFFFF;
+    private static final int ERROR_TEXT_COLOR = 0xFFFF6666;
     private static final int TOKEN_ADVANCE_PADDING = 2;
     private static final int LINE_SPACING = 2;
 
@@ -60,14 +61,15 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         int cursorIndex = textField.cursor();
         boolean shouldBlink = isFocused() && (Util.getMillis() - focusedTimestamp) / 300L % 2L == 0L;
         boolean cursorInText = cursorIndex < fullText.length();
+        int errorCursor = node.getErrorCursor();
 
         int caretX = getX() + innerPadding();
         int caretY = getY() + innerPadding();
         int lineY = getY() + innerPadding();
         int baseX = getX() + innerPadding();
+        int lineHeightWithSpacing = font.lineHeight + LINE_SPACING;
 
         Iterable<?> visualLines = textField.iterateLines();
-        int lineHeightWithSpacing = font.lineHeight + LINE_SPACING;
         for (Object view : visualLines) {
             int lineStart = beginIndex(view);
             int lineEnd = Math.min(fullText.length(), endIndex(view));
@@ -118,14 +120,46 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
                     int endX = endIndex(selected) > lineEnd
                             ? getX() + getWidth() - innerPadding()
                             : selectionBaseX + font.width(fullText.substring(lineStart, to));
-                    graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_BACKGROUND_COLOR);
+                    graphics.fill(startX, selectionY - 1, endX, selectionY + 1 + font.lineHeight, SELECTION_COLOR);
                 }
                 selectionY += lineHeightWithSpacing;
             }
         }
+
+        renderErrorOverlay(graphics, fullText, errorCursor, baseX, lineHeightWithSpacing);
     }
 
-    private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette, int start, int end, int x, int y) {
+    private void renderErrorOverlay(GuiGraphics graphics, String fullText, int errorCursor, int baseX, int lineHeightWithSpacing) {
+        if (errorCursor < 0 || errorCursor >= fullText.length()) {
+            return;
+        }
+        int lineY = getY() + innerPadding();
+        boolean highlightRest = false;
+        for (Object view : textField.iterateLines()) {
+            int lineStart = beginIndex(view);
+            int lineEnd = Math.min(fullText.length(), endIndex(view));
+            int drawStart = -1;
+            if (!highlightRest) {
+                if (errorCursor > lineEnd) {
+                    // no highlight on this line
+                } else if (errorCursor >= lineStart) {
+                    drawStart = errorCursor;
+                    highlightRest = true;
+                }
+            } else {
+                drawStart = lineStart;
+            }
+            if (drawStart >= 0 && withinContentAreaTopBottom(lineY, lineY + font.lineHeight)) {
+                int startX = baseX + font.width(fullText.substring(lineStart, drawStart));
+                String segment = fullText.substring(drawStart, lineEnd);
+                graphics.drawString(font, segment, startX, lineY, ERROR_TEXT_COLOR);
+            }
+            lineY += lineHeightWithSpacing;
+        }
+    }
+
+    private int drawSegment(GuiGraphics graphics, String fullText, SNBTSyntaxHighlighter highlighter, SyntaxHighlightingPalette palette,
+                             int start, int end, int x, int y) {
         int cursor = x;
         int index = start;
         List<Token> tokens = highlighter.getTokens();
@@ -199,6 +233,40 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
 
     private static int endIndex(Object view) {
         return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
+    }
+    @Override
+    public boolean mouseClicked(double d, double e, int i) {
+        if (this.withinContentAreaPoint(d, e) && i == 0) {
+            ((MultiLineEditBoxMixin) (Object) this).getTextField().setSelecting(net.minecraft.client.gui.screens.Screen.hasShiftDown());
+            double adjustedY = adjustMouseY(e);
+            ((MultiLineEditBoxMixin) (Object) this).invokeSeekCursorScreen(d, adjustedY);
+            return true;
+        }
+        return super.mouseClicked(d, e, i);
+    }
+
+    @Override
+    public boolean mouseDragged(double d, double e, int button, double dx, double dy) {
+        return super.mouseDragged(d, adjustMouseY(e), button, dx, dy);
+    }
+
+    private double adjustMouseY(double screenY) {
+        double contentTop = getY() + innerPadding();
+        double local = screenY - contentTop;
+        if (local <= 0) {
+            return screenY;
+        }
+        double perLine = font.lineHeight + LINE_SPACING;
+        if (perLine <= 0) {
+            return screenY;
+        }
+        int lineIndex = (int)Math.floor(local / perLine);
+        if (lineIndex < 0) lineIndex = 0;
+        double offsetWithinLine = local - lineIndex * perLine;
+        if (offsetWithinLine < 0) offsetWithinLine = 0;
+        if (offsetWithinLine > font.lineHeight) offsetWithinLine = font.lineHeight;
+        double adjustedLocal = lineIndex * font.lineHeight + offsetWithinLine;
+        return contentTop + adjustedLocal;
     }
 
 }

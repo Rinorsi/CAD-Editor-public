@@ -4,6 +4,7 @@ import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
 import com.github.rinorsi.cadeditor.client.screen.model.SNBTEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.view.SNBTEditorView;
+import com.github.rinorsi.cadeditor.client.screen.widget.SyntaxHighlightingTextArea;
 import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -29,6 +30,7 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
         view.addOpenEditorButton(() -> model.changeEditor(EditorType.STANDARD));
         view.addOpenNBTEditorButton(() -> model.changeEditor(EditorType.NBT));
         view.getTextArea().textProperty().bindBidirectional(model.valueProperty());
+        ((SyntaxHighlightingTextArea) view.getTextArea()).errorCursorProperty().bind(model.errorCursorProperty());
         view.getTextArea().setValidator(s -> {
             try {
                 return TagParser.parseTag(s) != null;
@@ -61,5 +63,3 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
         }
     }
 }
-
-
