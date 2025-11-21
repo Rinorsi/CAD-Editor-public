@@ -6,6 +6,7 @@ import static com.github.franckyi.guapi.api.GuapiHelper.translated;
 import java.util.Locale;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -274,6 +275,14 @@ public final class ModTexts {
     public static final MutableComponent FIREWORK_ADD_FADE_COLOR = translated("cadeditor.gui.firework_add_fade_color");
     public static final MutableComponent FIREWORK_ADD_EXPLOSION = translated("cadeditor.gui.firework_add_explosion");
     public static final MutableComponent FIREWORK_FLIGHT_DURATION = translated("cadeditor.gui.firework_flight_duration");
+
+    public static final MutableComponent ITEM_FRAME = translated("cadeditor.gui.item_frame");
+    public static final MutableComponent ITEM_FRAME_FACING = translated("cadeditor.gui.item_frame_facing");
+    public static final MutableComponent ITEM_FRAME_FIXED = translated("cadeditor.gui.item_frame_fixed");
+    public static final MutableComponent ITEM_FRAME_INVISIBLE = translated("cadeditor.gui.item_frame_invisible");
+    public static final MutableComponent ITEM_FRAME_ITEM = translated("cadeditor.gui.item_frame_item");
+    public static final MutableComponent ITEM_FRAME_DROP_CHANCE = translated("cadeditor.gui.item_frame_drop_chance");
+    public static final MutableComponent ITEM_FRAME_ROTATION = translated("cadeditor.gui.item_frame_rotation");
     public static MutableComponent errorServerModRequired(MutableComponent with) {
         return translated("cadeditor.message.error_server_mod", with).withStyle(ChatFormatting.RED);
     }
@@ -401,6 +410,10 @@ public final class ModTexts {
 
     public static MutableComponent give(MutableComponent with) {
         return translated("cadeditor.gui.give", with);
+    }
+
+    public static MutableComponent direction(Direction dir) {
+        return translated("cadeditor.gui.direction." + dir.getSerializedName());
     }
 
     public static MutableComponent soundFilterNamespace(String namespace) {
