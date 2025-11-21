@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.controller.selection;
 import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
 import com.github.rinorsi.cadeditor.client.ClientConfiguration;
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
@@ -10,6 +11,8 @@ import com.github.rinorsi.cadeditor.client.screen.model.selection.element.Select
 import com.github.rinorsi.cadeditor.client.screen.view.selection.ListSelectionScreenView;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ListSelectionScreenController extends AbstractController<ListSelectionScreenModel, ListSelectionScreenView> {
+    private static final Logger LOGGER = LogManager.getLogger("CAD-Editor/Selection");
     private ListSelectionFilter activeFilter;
     private boolean showAllItems;
 
@@ -42,23 +46,9 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         }
         view.getCancelButton().onAction(Guapi.getScreenHandler()::hideScene);
         if (model.isMultiSelect()) {
-            view.getDoneButton().onAction(() -> {
-                if (model.getMultiAction() != null) {
-                    List<ResourceLocation> selectedIds = model.getElements().stream()
-                            .filter(SelectableListSelectionElementModel.class::isInstance)
-                            .map(SelectableListSelectionElementModel.class::cast)
-                            .filter(SelectableListSelectionElementModel::isSelected)
-                            .map(item -> ((ListSelectionElementModel) item).getId())
-                            .collect(Collectors.toCollection(() -> new ArrayList<ResourceLocation>()));
-                    model.getMultiAction().accept(selectedIds);
-                }
-                Guapi.getScreenHandler().hideScene();
-            });
+            view.getDoneButton().onAction(this::confirmMultiSelection);
         } else {
-            view.getDoneButton().onAction(() -> {
-                model.getAction().accept(view.getListView().getFocusedElement().getId().toString());
-                Guapi.getScreenHandler().hideScene();
-            });
+            view.getDoneButton().onAction(this::confirmSingleSelection);
         }
         refreshButton();
         filter("");
@@ -127,4 +117,45 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
             selectable.selectedProperty().addListener(this::refreshButton);
         }
     }
+
+    private void confirmSingleSelection() {
+        ListSelectionElementModel focused = view.getListView().getFocusedElement();
+        if (focused == null) {
+            return;
+        }
+        runAndClose(() -> {
+            if (model.getAction() != null) {
+                model.getAction().accept(focused.getId().toString());
+            }
+        });
+    }
+
+    private void confirmMultiSelection() {
+        runAndClose(() -> {
+            if (model.getMultiAction() == null) {
+                return;
+            }
+            List<ResourceLocation> selectedIds = model.getElements().stream()
+                    .filter(SelectableListSelectionElementModel.class::isInstance)
+                    .map(SelectableListSelectionElementModel.class::cast)
+                    .filter(SelectableListSelectionElementModel::isSelected)
+                    .map(item -> ((ListSelectionElementModel) item).getId())
+                    .collect(Collectors.toCollection(() -> new ArrayList<ResourceLocation>()));
+            model.getMultiAction().accept(selectedIds);
+        });
+    }
+
+    private void runAndClose(Runnable action) {
+        try {
+            if (action != null) {
+                action.run();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to apply selection for '{}'", model.getTitle().getString(), e);
+            ClientUtil.showMessage(ModTexts.Messages.ERROR_GENERIC);
+        } finally {
+            Guapi.getScreenHandler().hideScene();
+        }
+    }
+
 }

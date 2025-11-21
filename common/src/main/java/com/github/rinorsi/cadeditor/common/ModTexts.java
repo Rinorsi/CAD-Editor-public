@@ -6,6 +6,7 @@ import static com.github.franckyi.guapi.api.GuapiHelper.translated;
 import java.util.Locale;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -48,6 +49,13 @@ public final class ModTexts {
     public static final MutableComponent DEBUG_MODE = translated("cadeditor.gui.debug_mode");
     public static final MutableComponent DEFAULT_POTION = translated("cadeditor.gui.default_potion");
     public static final MutableComponent DISPLAY = translated("cadeditor.gui.display");
+    public static final MutableComponent ITEM_FRAME = translated("cadeditor.gui.item_frame");
+    public static final MutableComponent ITEM_FRAME_ITEM = translated("cadeditor.gui.item_frame_item");
+    public static final MutableComponent ITEM_FRAME_DROP_CHANCE = translated("cadeditor.gui.item_frame_drop_chance");
+    public static final MutableComponent ITEM_FRAME_ROTATION = translated("cadeditor.gui.item_frame_rotation");
+    public static final MutableComponent ITEM_FRAME_FIXED = translated("cadeditor.gui.item_frame_fixed");
+    public static final MutableComponent ITEM_FRAME_INVISIBLE = translated("cadeditor.gui.item_frame_invisible");
+    public static final MutableComponent ITEM_FRAME_FACING = translated("cadeditor.gui.item_frame_facing");
     public static final MutableComponent DONE = translated("gui.done").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent DURATION = translated("cadeditor.gui.duration");
     public static final MutableComponent EFFECT = translated("cadeditor.gui.effect");
@@ -375,6 +383,10 @@ public final class ModTexts {
 
     public static MutableComponent equipmentSlot(net.minecraft.world.entity.EquipmentSlot slot) {
         return translated("cadeditor.gui.equipment_slot." + slot.getName());
+    }
+
+    public static MutableComponent direction(Direction direction) {
+        return translated("cadeditor.gui.direction." + direction.getSerializedName());
     }
 
     public static MutableComponent gui(String s) {

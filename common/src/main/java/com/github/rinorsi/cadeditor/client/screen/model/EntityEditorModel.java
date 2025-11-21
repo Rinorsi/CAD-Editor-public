@@ -6,6 +6,7 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityAttributesCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityEquipmentCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityGeneralCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityItemFrameCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMountCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntitySpawnSettingsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityVillagerDataCategoryModel;
@@ -20,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
@@ -61,6 +63,9 @@ public class EntityEditorModel extends StandardEditorModel {
         }
         if (entity instanceof Mob) {
             getCategories().add(new EntitySpawnSettingsCategoryModel(this));
+        }
+        if (isItemFrameLike(entity)) {
+            getCategories().add(new EntityItemFrameCategoryModel(this));
         }
         if (entity instanceof AbstractVillager) {
             getCategories().add(new EntityVillagerDataCategoryModel(this));
@@ -116,6 +121,21 @@ public class EntityEditorModel extends StandardEditorModel {
                 || tag.contains("OwnerUUID")
                 || tag.contains("OwnerUUIDMost")
                 || tag.contains("OwnerUUIDLeast");
+    }
+
+    private boolean isItemFrameLike(Entity entity) {
+        if (entity != null) {
+            EntityType<?> type = entity.getType();
+            if (type == EntityType.ITEM_FRAME || type == EntityType.GLOW_ITEM_FRAME) {
+                return true;
+            }
+        }
+        CompoundTag tag = getContext().getTag();
+        if (tag == null) {
+            return false;
+        }
+        String id = tag.getStringOr("id", "");
+        return "minecraft:item_frame".equals(id) || "minecraft:glow_item_frame".equals(id);
     }
 
     public void handleEntityReplaced(CompoundTag newTag) {
