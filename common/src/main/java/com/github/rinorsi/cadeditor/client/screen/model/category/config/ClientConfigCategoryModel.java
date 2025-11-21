@@ -16,6 +16,8 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
     private EnumEntryModel<DebugMode> guapiDebugModeEntry;
     private EnumEntryModel<SyntaxHighlightingPreset> syntaxHighlightingPresetEntry;
     private IntegerEntryModel selectionScreenMaxItemsEntry;
+    private IntegerEntryModel snbtLineSpacingEntry;
+    private StringEntryModel snbtSelectionColorEntry;
 
     public ClientConfigCategoryModel(ConfigEditorScreenModel editor) {
         super(ModTexts.CLIENT, editor);
@@ -32,8 +34,11 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
                         .withTextFactory(SyntaxHighlightingPreset::toComponent)
                         .withWeight(2),
                 selectionScreenMaxItemsEntry = new IntegerEntryModel(this, ModTexts.SELECTION_SCREEN_MAX_ITEMS, ClientConfiguration.INSTANCE.getSelectionScreenMaxItems(), ClientConfiguration.INSTANCE::setSelectionScreenMaxItems).withWeight(2),
+                snbtLineSpacingEntry = new IntegerEntryModel(this, ModTexts.SNBT_LINE_SPACING, ClientConfiguration.INSTANCE.getSnbtLineSpacing(), ClientConfiguration.INSTANCE::setSnbtLineSpacing, value -> value >= 0 && value <= 16).withWeight(2),
+                snbtSelectionColorEntry = new StringEntryModel(this, ModTexts.SNBT_SELECTION_COLOR, ClientConfiguration.INSTANCE.getSnbtSelectionBackgroundColorHex(), ClientConfiguration.INSTANCE::setSnbtSelectionBackgroundColorHex).withWeight(2),
                 new ActionEntryModel(this, ModTexts.RELOAD_CONFIG, this::reload)
         );
+        snbtSelectionColorEntry.setPlaceholder("0x66FFFFFF");
     }
 
     private void reload() {
@@ -46,6 +51,8 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
         guapiDebugModeEntry.setValue(ClientConfiguration.INSTANCE.getGuapiDebugMode());
         syntaxHighlightingPresetEntry.setValue(ClientConfiguration.INSTANCE.getSyntaxHighlightingPreset());
         selectionScreenMaxItemsEntry.setValue(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems());
+        snbtLineSpacingEntry.setValue(ClientConfiguration.INSTANCE.getSnbtLineSpacing());
+        snbtSelectionColorEntry.setValue(ClientConfiguration.INSTANCE.getSnbtSelectionBackgroundColorHex());
     }
 
     @Override

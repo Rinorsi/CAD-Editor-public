@@ -31,6 +31,8 @@ public final class ClientConfiguration {
     private int selectionScreenMaxItems;
     private String lastSeenUpdateLogVersion;
     private String syntaxHighlightingPreset;
+    private int snbtLineSpacing;
+    private int snbtSelectionBackgroundColor;
 
     private ClientConfiguration() {
         version = 0;
@@ -40,6 +42,8 @@ public final class ClientConfiguration {
         selectionScreenMaxItems = 100;
         lastSeenUpdateLogVersion = "";
         syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
+        snbtLineSpacing = 2;
+        snbtSelectionBackgroundColor = 0x66FFFFFF;
     }
 
     public int getEditorScale() {
@@ -113,6 +117,64 @@ public final class ClientConfiguration {
         }
     }
 
+    public int getSnbtLineSpacing() {
+        return Math.max(0, snbtLineSpacing);
+    }
+
+    public void setSnbtLineSpacing(int spacing) {
+        int sanitized = Math.max(0, spacing);
+        if (this.snbtLineSpacing != sanitized) {
+            this.snbtLineSpacing = sanitized;
+            changed = true;
+        }
+    }
+
+    public int getSnbtSelectionBackgroundColor() {
+        return snbtSelectionBackgroundColor == 0 ? 0x66FFFFFF : snbtSelectionBackgroundColor;
+    }
+
+    public void setSnbtSelectionBackgroundColor(int color) {
+        if (this.snbtSelectionBackgroundColor != color) {
+            this.snbtSelectionBackgroundColor = color;
+            changed = true;
+        }
+    }
+
+    public String getSnbtSelectionBackgroundColorHex() {
+        return "0x%08X".formatted(getSnbtSelectionBackgroundColor());
+    }
+
+    public void setSnbtSelectionBackgroundColorHex(String value) {
+        if (value == null) {
+            return;
+        }
+        String sanitized = value.trim();
+        if (sanitized.isEmpty()) {
+            return;
+        }
+        try {
+            int parsed = parseColorString(sanitized);
+            setSnbtSelectionBackgroundColor(parsed);
+        } catch (NumberFormatException ex) {
+            LOGGER.warn("Invalid SNBT selection highlight color '{}'", value);
+        }
+    }
+
+    private static int parseColorString(String raw) {
+        String normalized = raw;
+        if (normalized.startsWith("#")) {
+            normalized = normalized.substring(1);
+        }
+        if (normalized.startsWith("0x") || normalized.startsWith("0X")) {
+            normalized = normalized.substring(2);
+        }
+        if (normalized.length() > 8) {
+            normalized = normalized.substring(normalized.length() - 8);
+        }
+        long parsed = Long.parseUnsignedLong(normalized, 16);
+        return (int) parsed;
+    }
+
     public static void load() {
         Path source = null;
         if (Files.exists(CLIENT_CONFIG_FILE)) {
@@ -174,6 +236,12 @@ public final class ClientConfiguration {
         }
         if (syntaxHighlightingPreset == null || syntaxHighlightingPreset.isBlank()) {
             syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
+        }
+        if (snbtLineSpacing < 0) {
+            snbtLineSpacing = 2;
+        }
+        if (snbtSelectionBackgroundColor == 0) {
+            snbtSelectionBackgroundColor = 0x66FFFFFF;
         }
     }
 }

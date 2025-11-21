@@ -13,6 +13,7 @@ public class SNBTEditorModel implements EditorModel {
     private final StringProperty valueProperty;
     private final ObservableBooleanValue validProperty;
     private final ObjectProperty<SNBTPreviewNode> previewRootProperty;
+    private final ObjectProperty<Integer> parseErrorIndexProperty;
 
     public SNBTEditorModel(EditorContext<?> context) {
         this.context = context;
@@ -25,6 +26,7 @@ public class SNBTEditorModel implements EditorModel {
             }
         });
         previewRootProperty = ObjectProperty.create(SNBTPreviewNode.fromTag(context.getTag()));
+        parseErrorIndexProperty = ObjectProperty.create(null);
         valueProperty.addListener(value -> refreshPreview());
     }
 
@@ -44,11 +46,17 @@ public class SNBTEditorModel implements EditorModel {
         return previewRootProperty;
     }
 
+    public ObjectProperty<Integer> parseErrorIndexProperty() {
+        return parseErrorIndexProperty;
+    }
+
     private void refreshPreview() {
         try {
             previewRootProperty().setValue(SNBTPreviewNode.fromTag(TagParser.parseTag(getValue())));
+            parseErrorIndexProperty().setValue(null);
         } catch (CommandSyntaxException e) {
             previewRootProperty().setValue(null);
+            parseErrorIndexProperty().setValue(clampCursorToValueLength(e.getCursor()));
         }
     }
 
@@ -56,8 +64,10 @@ public class SNBTEditorModel implements EditorModel {
     public void apply() {
         try {
             context.setTag(TagParser.parseTag(getValue()));
+            parseErrorIndexProperty().setValue(null);
         } catch (CommandSyntaxException e) {
-            throw new RuntimeException(e);
+            parseErrorIndexProperty().setValue(clampCursorToValueLength(e.getCursor()));
+            throw new ParseException(e);
         }
     }
 
@@ -69,5 +79,26 @@ public class SNBTEditorModel implements EditorModel {
     @Override
     public ObservableBooleanValue validProperty() {
         return validProperty;
+    }
+
+    private int clampCursorToValueLength(int cursor) {
+        String value = getValue();
+        if (value == null) {
+            return Math.max(0, cursor);
+        }
+        int length = value.length();
+        if (cursor < 0) {
+            return 0;
+        }
+        if (cursor > length) {
+            return length;
+        }
+        return cursor;
+    }
+
+    public static class ParseException extends RuntimeException {
+        public ParseException(Throwable cause) {
+            super(cause);
+        }
     }
 }

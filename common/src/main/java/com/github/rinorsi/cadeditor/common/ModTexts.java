@@ -178,6 +178,8 @@ public final class ModTexts {
     public static final MutableComponent SNBT_PREVIEW = translated("cadeditor.gui.snbt_preview");
     public static final MutableComponent SNBT_PREVIEW_INVALID = translated("cadeditor.gui.snbt_preview_invalid").withStyle(ChatFormatting.RED);
     public static final MutableComponent SNBT_PREVIEW_TOGGLE = translated("cadeditor.gui.snbt_preview_toggle");
+    public static final MutableComponent SNBT_LINE_SPACING = translated("cadeditor.gui.snbt_line_spacing");
+    public static final MutableComponent SNBT_SELECTION_COLOR = translated("cadeditor.gui.snbt_selection_color");
     public static final MutableComponent PERMISSION_LEVEL = translated("cadeditor.gui.permission_level");
     public static final MutableComponent CREATIVE_ONLY = translated("cadeditor.gui.creative_only");
     public static final MutableComponent BLOCK_STATE = translated("cadeditor.gui.block_state");
@@ -445,6 +447,7 @@ public final class ModTexts {
         public static final MutableComponent NO_PERMISSION = prefixed(translated("cadeditor.message.no_permission")).withStyle(ChatFormatting.RED);
         public static final MutableComponent NO_BLOCK_DATA = prefixed(translated("cadeditor.message.no_block_data")).withStyle(ChatFormatting.RED);
         public static final MutableComponent VAULT_ITEM_GIVE_SUCCESS = prefixed(translated("cadeditor.message.vault_item_give_success")).withStyle(ChatFormatting.GREEN);
+        public static final MutableComponent SNBT_PARSE_ERROR = prefixed(translated("cadeditor.message.snbt_parse_error")).withStyle(ChatFormatting.RED);
 
         public static MutableComponent successUpdate(MutableComponent arg) {
             return prefixed(translated("cadeditor.message.success_update", arg)).withStyle(ChatFormatting.GREEN);

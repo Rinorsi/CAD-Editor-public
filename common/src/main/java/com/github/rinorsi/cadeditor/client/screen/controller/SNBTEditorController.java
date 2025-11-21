@@ -2,10 +2,12 @@ package com.github.rinorsi.cadeditor.client.screen.controller;
 
 import com.github.franckyi.guapi.api.Guapi;
 import com.github.franckyi.guapi.api.mvc.AbstractController;
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.SNBTEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.view.SNBTEditorView;
-import com.github.rinorsi.cadeditor.client.util.texteditor.SNBTSyntaxHighlighter;
+import com.github.rinorsi.cadeditor.client.screen.widget.SyntaxHighlightingTextArea;
 import com.github.rinorsi.cadeditor.common.EditorType;
+import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.nbt.SnbtPrinterTagVisitor;
 import net.minecraft.nbt.TagParser;
@@ -26,8 +28,8 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
     @Override
     public void bind() {
         EditorController.super.bind();
-        view.addOpenEditorButton(() -> model.changeEditor(EditorType.STANDARD));
-        view.addOpenNBTEditorButton(() -> model.changeEditor(EditorType.NBT));
+        view.addOpenEditorButton(() -> runWithParseGuard(() -> model.changeEditor(EditorType.STANDARD)));
+        view.addOpenNBTEditorButton(() -> runWithParseGuard(() -> model.changeEditor(EditorType.NBT)));
         view.getTextArea().textProperty().bindBidirectional(model.valueProperty());
         view.getTextArea().setValidator(s -> {
             try {
@@ -48,7 +50,10 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
         });
         view.getFormatButton().disableProperty().bind(view.getTextArea().validProperty().not());
         view.getFormatButton().onAction(this::format);
-        view.getDoneButton().onAction(model::update);
+        SyntaxHighlightingTextArea textArea = (SyntaxHighlightingTextArea) view.getTextArea();
+        model.parseErrorIndexProperty().addListener(textArea::setParseErrorIndex);
+        textArea.setParseErrorIndex(model.parseErrorIndexProperty().getValue());
+        view.getDoneButton().onAction(() -> runWithParseGuard(model::update));
         view.getCancelButton().onAction(Guapi.getScreenHandler()::hideScene);
     }
 
@@ -56,9 +61,30 @@ public class SNBTEditorController extends AbstractController<SNBTEditorModel, SN
         SnbtPrinterTagVisitor formatter = new SnbtPrinterTagVisitor("  ", 0, new ArrayList<>());
         try {
             model.setValue(formatter.visit(TagParser.parseTag(view.getTextArea().getText())));
+            model.parseErrorIndexProperty().setValue(null);
         } catch (CommandSyntaxException e) {
-            LOGGER.error("无法解析 NBT 标签", e);
+            int cursor = Math.max(0, Math.min(view.getTextArea().getText().length(), e.getCursor()));
+            model.parseErrorIndexProperty().setValue(cursor);
+            notifyParseFailure(e);
         }
+    }
+
+    private void runWithParseGuard(Runnable action) {
+        try {
+            action.run();
+        } catch (SNBTEditorModel.ParseException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof CommandSyntaxException syntaxException) {
+                notifyParseFailure(syntaxException);
+            } else {
+                notifyParseFailure(e);
+            }
+        }
+    }
+
+    private void notifyParseFailure(Exception e) {
+        LOGGER.error("SNBT parse failed", e);
+        ClientUtil.showMessage(ModTexts.Messages.SNBT_PARSE_ERROR);
     }
 }
 
