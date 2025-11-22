@@ -218,28 +218,13 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
         if (mouseX < node.getLeft() || mouseX > node.getRight() || mouseY < node.getTop() || mouseY > node.getBottom()) {
             return;
         }
-        int index = 0;
-        for (T child : children()) {
-            Node childNode = child.getNode();
-            if (childNode == null) {
-                index++;
-                continue;
-            }
-            double childTop = childNode.getTop();
-            double childBottom = childNode.getBottom();
-            if (childTop < node.getTop()) {
-                childTop = node.getTop();
-            }
-            if (childBottom > node.getBottom()) {
-                childBottom = node.getBottom();
-            }
-            if (mouseY < childTop || mouseY >= childBottom) {
-                index++;
-                continue;
-            }
-            child.getNode().handleEvent(target, event);
-            if (event.getTarget() != null) return;
-            index++;
+        T entry = getEntryAtPosition(mouseX, mouseY);
+        if (entry == null) {
+            return;
+        }
+        Node childNode = entry.getNode();
+        if (childNode != null) {
+            childNode.handleEvent(target, event);
         }
     }
 
