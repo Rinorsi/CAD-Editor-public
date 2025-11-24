@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.InfoEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.AttributeModifierEntryModel;
 import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.client.util.NbtUuidHelper;
@@ -42,6 +43,7 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
 
     @Override
     protected void setupEntries() {
+        getEntries().add(new InfoEntryModel(this, ModTexts.ATTRIBUTE_TOOLTIP_INFO));
         ItemStack stack = getParent().getContext().getItemStack();
         modifierIds.clear();
         boolean hasEntries = addComponentEntries(stack.get(DataComponents.ATTRIBUTE_MODIFIERS));
@@ -60,7 +62,7 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
 
     @Override
     public int getEntryHeight() {
-        return 50;
+        return 40;
     }
 
     @Override

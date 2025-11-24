@@ -1,5 +1,6 @@
 package com.github.franckyi.guapi.api;
 
+import com.github.rinorsi.cadeditor.client.util.AttributeTooltipFormatter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -85,7 +86,7 @@ public final class RenderHelper {
         } else {
             context = Item.TooltipContext.EMPTY;
         }
-        List<Component> lines = itemStack.getTooltipLines(context, minecraft.player, TooltipFlag.Default.NORMAL);
+        List<Component> lines = AttributeTooltipFormatter.buildTooltipLines(itemStack, context, minecraft.player, TooltipFlag.Default.NORMAL);
         renderTooltip(guiGraphics, font(), lines, itemStack.getTooltipImage(), x, y);
     }
 

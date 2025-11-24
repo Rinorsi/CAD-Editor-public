@@ -442,5 +442,6 @@
   "cadeditor.text.entity": "Entité",
   "cadeditor.text.item": "Item",
   "cadeditor.text.vault": "Favoris",
-  "cadeditor.gui.equipment_slot.saddle": "Selle"
+  "cadeditor.gui.equipment_slot.saddle": "Selle",
+  "cadeditor.gui.attribute_tooltip_info": "Remarque : les valeurs affichées dans l'infobulle sont les valeurs finales (base + modificateurs). La liste ci-dessous montre les modificateurs bruts."
 }

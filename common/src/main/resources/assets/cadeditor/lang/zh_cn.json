@@ -586,5 +586,6 @@
   "cadeditor.gui.color_light_purple": "粉紫",
   "cadeditor.gui.color_yellow": "黄色",
   "cadeditor.gui.color_white": "白色",
-  "cadeditor.gui.equipment_slot.saddle": "鞍具"
+  "cadeditor.gui.equipment_slot.saddle": "鞍具",
+  "cadeditor.gui.attribute_tooltip_info": "提示： \n物品悬停中显示的属性是最终值（基础值+加成）；\n下方列表显示各项加成值。"
 }

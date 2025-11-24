@@ -263,7 +263,7 @@
   "cadeditor.gui.hide_other_tooltip.1": "- Potion effects",
   "cadeditor.gui.hide_other_tooltip.2": "- Shield patterns",
   "cadeditor.gui.hide_other_tooltip.3": "- Enchanted Book enchantments",
-  "cadeditor.gui.hide_other_tooltip.4": "- Written Book author and \u201coriginal/copy\u201d",
+  "cadeditor.gui.hide_other_tooltip.4": "- Written Book author and “original/copy”",
   "cadeditor.gui.hide_other_tooltip.5": "- Explosion data",
   "cadeditor.gui.hide_other_tooltip.6": "- Fireworks data",
   "cadeditor.gui.hide_other_tooltip.7": "- Map tooltip",
@@ -379,7 +379,7 @@
   "cadeditor.gui.show_icon": "Show Icon",
   "cadeditor.gui.show_particles": "Show Particles",
   "cadeditor.gui.snbt_preview": "Structure Preview",
-  "cadeditor.gui.snbt_preview_invalid": "Invalid SNBT \u2013 preview unavailable",
+  "cadeditor.gui.snbt_preview_invalid": "Invalid SNBT – preview unavailable",
   "cadeditor.gui.snbt_preview_toggle": "Toggle Structure Preview",
   "cadeditor.gui.silent": "Silent",
   "cadeditor.gui.slot": "Slot",
@@ -449,7 +449,7 @@
   "cadeditor.gui.trim_show_tooltip": "Show In Tooltip",
   "cadeditor.gui.unbreakable": "Unbreakable",
   "cadeditor.gui.underline": "Underline",
-  "cadeditor.gui.update_bullet": "\u2022 %s",
+  "cadeditor.gui.update_bullet": "• %s",
   "cadeditor.gui.update_log": "Update Log",
   "cadeditor.gui.update_log.section.features": "New Features",
   "cadeditor.gui.update_log.section.fixes": "Bug Fixes",
@@ -582,5 +582,6 @@
   "cadeditor.gui.color_red": "Red",
   "cadeditor.gui.color_light_purple": "Light Purple",
   "cadeditor.gui.color_yellow": "Yellow",
-  "cadeditor.gui.color_white": "White"
+  "cadeditor.gui.color_white": "White",
+  "cadeditor.gui.attribute_tooltip_info": "Tooltip note: weapon stats shown in the tooltip are the final value (base + modifiers). The entries below list the raw modifier values."
 }

@@ -445,5 +445,6 @@
   "cadeditor.text.entity": "Сущность",
   "cadeditor.text.item": "Предмет",
   "cadeditor.text.vault": "Хранилище",
-  "cadeditor.gui.equipment_slot.saddle": "Седло"
+  "cadeditor.gui.equipment_slot.saddle": "Седло",
+  "cadeditor.gui.attribute_tooltip_info": "Примечание: в подсказке показывается итоговое значение (база + модификаторы). Ниже перечислены сами модификаторы."
 }

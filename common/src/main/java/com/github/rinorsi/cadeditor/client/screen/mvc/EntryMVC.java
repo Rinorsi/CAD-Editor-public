@@ -37,6 +37,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
     @Override
     public EntryView setup(EntryModel model) {
         return switch (model.getType()) {
+            case INFO ->
+                    MVC.createViewAndBind((InfoEntryModel) model, InfoEntryView::new, InfoEntryController::new);
             case STRING ->
                     MVC.createViewAndBind((StringEntryModel) model, StringEntryView::new, StringEntryController::new);
             case STRING_WITH_ACTIONS ->

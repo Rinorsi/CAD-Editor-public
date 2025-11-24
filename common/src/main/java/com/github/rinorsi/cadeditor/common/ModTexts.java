@@ -182,6 +182,7 @@ public final class ModTexts {
     public static final MutableComponent ZOOM_OUT = translated("cadeditor.gui.zoom_out");
     public static final MutableComponent ZOOM_RESET = translated("cadeditor.gui.zoom_reset");
     public static final MutableComponent SELECTION_SCREEN_MAX_ITEMS = translated("cadeditor.gui.selection_screen_max_items");
+    public static final MutableComponent ATTRIBUTE_TOOLTIP_INFO = translated("cadeditor.gui.attribute_tooltip_info").withStyle(ChatFormatting.GRAY);
     public static final MutableComponent LEVEL = translated("cadeditor.gui.level");
     public static final MutableComponent COMMON = translated("cadeditor.gui.common");
     public static final MutableComponent SNBT_PREVIEW = translated("cadeditor.gui.snbt_preview");
