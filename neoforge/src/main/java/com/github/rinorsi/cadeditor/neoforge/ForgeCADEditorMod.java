@@ -84,7 +84,12 @@ public final class ForgeCADEditorMod {
 
     private void onPlayerLoggedIn(final PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
-            ServerEventHandler.onPlayerJoin(serverPlayer);
+            var server = serverPlayer.level().getServer();
+            if (server != null) {
+                server.execute(() -> ServerEventHandler.onPlayerJoin(serverPlayer));
+            } else {
+                ServerEventHandler.onPlayerJoin(serverPlayer);
+            }
         }
     }
 
@@ -116,3 +121,5 @@ public final class ForgeCADEditorMod {
         }
     }
 }
+
+
