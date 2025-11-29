@@ -8,11 +8,13 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.extensions.ICommonPacketListener;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,6 +39,9 @@ public class PlatformUtilImpl {
     }
 
     public static <P> void sendToClient(ServerPlayer player, NetworkHandler.Client<P> handler, P packet) {
+        if (!(player.connection instanceof ICommonPacketListener listener) || !NetworkRegistry.hasChannel(listener, handler.getLocation())) {
+            return;
+        }
         PacketDistributor.sendToPlayer(player, wrap(handler, packet));
     }
 
