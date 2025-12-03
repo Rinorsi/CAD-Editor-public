@@ -4,6 +4,11 @@
     "date": "",
     "changelog": "\nCADE（Component And Data Editor）是在 IBE Editor（作者 Skye，MIT 许可）基础上重置与重构的个人维护版。本项目与 Skye 无隶属关系或官方背书；已在源码与许可证中完整保留原版权与署名。"
   },
+    "0.1.1": {
+"type": "release",
+"date": "2025-12-03",
+"changelog": "修复了局域网联机玩家无法进入游戏的问题。\n- 优化了mixin字段读取逻辑，兼容旧版fabricloader \n- 优化了多选页缓存机制"
+},
     "0.1.0": {
 "type": "release",
 "date": "2025-11-11",

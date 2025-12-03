@@ -7,7 +7,6 @@ import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPal
 import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPreset;
 import com.github.rinorsi.cadeditor.mixin.MultiLineEditBoxMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldMixin;
-import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldStringViewAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -16,6 +15,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.network.chat.Component;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.util.List;
 
 public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.guapi.base.theme.vanilla.delegate.VanillaTextAreaSkinDelegate<SyntaxHighlightingTextArea> {
@@ -227,13 +229,6 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         return adjusted;
     }
 
-    private static int beginIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$beginIndex();
-    }
-
-    private static int endIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
-    }
     @Override
     public boolean mouseClicked(double d, double e, int i) {
         if (this.withinContentAreaPoint(d, e) && i == 0) {
@@ -269,4 +264,37 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
         return contentTop + adjustedLocal;
     }
 
+    private static int beginIndex(Object view) {
+        return getComponentIndex(view, 0);
+    }
+
+    private static int endIndex(Object view) {
+        return getComponentIndex(view, 1);
+    }
+
+    private static int getComponentIndex(Object view, int componentIndex) {
+        Class<?> cls = view.getClass();
+        try {
+            RecordComponent[] components = cls.getRecordComponents();
+            if (components != null && components.length > componentIndex) {
+                Method accessor = components[componentIndex].getAccessor();
+                accessor.setAccessible(true);
+                Object value = accessor.invoke(view);
+                if (value instanceof Integer integer) {
+                    return integer;
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        Field[] fields = cls.getDeclaredFields();
+        if (fields.length > componentIndex && fields[componentIndex].getType() == int.class) {
+            try {
+                Field field = fields[componentIndex];
+                field.setAccessible(true);
+                return field.getInt(view);
+            } catch (IllegalAccessException ignored) {
+            }
+        }
+        throw new IllegalStateException("Unable to read StringView component " + componentIndex + " from " + cls.getName());
+    }
 }

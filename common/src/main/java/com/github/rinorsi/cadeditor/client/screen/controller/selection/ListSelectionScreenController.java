@@ -12,8 +12,10 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ListSelectionScreenController extends AbstractController<ListSelectionScreenModel, ListSelectionScreenView> {
@@ -31,7 +33,7 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         setupFilterButton();
         setupLoadAllButton();
         if (model.isMultiSelect()) {
-            model.getElements().forEach(item -> initializeSelectableItem(item));
+            initializeSelectableItems();
         } else {
             model.getElements().forEach(item -> {
                 if (item.getId().toString().equals(model.getInitialValue())) {
@@ -120,11 +122,25 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
         }
     }
 
-    private void initializeSelectableItem(ListSelectionElementModel item) {
-        if (item instanceof SelectableListSelectionElementModel selectable) {
-            ResourceLocation id = item.getId();
-            selectable.setSelected(model.getInitiallySelected().contains(id));
-            selectable.selectedProperty().addListener(this::refreshButton);
+    private void initializeSelectableItems() {
+        Set<ResourceLocation> initialSelection = safeInitialSelection();
+        model.getElements().stream()
+                .filter(SelectableListSelectionElementModel.class::isInstance)
+                .map(SelectableListSelectionElementModel.class::cast)
+                .forEach(selectable -> selectable.setSelected(false));
+        if (initialSelection.isEmpty()) {
+            return;
         }
+        model.getElements().forEach(item -> {
+            if (item instanceof SelectableListSelectionElementModel selectable
+                    && initialSelection.contains(item.getId())) {
+                selectable.setSelected(true);
+            }
+        });
+    }
+
+    private Set<ResourceLocation> safeInitialSelection() {
+        Set<ResourceLocation> selected = model.getInitiallySelected();
+        return selected == null ? Collections.emptySet() : selected;
     }
 }

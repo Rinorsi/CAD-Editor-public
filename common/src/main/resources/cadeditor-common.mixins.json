@@ -13,8 +13,7 @@
     "CreativeModeInventoryScreenMixin",
     "EditBoxMixin",
     "MultiLineEditBoxMixin",
-    "MultilineTextFieldMixin",
-    "MultilineTextFieldStringViewAccessor"
+    "MultilineTextFieldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
