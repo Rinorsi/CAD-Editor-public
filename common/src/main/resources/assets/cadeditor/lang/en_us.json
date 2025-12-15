@@ -155,10 +155,10 @@
   "cadeditor.gui.enchantment": "Enchantment",
   "cadeditor.gui.enchantments": "Enchantments",
   "cadeditor.gui.entity_attributes": "Attributes",
-  "cadeditor.gui.entity_equipment": "Equipment & Drops",
-  "cadeditor.gui.entity_spawn": "Spawn & Behaviour",
+  "cadeditor.gui.entity_equipment": "Equipment",
+  "cadeditor.gui.entity_spawn": "Spawn & AI",
   "cadeditor.gui.entity_taming": "Taming",
-  "cadeditor.gui.entity_mount": "Mount & Riding",
+  "cadeditor.gui.entity_mount": "Mounts",
   "cadeditor.gui.expand": "Expand All",
   "cadeditor.gui.feet": "Boots",
   "cadeditor.gui.fire": "Fire Duration",
@@ -223,7 +223,7 @@
   "cadeditor.gui.lodestone": "Lodestone",
   "cadeditor.gui.lodestone_target": "Bind to Lodestone",
   "cadeditor.gui.lodestone_tracked": "Track Target",
-  "cadeditor.gui.loot_table": "Loot & Drops",
+  "cadeditor.gui.loot_table": "Loot",
   "cadeditor.gui.container_loot": "Container Loot",
   "cadeditor.gui.seed": "Seed",
   "cadeditor.gui.container_loot_hint_button": "Placement Tip",
@@ -242,7 +242,7 @@
   "cadeditor.gui.map_decoration_z": "Z",
   "cadeditor.gui.map_id_toggle": "Use Custom Map ID",
   "cadeditor.gui.map_id_value": "Map ID (clear = current)",
-  "cadeditor.gui.map_lock": "Lock Map (freeze updates)",
+  "cadeditor.gui.map_lock": "Lock Map",
   "cadeditor.gui.modifier": "Modifier",
   "cadeditor.gui.move_down": "Move Down",
   "cadeditor.gui.move_up": "Move Up",
@@ -494,4 +494,3 @@
   "cadeditor.gui.color_yellow": "Yellow",
   "cadeditor.gui.color_white": "White"
 }
-

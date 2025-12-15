@@ -7,7 +7,7 @@
     "0.1.1": {
 "type": "release",
 "date": "2025-12-03",
-"changelog": "修复了局域网联机玩家无法进入游戏的问题。\n- 优化了mixin字段读取逻辑，兼容旧版fabricloader \n- 优化了多选页缓存机制"
+"changelog": "修复了局域网联机玩家无法进入游戏的问题。\n- 优化了mixin字段读取逻辑，兼容旧版fabricloader \n- 优化了多选页缓存机制 \n- 优化了部分英文文本过长的问题"
 },
     "0.1.0": {
 "type": "release",

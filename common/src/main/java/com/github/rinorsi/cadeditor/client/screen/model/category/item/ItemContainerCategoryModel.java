@@ -7,7 +7,9 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.world.LockCode;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
@@ -17,6 +19,7 @@ import java.util.Optional;
 
 public class ItemContainerCategoryModel extends ItemEditorCategoryModel {
     private final List<StringEntryModel> slotEntries = new ArrayList<>();
+    private StringEntryModel lockEntry;
 
     public ItemContainerCategoryModel(ItemEditorModel editor) {
         super(ModTexts.CONTAINER_CONTENTS, editor);
@@ -26,6 +29,10 @@ public class ItemContainerCategoryModel extends ItemEditorCategoryModel {
     protected void setupEntries() {
         slotEntries.clear();
         ItemStack stack = getParent().getContext().getItemStack();
+        LockCode lockCode = stack.get(DataComponents.LOCK);
+        String currentLock = lockCode == null || lockCode.equals(LockCode.NO_LOCK) ? "" : lockCode.key();
+        lockEntry = new StringEntryModel(this, ModTexts.LOCK_CODE, currentLock, value -> { });
+        getEntries().add(lockEntry);
         ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
         //TODO UI还得增强，最好是得让玩家一眼就能设定锁匙
         if (contents != null) {
@@ -79,12 +86,33 @@ public class ItemContainerCategoryModel extends ItemEditorCategoryModel {
         } else {
             stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(parsed));
         }
+        String lockValue = Optional.ofNullable(lockEntry == null ? "" : lockEntry.getValue()).orElse("").trim();
+        if (lockValue.isEmpty()) {
+            stack.remove(DataComponents.LOCK);
+        } else {
+            stack.set(DataComponents.LOCK, new LockCode(lockValue));
+        }
         CompoundTag data = getData();
-        if (data != null && data.contains("components")) {
+        if (data != null) {
             CompoundTag components = data.getCompound("components");
-            components.remove("minecraft:container");
-            if (components.isEmpty()) {
-                data.remove("components");
+            if (!components.isEmpty()) {
+                components.remove("minecraft:container");
+                if (lockValue.isEmpty()) {
+                    components.remove("minecraft:lock");
+                } else {
+                    CompoundTag lockComponent = new CompoundTag();
+                    lockComponent.putString("key", lockValue);
+                    components.put("minecraft:lock", lockComponent);
+                }
+                if (components.isEmpty()) {
+                    data.remove("components");
+                }
+            } else if (!lockValue.isEmpty()) {
+                CompoundTag newComponents = new CompoundTag();
+                CompoundTag lockComponent = new CompoundTag();
+                lockComponent.putString("key", lockValue);
+                newComponents.put("minecraft:lock", lockComponent);
+                data.put("components", newComponents);
             }
         }
     }

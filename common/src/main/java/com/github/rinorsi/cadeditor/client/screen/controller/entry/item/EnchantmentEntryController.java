@@ -49,7 +49,7 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
     @Override
     protected void openSelectionScreen() {
         ItemEnchantmentsCategoryModel category = (ItemEnchantmentsCategoryModel) model.getCategory();
-        Set<ResourceLocation> selected = new HashSet<>(category.getExistingEnchantmentIds());
+        Set<ResourceLocation> selected = new HashSet<>();
         ResourceLocation currentId = parseResourceLocation(model.getValue());
         if (currentId != null) {
             selected.add(currentId);
