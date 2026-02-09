@@ -46,8 +46,8 @@ public final class FabricCADEditorModClient implements ClientModInitializer {
 
     private void registerContainerScreenKeyHandler(Screen screen) {
         if (screen instanceof AbstractContainerScreen<?> container) {
-            ScreenKeyboardEvents.allowKeyPress(screen).register((current, key, scancode, modifiers) ->
-                    !ClientEventHandler.onScreenEvent(container, key, scancode));
+            ScreenKeyboardEvents.allowKeyPress(screen).register((current, keyEvent) ->
+                    !ClientEventHandler.onScreenEvent(container, keyEvent.key(), keyEvent.scancode(), keyEvent.modifiers()));
         }
     }
 }

@@ -15,8 +15,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultilineTextField;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -204,24 +205,24 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (isPointInsideContentArea(mouseX, mouseY) && button == 0) {
-            textField.setSelecting(Screen.hasShiftDown());
-            seekCursorWithSpacing(mouseX, mouseY);
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (isPointInsideContentArea(event.x(), event.y()) && event.button() == 0) {
+            textField.setSelecting((event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0);
+            seekCursorWithSpacing(event.x(), event.y());
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        if (super.mouseDragged(event, deltaX, deltaY)) {
             return true;
         }
-        if (isPointInsideContentArea(mouseX, mouseY) && button == 0) {
+        if (isPointInsideContentArea(event.x(), event.y()) && event.button() == 0) {
             textField.setSelecting(true);
-            seekCursorWithSpacing(mouseX, mouseY);
-            textField.setSelecting(Screen.hasShiftDown());
+            seekCursorWithSpacing(event.x(), event.y());
+            textField.setSelecting((event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0);
             return true;
         }
         return false;

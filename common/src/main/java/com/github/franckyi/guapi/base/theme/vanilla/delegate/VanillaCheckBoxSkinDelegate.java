@@ -4,6 +4,7 @@ import com.github.franckyi.guapi.api.node.CheckBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.ResourceLocation;
@@ -38,7 +39,7 @@ public class VanillaCheckBoxSkinDelegate extends AbstractButton implements Vanil
     }
 
     @Override
-    public void onPress() {
+    public void onPress(InputWithModifiers input) {
         setSelected(!isSelected());
         node.setChecked(isSelected());
     }

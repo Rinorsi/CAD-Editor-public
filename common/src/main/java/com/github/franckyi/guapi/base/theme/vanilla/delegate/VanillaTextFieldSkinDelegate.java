@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
@@ -48,6 +49,9 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
         node.highlightPositionProperty().addListener(super::setHighlightPos);
         node.placeholderProperty().addListener(this::updatePlaceholder);
         node.textProperty().addListener(this::updatePlaceholder);
+        addFormatter((string, integer) -> node.getTextRenderer() == null
+                ? FormattedCharSequence.forward(string, Style.EMPTY)
+                : renderText(string, integer).getVisualOrderText());
         moveCursorToStart(false); // fix in order to render text
         updateValidator();
         updateRenderer();
@@ -77,11 +81,6 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
     }
 
     private void updateRenderer() {
-        if (node.getTextRenderer() == null) {
-            setFormatter((string, integer) -> FormattedCharSequence.forward(string, Style.EMPTY));
-        } else {
-            setFormatter((string, integer) -> renderText(string, integer).getVisualOrderText());
-        }
         moveCursorToStart(false); // fix in order to render text
     }
 
@@ -131,15 +130,18 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
+    protected void onDrag(MouseButtonEvent event, double deltaX, double deltaY) {
         int displayPos = self.getDisplayPos();
         Font font = Minecraft.getInstance().font;
         FormattedText string = font.substrByWidth(renderText(getValue().substring(displayPos), displayPos), getInnerWidth());
-        setHighlightPos(font.substrByWidth(string, Mth.floor(mouseX) - getX() - 4).getString().length() + displayPos);
+        setHighlightPos(font.substrByWidth(string, Mth.floor(event.x()) - getX() - 4).getString().length() + displayPos);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         Font font = Minecraft.getInstance().font;
         if (!isVisible()) {
             return false;
@@ -192,7 +194,7 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
 
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
-                FormattedCharSequence formatted = self.getFormatter().apply(s1, self.getDisplayPos());
+                FormattedCharSequence formatted = renderText(s1, self.getDisplayPos()).getVisualOrderText();
                 guiGraphics.drawString(font, formatted, l, i1, textColor);
                 j1 = l + font.width(formatted);
             }
@@ -207,7 +209,7 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
             }
 
             if (!s.isEmpty() && flag && j < s.length()) {
-                guiGraphics.drawString(font, self.getFormatter().apply(s.substring(j), self.getCursorPos()), j1, i1, textColor);
+                guiGraphics.drawString(font, renderText(s.substring(j), self.getCursorPos()).getVisualOrderText(), j1, i1, textColor);
             }
 
             if (!flag2 && self.getSuggestion() != null) {

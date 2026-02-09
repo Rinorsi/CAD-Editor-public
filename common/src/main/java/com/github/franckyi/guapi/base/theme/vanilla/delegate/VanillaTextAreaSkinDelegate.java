@@ -5,8 +5,9 @@ import com.github.rinorsi.cadeditor.mixin.MultiLineEditBoxMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldMixin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.components.Whence;
-import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 
 @SuppressWarnings("this-escape")
 public class VanillaTextAreaSkinDelegate<N extends TextArea> extends MultiLineEditBox implements VanillaWidgetSkinDelegate {
@@ -69,13 +70,13 @@ public class VanillaTextAreaSkinDelegate<N extends TextArea> extends MultiLineEd
 
     // Mojang somehow broke moving the cursor with the mouse???
     @Override
-    public boolean mouseClicked(double d, double e, int i) {
-        if (isWithinContentArea(d, e) && i == 0) {
-            self.getTextField().setSelecting(Screen.hasShiftDown());
-            self.invokeSeekCursorScreen(d, e);
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (isWithinContentArea(event.x(), event.y()) && event.button() == 0) {
+            self.getTextField().setSelecting((event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0);
+            self.invokeSeekCursorScreen(event.x(), event.y());
             return true;
         } else {
-            return super.mouseClicked(d, e, i);
+            return super.mouseClicked(event, isDoubleClick);
         }
     }
 

@@ -103,7 +103,7 @@ public final class ClientEditorRequestLogic {
     public static void requestSelfEditor(EditorType editorType) {
         var entity = Minecraft.getInstance().player;
         if (ClientContext.isModInstalledOnServer()) {
-            DebugLog.infoKey("cadeditor.debug.request.self.server", entity.getGameProfile().getName());
+            DebugLog.infoKey("cadeditor.debug.request.self.server", entity.getName().getString());
             NetworkManager.sendToServer(NetworkManager.ENTITY_EDITOR_REQUEST, new EntityEditorPacket.Request(editorType, entity.getId()));
         } else {
             DebugLog.infoKey("cadeditor.debug.request.self.missing");

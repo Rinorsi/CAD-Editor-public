@@ -14,16 +14,16 @@ public final class ServerContext {
     private static final Set<UUID> moddedClients = new HashSet<>();
 
     public static void removeModdedClient(ServerPlayer player) {
-        LOGGER.debug("Removing {} from modded clients", player.getGameProfile().getName());
-        moddedClients.remove(player.getGameProfile().getId());
+        LOGGER.debug("Removing {} from modded clients", player.getName().getString());
+        moddedClients.remove(player.getUUID());
     }
 
     public static void addModdedClient(ServerPlayer player, ModNotificationPacket.Client packet) {
-        LOGGER.debug("Adding {} to modded clients", player.getGameProfile().getName());
-        moddedClients.add(player.getGameProfile().getId());
+        LOGGER.debug("Adding {} to modded clients", player.getName().getString());
+        moddedClients.add(player.getUUID());
     }
 
     public static boolean isClientModded(ServerPlayer player) {
-        return moddedClients.contains(player.getGameProfile().getId());
+        return moddedClients.contains(player.getUUID());
     }
 }

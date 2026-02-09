@@ -40,7 +40,7 @@ public final class ForgeCADEditorMod {
         modBus.addListener(this::onCommonInit);
         modBus.addListener(PlatformUtilImpl::registerPayloadHandlers);
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             ClientInit.init();
             modBus.addListener(this::onClientInit);
             modBus.addListener(this::onRegisterKeybindings);
@@ -117,7 +117,7 @@ public final class ForgeCADEditorMod {
 
     private void onKeyPressed(final ScreenEvent.KeyPressed.Pre event) {
         if (event.getScreen() instanceof AbstractContainerScreen<?> screen) {
-            event.setCanceled(ClientEventHandler.onScreenEvent(screen, event.getKeyCode(), event.getScanCode()));
+            event.setCanceled(ClientEventHandler.onScreenEvent(screen, event.getKeyCode(), event.getScanCode(), event.getModifiers()));
         }
     }
 }

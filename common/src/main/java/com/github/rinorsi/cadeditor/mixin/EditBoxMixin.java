@@ -1,12 +1,9 @@
 package com.github.rinorsi.cadeditor.mixin;
 
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
-import java.util.function.BiFunction;
 
 @Mixin(EditBox.class)
 public interface EditBoxMixin {
@@ -45,9 +42,6 @@ public interface EditBoxMixin {
 
     @Accessor("suggestion")
     String getSuggestion();
-
-    @Accessor("formatter")
-    BiFunction<String, Integer, FormattedCharSequence> getFormatter();
 
     @Invoker("getMaxLength")
     int invokeGetMaxLength();

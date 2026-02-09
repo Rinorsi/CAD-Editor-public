@@ -8,6 +8,7 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -818,9 +819,14 @@ public final class ClientCache {
     }
 
     private static Supplier<TextureAtlasSprite> mobEffectSpriteSupplier(Holder<MobEffect> holder) {
-        return () -> Minecraft.getInstance()
-                .getGuiSprites()
-                .getSprite(net.minecraft.client.gui.Gui.getMobEffectSprite(holder));
+        return () -> {
+            var texture = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS);
+            if (texture instanceof TextureAtlas atlas) {
+                return atlas.getSprite(Gui.getMobEffectSprite(holder));
+            }
+            return ((TextureAtlas) Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS))
+                    .getSprite(Gui.getMobEffectSprite(holder));
+        };
     }
 
     private static ItemStack patternIconStack(ResourceLocation patternId) {

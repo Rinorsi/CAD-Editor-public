@@ -12,6 +12,9 @@ import com.github.franckyi.guapi.base.event.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
@@ -134,32 +137,32 @@ public final class ScreenHandlerImpl implements ScreenHandler {
         heightProperty.setValue(height);
     }
 
-    private boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return handleEvent(ScreenEventType.MOUSE_CLICKED, new MouseButtonEventImpl(mouseX, mouseY, button));
+    private boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        return handleEvent(ScreenEventType.MOUSE_CLICKED, new MouseButtonEventImpl(event.x(), event.y(), event.button()));
     }
 
-    private boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return handleEvent(ScreenEventType.MOUSE_RELEASED, new MouseButtonEventImpl(mouseX, mouseY, button));
+    private boolean mouseReleased(MouseButtonEvent event) {
+        return handleEvent(ScreenEventType.MOUSE_RELEASED, new MouseButtonEventImpl(event.x(), event.y(), event.button()));
     }
 
-    private boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return handleEvent(ScreenEventType.MOUSE_DRAGGED, new MouseDragEventImpl(mouseX, mouseY, button, deltaX, deltaY));
+    private boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        return handleEvent(ScreenEventType.MOUSE_DRAGGED, new MouseDragEventImpl(event.x(), event.y(), event.button(), deltaX, deltaY));
     }
 
     private boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         return handleEvent(ScreenEventType.MOUSE_SCOLLED, new MouseScrollEventImpl(mouseX, mouseY, deltaX, deltaY));
     }
 
-    private boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return handleEvent(ScreenEventType.KEY_PRESSED, new KeyEventImpl(keyCode, scanCode, modifiers));
+    private boolean keyPressed(KeyEvent event) {
+        return handleEvent(ScreenEventType.KEY_PRESSED, new KeyEventImpl(event.key(), event.scancode(), event.modifiers()));
     }
 
-    private boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        return handleEvent(ScreenEventType.KEY_RELEASED, new KeyEventImpl(keyCode, scanCode, modifiers));
+    private boolean keyReleased(KeyEvent event) {
+        return handleEvent(ScreenEventType.KEY_RELEASED, new KeyEventImpl(event.key(), event.scancode(), event.modifiers()));
     }
 
-    private boolean charTyped(char chr, int modifiers) {
-        return handleEvent(ScreenEventType.CHAR_TYPED, new TypeEventImpl(chr, modifiers));
+    private boolean charTyped(CharacterEvent event) {
+        return handleEvent(ScreenEventType.CHAR_TYPED, new TypeEventImpl((char) event.codepoint(), event.modifiers()));
     }
 
     private void mouseMoved(double mouseX, double mouseY) {
@@ -205,18 +208,18 @@ public final class ScreenHandlerImpl implements ScreenHandler {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return ScreenHandlerImpl.this.mouseClicked(mouseX, mouseY, button);
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            return ScreenHandlerImpl.this.mouseClicked(event, isDoubleClick);
         }
 
         @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            return ScreenHandlerImpl.this.mouseReleased(mouseX, mouseY, button);
+        public boolean mouseReleased(MouseButtonEvent event) {
+            return ScreenHandlerImpl.this.mouseReleased(event);
         }
 
         @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-            return ScreenHandlerImpl.this.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+            return ScreenHandlerImpl.this.mouseDragged(event, deltaX, deltaY);
         }
 
         @Override
@@ -225,18 +228,18 @@ public final class ScreenHandlerImpl implements ScreenHandler {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return ScreenHandlerImpl.this.keyPressed(keyCode, scanCode, modifiers);
+        public boolean keyPressed(KeyEvent event) {
+            return ScreenHandlerImpl.this.keyPressed(event);
         }
 
         @Override
-        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-            return ScreenHandlerImpl.this.keyReleased(keyCode, scanCode, modifiers);
+        public boolean keyReleased(KeyEvent event) {
+            return ScreenHandlerImpl.this.keyReleased(event);
         }
 
         @Override
-        public boolean charTyped(char chr, int modifiers) {
-            return ScreenHandlerImpl.this.charTyped(chr, modifiers);
+        public boolean charTyped(CharacterEvent event) {
+            return ScreenHandlerImpl.this.charTyped(event);
         }
 
         @Override

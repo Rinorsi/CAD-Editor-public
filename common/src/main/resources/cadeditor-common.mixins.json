@@ -7,7 +7,6 @@
   "client": [
     "FoodDataAccessor",
     "AbstractContainerScreenMixin",
-    "AbstractSelectionListMixin",
     "AbstractWidgetMixin",
     "CompoundTagMixin",
     "CreativeModeInventoryScreenMixin",

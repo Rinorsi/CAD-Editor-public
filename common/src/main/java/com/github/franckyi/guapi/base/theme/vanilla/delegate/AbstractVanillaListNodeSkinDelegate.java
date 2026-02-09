@@ -65,11 +65,11 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (getEntryAtPosition(mouseX, mouseY) == null && (mouseX < scrollBarX() || mouseX > node.getRight())) {
-            setFocused(null);
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+        if (getEntryAtPosition(event.x(), event.y()) == null && (event.x() < scrollBarX() || event.x() > node.getRight())) {
+            setFocused((GuiEventListener) null);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
@@ -267,7 +267,7 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
             return list.node.isChildrenFocusable();
         }
     }

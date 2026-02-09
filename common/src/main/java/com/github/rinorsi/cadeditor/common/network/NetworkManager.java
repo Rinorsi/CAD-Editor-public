@@ -67,7 +67,7 @@ public final class NetworkManager {
     }
 
     public static <P> void sendToClient(ServerPlayer player, NetworkHandler.Client<P> handler, P packet) {
-        LOGGER.debug("Sending {} packet to player {}", handler.getLocation(), player.getGameProfile().getName());
+        LOGGER.debug("Sending {} packet to player {}", handler.getLocation(), player.getName().getString());
         PlatformUtil.sendToClient(player, handler, packet);
     }
 }

@@ -37,7 +37,7 @@ public class VanillaTreeViewSkinDelegate<E extends TreeView.TreeItem<E>> extends
 
     private void addChild(E item, int increment) {
         NodeEntry<E> entry = new NodeEntry<>(this, item, node.getRenderer().getView(item), increment);
-        children().add(entry);
+        addEntry(entry);
         if (item == node.getFocusedElement()) {
             setFocused(entry);
         }
@@ -83,9 +83,12 @@ public class VanillaTreeViewSkinDelegate<E extends TreeView.TreeItem<E>> extends
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            int x = getContentX();
+            int y = getContentY();
+            int entryWidth = getContentWidth();
+            int entryHeight = getContentHeight();
             int incr = increment * getList().node.getChildrenIncrement();
-            entryWidth = getList().maxScrollAmount() == 0 ? entryWidth + 6 : entryWidth;
             getNode().setX(x + incr);
             getNode().setY(y);
             getNode().setParentPrefWidth(entryWidth - incr);

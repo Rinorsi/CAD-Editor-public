@@ -64,7 +64,7 @@ public final class ServerEditorUpdateLogic {
 
             queueMainHandVerification(player, normalizedStack);
         } catch (Exception e) {
-            LOGGER.error("Failed to apply main hand item update for {}", player.getGameProfile().getName(), e);
+            LOGGER.error("Failed to apply main hand item update for {}", player.getName().getString(), e);
             CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
         }
     }
@@ -86,7 +86,7 @@ public final class ServerEditorUpdateLogic {
 
             queueInventoryVerification(player, response.getSlot(), normalizedStack);
         } catch (Exception e) {
-            LOGGER.error("Failed to apply inventory item update for {} (slot {})", player.getGameProfile().getName(), response.getSlot(), e);
+            LOGGER.error("Failed to apply inventory item update for {} (slot {})", player.getName().getString(), response.getSlot(), e);
             CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
         }
     }
@@ -110,7 +110,7 @@ public final class ServerEditorUpdateLogic {
                     player.containerMenu.broadcastChanges();
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to update block inventory at {} (slot {}) for {}", pos, response.getSlot(), player.getGameProfile().getName(), e);
+                LOGGER.error("Failed to update block inventory at {} (slot {}) for {}", pos, response.getSlot(), player.getName().getString(), e);
                 CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
             }
         } else {
@@ -166,7 +166,7 @@ public final class ServerEditorUpdateLogic {
             level.sendBlockUpdated(pos, oldState, currentState, Block.UPDATE_CLIENTS);
             CommonUtil.showUpdateSuccess(player, ModTexts.BLOCK);
         } catch (Exception e) {
-            LOGGER.error("Failed to update block at {} for {}", pos, player.getGameProfile().getName(), e);
+            LOGGER.error("Failed to update block at {} for {}", pos, player.getName().getString(), e);
             CommonUtil.showMessage(player, ModTexts.Messages.ERROR_GENERIC);
         }
     }
@@ -213,7 +213,7 @@ public final class ServerEditorUpdateLogic {
                 ClientboundSetEntityDataPacket dataPacket =
                         new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues());
                 if (entity.level() instanceof ServerLevel serverLevel) {
-                    serverLevel.getChunkSource().broadcastAndSend(entity, dataPacket);
+                    serverLevel.getChunkSource().sendToTrackingPlayersAndSelf(entity, dataPacket);
                 }
                 if (entity instanceof ServerPlayer targetPlayer) {
                     targetPlayer.connection.send(dataPacket);
@@ -225,7 +225,7 @@ public final class ServerEditorUpdateLogic {
                                     entity.getId(),
                                     livingEntity.getAttributes().getSyncableAttributes());
                     if (entity.level() instanceof ServerLevel serverLevel) {
-                        serverLevel.getChunkSource().broadcastAndSend(entity, attributesPacket);
+                        serverLevel.getChunkSource().sendToTrackingPlayersAndSelf(entity, attributesPacket);
                     }
                     if (entity instanceof ServerPlayer targetPlayer) {
                         targetPlayer.connection.send(attributesPacket);
@@ -239,7 +239,7 @@ public final class ServerEditorUpdateLogic {
                 }
                 CommonUtil.showUpdateSuccess(player, ModTexts.ENTITY);
             } catch (Exception e) {
-                LOGGER.error("Failed to update entity {} for {}", update.getEntityId(), player.getGameProfile().getName(), e);
+                LOGGER.error("Failed to update entity {} for {}", update.getEntityId(), player.getName().getString(), e);
                 CommonUtil.showMessage(player, ModTexts.Messages.ERROR_GENERIC);
             }
         } else {
@@ -333,9 +333,9 @@ public final class ServerEditorUpdateLogic {
             var ops = NbtOps.INSTANCE;
             var actualData = ItemStack.CODEC.encodeStart(ops, actual).result().orElse(null);
             var expectedData = ItemStack.CODEC.encodeStart(ops, expected).result().orElse(null);
-            LOGGER.warn("[{}] stack mismatch for {}. Actual={}, Expected={}", where, player.getGameProfile().getName(), actualData, expectedData);
+            LOGGER.warn("[{}] stack mismatch for {}. Actual={}, Expected={}", where, player.getName().getString(), actualData, expectedData);
         } catch (Exception ex) {
-            LOGGER.warn("Failed to diff stacks for {}", player.getGameProfile().getName(), ex);
+            LOGGER.warn("Failed to diff stacks for {}", player.getName().getString(), ex);
         }
     }
 
@@ -399,7 +399,7 @@ public final class ServerEditorUpdateLogic {
                 return entity;
             });
             if (passenger != null) {
-                passenger.startRiding(root, true);
+                passenger.startRiding(root, true, true);
             }
         }
     }
