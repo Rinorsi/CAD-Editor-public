@@ -84,7 +84,8 @@ public class EntityEquipmentEntryModel extends EntryModel {
     }
 
     public void setDropChance(float chance) {
-        float clamped = Math.max(0f, Math.min(1f, chance));
+        float safeChance = Float.isFinite(chance) ? chance : slot.defaultDropChance();
+        float clamped = Math.max(0f, Math.min(1f, safeChance));
         dropChanceProperty.setValue(clamped);
         invalidateIfNecessary();
     }
@@ -98,8 +99,7 @@ public class EntityEquipmentEntryModel extends EntryModel {
             return false;
         }
         try {
-            Float.parseFloat(text);
-            return true;
+            return Float.isFinite(Float.parseFloat(text));
         } catch (NumberFormatException ex) {
             return false;
         }

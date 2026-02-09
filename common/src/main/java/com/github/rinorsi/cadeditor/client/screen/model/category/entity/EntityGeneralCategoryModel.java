@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.UUID;
@@ -85,23 +86,18 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
     }
 
     private MutableComponent getCustomName() {
-        String s = getData().getString("CustomName").orElse("");
-        if (s.isEmpty()) {
-            return null;
-        }
-        return ComponentJsonHelper.decode(s, ClientUtil.registryAccess());
+        Tag encoded = getData().get("CustomName");
+        return ComponentJsonHelper.decode(encoded, ClientUtil.registryAccess());
     }
 
     private void setCustomName(MutableComponent value) {
         if (value != null && !value.getString().isEmpty()) {
-            String json = ComponentJsonHelper.encode(value, ClientUtil.registryAccess());
-            if (!json.isEmpty()) {
-                getData().putString("CustomName", json);
+            Tag encoded = ComponentJsonHelper.encodeToTag(value, ClientUtil.registryAccess());
+            if (encoded != null) {
+                getData().put("CustomName", encoded);
             }
-        } else if (getData().getString("CustomName").orElse("").isEmpty()) {
-            getData().remove("CustomName");
         } else {
-            getData().putString("CustomName", "");
+            getData().remove("CustomName");
         }
     }
 

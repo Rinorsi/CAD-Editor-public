@@ -81,9 +81,9 @@ public class ItemToolCategoryModel extends ItemEditorCategoryModel {
                     hasInvalid = true;
                     continue;
                 }
-                var parsed = rule.toRule(blockLookup);
+                var parsed = rule.toRules(blockLookup);
                 if (parsed.isPresent()) {
-                    parsedRules.add(parsed.get());
+                    parsedRules.addAll(parsed.get());
                     rule.setValid(true);
                 } else {
                     rule.setValid(false);

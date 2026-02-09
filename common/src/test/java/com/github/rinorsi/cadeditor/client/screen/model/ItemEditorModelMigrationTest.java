@@ -97,6 +97,161 @@ class ItemEditorModelMigrationTest {
         Assertions.assertFalse(migratedComponents.contains("minecraft:hide_tooltip"), "Legacy hide tooltip component should be cleared");
     }
 
+    @Test
+    void legacyAttributeModifiersAreConvertedToComponent() {
+        CompoundTag legacyTag = new CompoundTag();
+        ListTag attributeModifiers = new ListTag();
+        CompoundTag modifier = new CompoundTag();
+        modifier.putString("AttributeName", "minecraft:attack_damage");
+        modifier.putDouble("Amount", 10.5d);
+        modifier.putInt("Operation", 0);
+        modifier.putString("Slot", "mainhand");
+        attributeModifiers.add(modifier);
+        legacyTag.put("AttributeModifiers", attributeModifiers);
+
+        CompoundTag root = new CompoundTag();
+        root.putString("id", BuiltInRegistries.ITEM.getKey(Items.DIAMOND_SWORD).toString());
+        root.put("tag", legacyTag.copy());
+
+        CompoundTag migrated = ItemEditorModel.mergeComponentsPreservingUnknown(root, root, Collections.emptySet());
+        CompoundTag components = requireCompound(migrated, "components");
+        CompoundTag attributeComponent = requireCompound(components, "minecraft:attribute_modifiers");
+        ListTag modifiers = attributeComponent.getList("modifiers").orElse(new ListTag());
+        Assertions.assertEquals(1, modifiers.size());
+        CompoundTag migratedModifier = modifiers.getCompound(0).orElseThrow();
+        Assertions.assertEquals("minecraft:attack_damage", migratedModifier.getString("type").orElse(""));
+        Assertions.assertEquals(10.5d, migratedModifier.getDouble("amount").orElse(0d), 1e-6);
+        Assertions.assertEquals("add_value", migratedModifier.getString("operation").orElse(""));
+        Assertions.assertEquals("mainhand", migratedModifier.getString("slot").orElse(""));
+        Assertions.assertTrue(migratedModifier.contains("id"));
+        String migratedId = migratedModifier.getString("id").orElse("");
+        Assertions.assertTrue(migratedId.startsWith("cadeditor:m_"), "Modifier id should use compact cadeditor namespace");
+        Assertions.assertTrue(migratedId.length() <= 32, "Modifier id should stay compact");
+
+        CompoundTag migratedLegacy = migrated.getCompound("tag").orElse(new CompoundTag());
+        Assertions.assertFalse(migratedLegacy.contains("AttributeModifiers"), "Legacy attribute modifiers should be removed");
+    }
+
+    @Test
+    void legacyCanDestroyAndCanPlaceOnAreConvertedToComponents() {
+        CompoundTag legacyTag = new CompoundTag();
+        ListTag canDestroy = new ListTag();
+        canDestroy.add(StringTag.valueOf("stone"));
+        canDestroy.add(StringTag.valueOf("#mineable/pickaxe"));
+        legacyTag.put("CanDestroy", canDestroy);
+
+        ListTag canPlaceOn = new ListTag();
+        canPlaceOn.add(StringTag.valueOf("minecraft:dirt"));
+        legacyTag.put("CanPlaceOn", canPlaceOn);
+
+        CompoundTag root = new CompoundTag();
+        root.putString("id", BuiltInRegistries.ITEM.getKey(Items.DIAMOND_PICKAXE).toString());
+        root.put("tag", legacyTag.copy());
+
+        CompoundTag migrated = ItemEditorModel.mergeComponentsPreservingUnknown(root, root, Collections.emptySet());
+        CompoundTag components = requireCompound(migrated, "components");
+        CompoundTag canBreak = requireCompound(components, "minecraft:can_break");
+        CompoundTag canPlace = requireCompound(components, "minecraft:can_place_on");
+
+        ListTag canBreakPredicates = canBreak.getList("predicates").orElse(new ListTag());
+        Assertions.assertEquals(2, canBreakPredicates.size());
+        Set<String> breakSelectors = readBlockSelectors(canBreakPredicates);
+        Assertions.assertTrue(breakSelectors.contains("minecraft:stone"));
+        Assertions.assertTrue(breakSelectors.contains("#minecraft:mineable/pickaxe"));
+
+        ListTag canPlacePredicates = canPlace.getList("predicates").orElse(new ListTag());
+        Assertions.assertEquals(1, canPlacePredicates.size());
+        Set<String> placeSelectors = readBlockSelectors(canPlacePredicates);
+        Assertions.assertTrue(placeSelectors.contains("minecraft:dirt"));
+
+        CompoundTag migratedLegacy = migrated.getCompound("tag").orElse(new CompoundTag());
+        Assertions.assertFalse(migratedLegacy.contains("CanDestroy"));
+        Assertions.assertFalse(migratedLegacy.contains("CanPlaceOn"));
+    }
+
+    @Test
+    void legacyEntityTagMovesToEntityDataComponent() {
+        CompoundTag legacyTag = new CompoundTag();
+        CompoundTag entityTag = new CompoundTag();
+        entityTag.putString("id", "minecraft:allay");
+        legacyTag.put("EntityTag", entityTag);
+
+        CompoundTag root = new CompoundTag();
+        root.putString("id", BuiltInRegistries.ITEM.getKey(Items.ALLAY_SPAWN_EGG).toString());
+        root.put("tag", legacyTag.copy());
+
+        CompoundTag migrated = ItemEditorModel.mergeComponentsPreservingUnknown(root, root, Collections.emptySet());
+        CompoundTag components = requireCompound(migrated, "components");
+        CompoundTag entityData = requireCompound(components, "minecraft:entity_data");
+        Assertions.assertEquals("minecraft:allay", entityData.getString("id").orElse(""));
+
+        CompoundTag migratedLegacy = migrated.getCompound("tag").orElse(new CompoundTag());
+        Assertions.assertFalse(migratedLegacy.contains("EntityTag"));
+    }
+
+    @Test
+    void legacyPotionFieldsAreConvertedToPotionContentsComponent() {
+        CompoundTag legacyTag = new CompoundTag();
+        legacyTag.putString("Potion", "swiftness");
+        legacyTag.putInt("CustomPotionColor", 123456);
+        ListTag legacyEffects = new ListTag();
+        CompoundTag effect = new CompoundTag();
+        effect.putString("Id", "speed");
+        effect.putInt("Amplifier", 2);
+        effect.putInt("Duration", 1200);
+        effect.putBoolean("Ambient", true);
+        effect.putBoolean("ShowParticles", false);
+        legacyEffects.add(effect);
+        legacyTag.put("custom_potion_effects", legacyEffects);
+
+        CompoundTag root = new CompoundTag();
+        root.putString("id", BuiltInRegistries.ITEM.getKey(Items.POTION).toString());
+        root.put("tag", legacyTag.copy());
+
+        CompoundTag migrated = ItemEditorModel.mergeComponentsPreservingUnknown(root, root, Collections.emptySet());
+        CompoundTag components = requireCompound(migrated, "components");
+        CompoundTag potionContents = requireCompound(components, "minecraft:potion_contents");
+        Assertions.assertEquals("minecraft:swiftness", potionContents.getString("potion").orElse(""));
+        Assertions.assertEquals(123456, potionContents.getInt("custom_color").orElse(0));
+        ListTag customEffects = potionContents.getList("custom_effects").orElse(new ListTag());
+        Assertions.assertEquals(1, customEffects.size());
+        CompoundTag migratedEffect = customEffects.getCompound(0).orElseThrow();
+        Assertions.assertEquals("minecraft:speed", migratedEffect.getString("id").orElse(""));
+        Assertions.assertEquals(2, migratedEffect.getInt("amplifier").orElse(0));
+        Assertions.assertEquals(1200, migratedEffect.getInt("duration").orElse(0));
+        Assertions.assertTrue(migratedEffect.getBoolean("ambient").orElse(false));
+        Assertions.assertFalse(migratedEffect.getBoolean("show_particles").orElse(true));
+
+        CompoundTag migratedLegacy = migrated.getCompound("tag").orElse(new CompoundTag());
+        Assertions.assertFalse(migratedLegacy.contains("Potion"));
+        Assertions.assertFalse(migratedLegacy.contains("CustomPotionColor"));
+        Assertions.assertFalse(migratedLegacy.contains("custom_potion_effects"));
+    }
+
+    @Test
+    void legacyWritableBookPagesAreConvertedToWritableBookComponent() {
+        CompoundTag legacyTag = new CompoundTag();
+        ListTag pages = new ListTag();
+        pages.add(StringTag.valueOf("page one"));
+        pages.add(StringTag.valueOf("page two"));
+        legacyTag.put("pages", pages);
+
+        CompoundTag root = new CompoundTag();
+        root.putString("id", BuiltInRegistries.ITEM.getKey(Items.WRITABLE_BOOK).toString());
+        root.put("tag", legacyTag.copy());
+
+        CompoundTag migrated = ItemEditorModel.mergeComponentsPreservingUnknown(root, root, Collections.emptySet());
+        CompoundTag components = requireCompound(migrated, "components");
+        CompoundTag writableBook = requireCompound(components, "minecraft:writable_book_content");
+        ListTag migratedPages = writableBook.getList("pages").orElse(new ListTag());
+        Assertions.assertEquals(2, migratedPages.size());
+        Assertions.assertEquals("page one", migratedPages.getString(0).orElse(""));
+        Assertions.assertEquals("page two", migratedPages.getString(1).orElse(""));
+
+        CompoundTag migratedLegacy = migrated.getCompound("tag").orElse(new CompoundTag());
+        Assertions.assertFalse(migratedLegacy.contains("pages"));
+    }
+
     private static CompoundTag requireCompound(CompoundTag parent, String key) {
         return parent.getCompound(key)
                 .orElseThrow(() -> new AssertionError("Missing compound: " + key));
@@ -107,6 +262,15 @@ class ItemEditorModelMigrationTest {
                 .filter(StringTag.class::isInstance)
                 .map(StringTag.class::cast)
                 .map(StringTag::value)
+                .collect(Collectors.toSet());
+    }
+
+    private static Set<String> readBlockSelectors(ListTag predicates) {
+        return predicates.stream()
+                .filter(CompoundTag.class::isInstance)
+                .map(CompoundTag.class::cast)
+                .map(tag -> tag.getString("blocks").orElse(""))
+                .filter(value -> !value.isEmpty())
                 .collect(Collectors.toSet());
     }
 }

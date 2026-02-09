@@ -5,7 +5,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BlockSelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.util.NbtHelper;
-import com.github.rinorsi.cadeditor.client.util.NbtUuidHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.advancements.critereon.BlockPredicate;
 import net.minecraft.advancements.critereon.DataComponentMatchers;
@@ -20,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.AdventureModePredicate;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -39,17 +39,7 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     protected void setupEntries() {
-        // 1) Try legacy NBT list
-        ListTag nbtList = NbtHelper.getListOrEmpty(getTag(), tagName);
-        if (!nbtList.isEmpty()) {
-            for (Tag element : nbtList) {
-                if (element instanceof StringTag stringTag) {
-                    getEntries().add(createBlockEntry(stringTag.value()));
-                }
-            }
-            return;
-        }
-        // 2) Fallback to 1.21 components stored under "components"
+        // 1) Prefer 1.21 components
         var data = getData();
         if (data != null) {
             var components = data.getCompound("components").orElse(null);
@@ -66,6 +56,17 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
                         }
                     }
                 }
+            }
+        }
+        if (!getEntries().isEmpty()) {
+            return;
+        }
+        // 2) Fallback to legacy lists
+        CompoundTag legacyTag = data == null ? null : data.getCompound("tag").orElse(null);
+        ListTag nbtList = NbtHelper.getListOrEmpty(legacyTag, tagName);
+        for (Tag element : nbtList) {
+            if (element instanceof StringTag stringTag) {
+                getEntries().add(createBlockEntry(stringTag.value()));
             }
         }
     }
@@ -93,13 +94,6 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
     public void apply() {
         newBlocks = new ListTag();
         super.apply();
-        // 1) Keep legacy NBT for UI compatibility
-        if (!newBlocks.isEmpty()) {
-            getOrCreateTag().put(tagName, newBlocks);
-        } else if (getOrCreateTag().contains(tagName)) {
-            getOrCreateTag().remove(tagName);
-        }
-        // 2) Apply 1.21 Data Components to the actual stack
         ItemStack stack = getParent().getContext().getItemStack();
         List<BlockPredicate> predicates = new ArrayList<>();
         var lookupOpt = ClientUtil.registryAccess().lookup(Registries.BLOCK);
@@ -107,12 +101,25 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
             var lookup = lookupOpt.get();
             for (Tag t : newBlocks) {
                 if (t instanceof StringTag s) {
-                    ResourceLocation rl = ResourceLocation.tryParse(s.value());
-                    if (rl != null) {
-                        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, rl);
-                        var holder = lookup.get(key);
-                        holder.ifPresent(h -> predicates.add(new BlockPredicate(Optional.of(HolderSet.direct(h)), Optional.empty(), Optional.empty(), DataComponentMatchers.ANY)));
+                    String selector = s.value().trim();
+                    if (selector.isEmpty()) {
+                        continue;
                     }
+                    if (selector.startsWith("#")) {
+                        ResourceLocation tagId = ResourceLocation.tryParse(selector.substring(1));
+                        if (tagId == null) {
+                            continue;
+                        }
+                        TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, tagId);
+                        lookup.get(tagKey).ifPresent(holders -> predicates.add(new BlockPredicate(Optional.of(holders), Optional.empty(), Optional.empty(), DataComponentMatchers.ANY)));
+                        continue;
+                    }
+                    ResourceLocation rl = ResourceLocation.tryParse(selector);
+                    if (rl == null) {
+                        continue;
+                    }
+                    ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, rl);
+                    lookup.get(key).ifPresent(h -> predicates.add(new BlockPredicate(Optional.of(HolderSet.direct(h)), Optional.empty(), Optional.empty(), DataComponentMatchers.ANY)));
                 }
             }
         }
@@ -122,6 +129,17 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
             if (isDestroy) stack.set(DataComponents.CAN_BREAK, predicate); else stack.set(DataComponents.CAN_PLACE_ON, predicate);
         } else {
             if (isDestroy) stack.remove(DataComponents.CAN_BREAK); else stack.remove(DataComponents.CAN_PLACE_ON);
+        }
+
+        CompoundTag data = getData();
+        if (data != null) {
+            CompoundTag legacyTag = data.getCompound("tag").orElse(null);
+            if (legacyTag != null && legacyTag.contains(tagName)) {
+                legacyTag.remove(tagName);
+                if (legacyTag.isEmpty()) {
+                    data.remove("tag");
+                }
+            }
         }
     }
 

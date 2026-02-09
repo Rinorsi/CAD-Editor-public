@@ -42,6 +42,8 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
     private int originalBaseEntryCount;
     private int currentBaseEntryCount;
     private boolean baseEffectsModified;
+    private String selectedPotionId = "";
+    private int selectedCustomColor = Color.NONE;
 
     public ItemPotionEffectsCategoryModel(ItemEditorModel editor) {
         super(ModTexts.POTION_EFFECTS, editor);
@@ -65,9 +67,10 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
             contents.customEffects().forEach(e -> getEntries().add(createPotionEffectEntry(toTag(e), false)));
         } else {
-            CompoundTag legacy = getTag();
+            CompoundTag data = getData();
+            CompoundTag legacy = data == null ? null : data.getCompound("tag").orElse(null);
             potionId = NbtHelper.getString(legacy, "Potion", "");
-            customColor = getCustomPotionColor();
+            customColor = NbtHelper.getInt(legacy, "CustomPotionColor", Color.NONE);
             originalBaseEffectTags = resolveBasePotionEffects(potionId);
             originalBaseEntryCount = originalBaseEffectTags.size();
             originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
@@ -77,9 +80,11 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
                     .map(t -> createPotionEffectEntry(t, false))
                     .forEach(getEntries()::add);
         }
+        selectedPotionId = potionId;
+        selectedCustomColor = customColor;
         getEntries().add(0, new PotionSelectionEntryModel(this, ModTexts.DEFAULT_POTION,
                 potionId, customColor,
-                p -> getOrCreateTag().putString("Potion", p), this::setCustomPotionColor));
+                this::setPotionId, this::setCustomPotionColor));
     }
 
     @Override
@@ -148,10 +153,10 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
                 effects.add(new MobEffectInstance(holderOpt.get(), duration, amplifier, ambient, showParticles, showIcon));
             }
         }
-        String potionStr = NbtHelper.getString(getTag(), "Potion", "");
+        String potionStr = selectedPotionId == null ? "" : selectedPotionId;
         if (baseEffectsModified && !potionStr.isEmpty()) {
             potionStr = "";
-            getOrCreateTag().putString("Potion", potionStr);
+            selectedPotionId = potionStr;
             if (!getEntries().isEmpty() && getEntries().get(0) instanceof PotionSelectionEntryModel selection) {
                 selection.setValue(potionStr);
                 selection.apply();
@@ -179,24 +184,28 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         } else {
             stack.remove(DataComponents.POTION_CONTENTS);
         }
-        CompoundTag legacy = getTag();
+        CompoundTag data = getData();
+        CompoundTag legacy = data == null ? null : data.getCompound("tag").orElse(null);
         if (legacy != null) {
             legacy.remove("Potion");
             legacy.remove("CustomPotionColor");
             legacy.remove("custom_potion_effects");
+            if (legacy.isEmpty()) {
+                data.remove("tag");
+            }
         }
     }
 
     private int getCustomPotionColor() {
-        return NbtHelper.getInt(getTag(), "CustomPotionColor", Color.NONE);
+        return selectedCustomColor;
     }
 
     private void setCustomPotionColor(int color) {
-        if (color != Color.NONE) {
-            getOrCreateTag().putInt("CustomPotionColor", color);
-        } else {
-            getOrCreateTag().remove("CustomPotionColor");
-        }
+        selectedCustomColor = color;
+    }
+
+    private void setPotionId(String potionId) {
+        selectedPotionId = potionId == null ? "" : potionId.trim();
     }
 
     private EntryModel createPotionEffectEntry(CompoundTag tag, boolean baseEffect) {

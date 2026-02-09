@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceLocation;
 import com.mojang.serialization.DataResult;
 import net.minecraft.world.item.ItemStack;
 
@@ -250,16 +251,10 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         if (attributeTag instanceof CompoundTag attributeCompound) {
             ListTag modifiers = attributeCompound.getListOrEmpty("modifiers");
             if (!modifiers.isEmpty()) {
-                Set<UUID> usedIds = new HashSet<>();
+                Set<ResourceLocation> usedIds = new HashSet<>();
                 for (Tag entryTag : modifiers) {
                     if (entryTag instanceof CompoundTag modifier) {
-                        UUID id = readModifierUUID(modifier);
-                        if (id != null && !usedIds.add(id)) {
-                            id = null;
-                        }
-                        if (id == null) {
-                            id = generateModifierUUID(modifier, usedIds);
-                        }
+                        ResourceLocation id = resolveModifierId(modifier, usedIds);
                         modifier.putString("id", id.toString());
                     }
                 }
@@ -268,16 +263,58 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         return normalized;
     }
 
-    private static UUID generateModifierUUID(CompoundTag modifier, Set<UUID> usedIds) {
-        String seed = buildModifierSeed(modifier);
-        int salt = 0;
-        while (true) {
-            UUID uuid = UUID.nameUUIDFromBytes((seed + "#" + salt).getBytes(StandardCharsets.UTF_8));
-            if (usedIds.add(uuid)) {
-                return uuid;
+    private static ResourceLocation resolveModifierId(CompoundTag modifier, Set<ResourceLocation> usedIds) {
+        String rawId = modifier.getString("id").orElse("").trim();
+        if (!rawId.isEmpty()) {
+            UUID uuid = parseUuidString(rawId);
+            if (uuid != null) {
+                return createModifierIdFromUuid(uuid, usedIds);
             }
-            salt++;
+            ResourceLocation parsed = normalizeModifierId(rawId);
+            if (parsed != null && usedIds.add(parsed)) {
+                return parsed;
+            }
         }
+        UUID uuid = readModifierUUID(modifier);
+        if (uuid != null) {
+            return createModifierIdFromUuid(uuid, usedIds);
+        }
+        return createModifierIdFromSeed(buildModifierSeed(modifier), usedIds);
+    }
+
+    private static ResourceLocation createModifierIdFromSeed(String seed, Set<ResourceLocation> usedIds) {
+        UUID uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8));
+        return createModifierIdFromUuid(uuid, usedIds);
+    }
+
+    private static ResourceLocation createModifierIdFromUuid(UUID uuid, Set<ResourceLocation> usedIds) {
+        String compact = uuid.toString().replace("-", "");
+        String basePath = "m_" + compact.substring(0, 12);
+        ResourceLocation direct = ResourceLocation.fromNamespaceAndPath("cadeditor", basePath);
+        if (usedIds.add(direct)) {
+            return direct;
+        }
+        int suffix = 1;
+        while (true) {
+            ResourceLocation withSuffix = ResourceLocation.fromNamespaceAndPath(
+                    "cadeditor",
+                    basePath + "_" + Integer.toHexString(suffix++)
+            );
+            if (usedIds.add(withSuffix)) {
+                return withSuffix;
+            }
+        }
+    }
+
+    private static ResourceLocation normalizeModifierId(String raw) {
+        String value = raw == null ? "" : raw.trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        if (!value.contains(":")) {
+            value = "minecraft:" + value;
+        }
+        return ResourceLocation.tryParse(value);
     }
 
     private static String buildModifierSeed(CompoundTag modifier) {

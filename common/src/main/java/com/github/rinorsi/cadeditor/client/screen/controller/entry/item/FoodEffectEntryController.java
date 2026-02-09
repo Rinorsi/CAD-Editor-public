@@ -46,7 +46,7 @@ public class FoodEffectEntryController extends PotionEffectEntryController {
     private boolean isProbabilityValid(String value) {
         try {
             double parsed = Double.parseDouble(value);
-            return parsed >= 0d && parsed <= 1d;
+            return Double.isFinite(parsed) && parsed >= 0d && parsed <= 1d;
         } catch (NumberFormatException e) {
             return false;
         }
@@ -55,6 +55,9 @@ public class FoodEffectEntryController extends PotionEffectEntryController {
     private double parseProbability(String value) {
         try {
             double parsed = Double.parseDouble(value);
+            if (!Double.isFinite(parsed)) {
+                return 0d;
+            }
             if (parsed < 0d) {
                 return 0d;
             }

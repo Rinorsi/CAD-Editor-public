@@ -151,7 +151,8 @@ public class MapDecorationEntryModel extends EntryModel {
             return 0d;
         }
         try {
-            return Double.parseDouble(value);
+            double parsed = Double.parseDouble(value);
+            return Double.isFinite(parsed) ? parsed : null;
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -162,7 +163,8 @@ public class MapDecorationEntryModel extends EntryModel {
             return 0f;
         }
         try {
-            return Float.parseFloat(value);
+            float parsed = Float.parseFloat(value);
+            return Float.isFinite(parsed) ? parsed : null;
         } catch (NumberFormatException ex) {
             return null;
         }

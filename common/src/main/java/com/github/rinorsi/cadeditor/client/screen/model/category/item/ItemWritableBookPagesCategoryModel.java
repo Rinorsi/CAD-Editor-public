@@ -8,7 +8,6 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.WritableBookContent;
@@ -66,7 +65,7 @@ public class ItemWritableBookPagesCategoryModel extends ItemEditorCategoryModel 
             stack.set(DataComponents.WRITABLE_BOOK_CONTENT, new WritableBookContent(filterables));
         }
 
-        writeLegacyPages(pages);
+        clearLegacyPages();
     }
 
     private List<String> readPages() {
@@ -109,34 +108,19 @@ public class ItemWritableBookPagesCategoryModel extends ItemEditorCategoryModel 
         stagedPages = List.copyOf(sanitized);
     }
 
-    private void writeLegacyPages(List<String> pages) {
+    private void clearLegacyPages() {
         CompoundTag data = getData();
         if (data == null) {
             return;
         }
-        if (pages.isEmpty()) {
-            CompoundTag tag = data.getCompound("tag").orElse(null);
-            if (tag != null) {
-                tag.remove("pages");
-                if (tag.isEmpty()) {
-                    data.remove("tag");
-                }
-            }
+        CompoundTag tag = data.getCompound("tag").orElse(null);
+        if (tag == null) {
             return;
         }
-
-        CompoundTag tag = data.getCompound("tag").orElseGet(() -> {
-            CompoundTag created = new CompoundTag();
-            data.put("tag", created);
-            return created;
-        });
-        ListTag list = new ListTag();
-        pages.stream()
-                .limit(WritableBookContent.MAX_PAGES)
-                .map(this::sanitizePage)
-                .map(StringTag::valueOf)
-                .forEach(list::add);
-        tag.put("pages", list);
+        tag.remove("pages");
+        if (tag.isEmpty()) {
+            data.remove("tag");
+        }
     }
 
     private String sanitizePage(String text) {

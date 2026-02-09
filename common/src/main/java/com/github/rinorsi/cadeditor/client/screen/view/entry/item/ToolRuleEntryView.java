@@ -42,7 +42,12 @@ public class ToolRuleEntryView extends EntryView {
             content.add(speedField = textField()
                     .prefWidth(60)
                     .prefHeight(16)
-                    .validator(value -> value == null || value.isBlank() || Predicates.IS_DOUBLE.test(value))
+                    .validator(value -> {
+                        if (value == null || value.isBlank()) {
+                            return true;
+                        }
+                        return Predicates.IS_DOUBLE.test(value);
+                    })
                     .placeholder(ModTexts.gui("tool_rule_speed")));
             content.add(behaviorButton = enumButton(ToolRuleEntryModel.DropBehavior.values())
                     .prefWidth(60)

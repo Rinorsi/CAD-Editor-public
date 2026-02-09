@@ -41,7 +41,10 @@ public class PotionEffectEntryController extends SelectionEntryController<Potion
         view.getDurationField().textProperty().addListener(value -> {
             if (view.getDurationField().isValid()) {
                 if (model.isUseSeconds()) {
-                    model.setDuration(secondsToTicks(Double.parseDouble(value)));
+                    double seconds = Double.parseDouble(value);
+                    if (Double.isFinite(seconds)) {
+                        model.setDuration(secondsToTicks(seconds));
+                    }
                 } else {
                     model.setDuration(Integer.parseInt(value));
                 }
@@ -81,7 +84,8 @@ public class PotionEffectEntryController extends SelectionEntryController<Potion
         if (model.isUseSeconds()) {
             view.getDurationField().setValidator(value -> {
                 try {
-                    return Double.parseDouble(value) > 0;
+                    double seconds = Double.parseDouble(value);
+                    return Double.isFinite(seconds) && seconds > 0;
                 } catch (NumberFormatException e) {
                     return false;
                 }

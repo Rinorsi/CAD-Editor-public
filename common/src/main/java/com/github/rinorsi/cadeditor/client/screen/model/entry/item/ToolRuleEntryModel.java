@@ -18,10 +18,8 @@ import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class ToolRuleEntryModel extends EntryModel {
     private final List<ResourceLocation> blockIds = new ArrayList<>();
@@ -105,7 +103,8 @@ public class ToolRuleEntryModel extends EntryModel {
             return true;
         }
         try {
-            speedValue = Float.parseFloat(trimmed);
+            float parsed = Float.parseFloat(trimmed);
+            speedValue = parsed;
             return true;
         } catch (NumberFormatException ex) {
             speedValue = null;
@@ -191,40 +190,46 @@ public class ToolRuleEntryModel extends EntryModel {
                 .append(Component.literal(" ").withStyle(ChatFormatting.DARK_GRAY))
                 .append(behaviorProperty.getValue().getDescription().copy());
     }
-    public Optional<Tool.Rule> toRule(HolderLookup.RegistryLookup<Block> lookup) {
+
+    public Optional<List<Tool.Rule>> toRules(HolderLookup.RegistryLookup<Block> lookup) {
         if (!hasSelection() || lookup == null) {
             return Optional.empty();
         }
-        if (tagIds.size() == 1 && blockIds.isEmpty()) {
-            TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, tagIds.get(0));
-            Optional<HolderSet.Named<Block>> named = lookup.get(tagKey);
-            if (named.isEmpty()) {
-                return Optional.empty();
-            }
-            return Optional.of(new Tool.Rule(named.get(), Optional.ofNullable(speedValue), behaviorProperty.getValue().toOptional()));
-        }
-        Set<Holder<Block>> holders = new LinkedHashSet<>();
+        Optional<Float> speed = Optional.ofNullable(speedValue);
+        Optional<Boolean> behavior = behaviorProperty.getValue().toOptional();
+        List<Tool.Rule> rules = new ArrayList<>();
+
         for (ResourceLocation tagId : tagIds) {
             TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, tagId);
             Optional<HolderSet.Named<Block>> named = lookup.get(tagKey);
             if (named.isEmpty()) {
                 return Optional.empty();
             }
-            named.get().stream().forEach(holders::add);
+            rules.add(new Tool.Rule(named.get(), speed, behavior));
         }
-        for (ResourceLocation blockId : blockIds) {
-            ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, blockId);
-            Optional<Holder.Reference<Block>> holder = lookup.get(key);
-            if (holder.isEmpty()) {
-                return Optional.empty();
+
+        if (!blockIds.isEmpty()) {
+            List<Holder<Block>> holders = new ArrayList<>();
+            for (ResourceLocation blockId : blockIds) {
+                ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, blockId);
+                Optional<Holder.Reference<Block>> holder = lookup.get(key);
+                if (holder.isEmpty()) {
+                    return Optional.empty();
+                }
+                holders.add(holder.get());
             }
-            holders.add(holder.get());
+            rules.add(new Tool.Rule(HolderSet.direct(holders), speed, behavior));
         }
-        if (holders.isEmpty()) {
+
+        return rules.isEmpty() ? Optional.empty() : Optional.of(List.copyOf(rules));
+    }
+
+    public Optional<Tool.Rule> toRule(HolderLookup.RegistryLookup<Block> lookup) {
+        Optional<List<Tool.Rule>> rules = toRules(lookup);
+        if (rules.isEmpty() || rules.get().size() != 1) {
             return Optional.empty();
         }
-        HolderSet<Block> blockSet = HolderSet.direct(new ArrayList<>(holders));
-        return Optional.of(new Tool.Rule(blockSet, Optional.ofNullable(speedValue), behaviorProperty.getValue().toOptional()));
+        return Optional.of(rules.get().getFirst());
     }
 
     public void setFromRule(Tool.Rule rule) {

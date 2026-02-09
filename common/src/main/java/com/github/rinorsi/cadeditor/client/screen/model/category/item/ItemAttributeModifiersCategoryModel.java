@@ -95,10 +95,15 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     public void apply() {
         newAttributeModifiers = new ListTag();
         super.apply();
-        if (!newAttributeModifiers.isEmpty()) {
-            getOrCreateTag().put("AttributeModifiers", newAttributeModifiers);
-        } else if (getOrCreateTag().contains("AttributeModifiers")) {
-            getOrCreateTag().remove("AttributeModifiers");
+        CompoundTag data = getData();
+        if (data != null) {
+            CompoundTag legacyTag = data.getCompound("tag").orElse(null);
+            if (legacyTag != null && legacyTag.contains("AttributeModifiers")) {
+                legacyTag.remove("AttributeModifiers");
+                if (legacyTag.isEmpty()) {
+                    data.remove("tag");
+                }
+            }
         }
         ItemStack stack = getParent().getContext().getItemStack();
         var attrLookupOpt = ClientUtil.registryAccess().lookup(Registries.ATTRIBUTE);
@@ -262,9 +267,28 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         if (existing != null) {
             return existing;
         }
-        ResourceLocation generated = ResourceLocation.fromNamespaceAndPath("cadeditor", uuid.toString());
+        ResourceLocation generated = createGeneratedModifierId(uuid);
         modifierIds.put(uuid, generated);
         return generated;
+    }
+
+    private ResourceLocation createGeneratedModifierId(UUID uuid) {
+        String compact = uuid.toString().replace("-", "");
+        String basePath = "m_" + compact.substring(0, 12);
+        ResourceLocation candidate = ResourceLocation.fromNamespaceAndPath("cadeditor", basePath);
+        if (!modifierIds.containsValue(candidate)) {
+            return candidate;
+        }
+        int suffix = 1;
+        while (true) {
+            ResourceLocation withSuffix = ResourceLocation.fromNamespaceAndPath(
+                    "cadeditor",
+                    basePath + "_" + Integer.toHexString(suffix++)
+            );
+            if (!modifierIds.containsValue(withSuffix)) {
+                return withSuffix;
+            }
+        }
     }
 
     private static AttributeModifier.Operation operationFromIndex(int index) {

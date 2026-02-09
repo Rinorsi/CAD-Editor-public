@@ -48,22 +48,21 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
             return;
         }
         CompoundTag itemData = getData();
+        CompoundTag legacyTag = itemData.getCompound("tag").orElse(null);
+        if (legacyTag != null && legacyTag.contains("EntityTag")) {
+            legacyTag.remove("EntityTag");
+            if (legacyTag.isEmpty()) {
+                itemData.remove("tag");
+            }
+        }
         if (spawnData == null || spawnData.isEmpty()
                 || !spawnData.contains("id")
                 || spawnData.getString("id").orElse("").isEmpty()) {
-            CompoundTag tag = itemData.getCompound("tag").orElse(null);
-            if (tag != null) {
-                tag.remove("EntityTag");
-                if (tag.isEmpty()) {
-                    itemData.remove("tag");
-                }
-            }
             stack.remove(DataComponents.ENTITY_DATA);
             spawnData = new CompoundTag();
             return;
         }
         CompoundTag sanitized = spawnData.copy();
-        getOrCreateTag().put("EntityTag", sanitized.copy());
         stack.set(DataComponents.ENTITY_DATA, CustomData.of(sanitized));
         spawnData = sanitized;
     }

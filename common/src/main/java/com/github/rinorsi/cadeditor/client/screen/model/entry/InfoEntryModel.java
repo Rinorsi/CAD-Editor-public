@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.entry;
 import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import net.minecraft.network.chat.MutableComponent;
 
+@SuppressWarnings("this-escape")
 public class InfoEntryModel extends EntryModel {
     private final MutableComponent text;
 

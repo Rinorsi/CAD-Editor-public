@@ -4,9 +4,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 /**
- * Mixes into the protected MultilineTextField.StringView inner class using the target name,
- * since the class isn't accessible directly from our sources.
+ * Accesses methods on MultilineTextField.StringView via target name because it
+ * is not publicly accessible in all mappings.
  */
+@SuppressWarnings("public-target")
 @Mixin(targets = "net.minecraft.client.gui.components.MultilineTextField$StringView", remap = true)
 public interface MultilineTextFieldStringViewAccessor {
     @Invoker("beginIndex")
