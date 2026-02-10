@@ -51,6 +51,7 @@ public class ItemEditorModel extends StandardEditorModel {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String KEY_COMPONENTS = "components";
+    private static final String KEY_LEGACY_TAG = "tag";
     private static final String TOMBSTONE_PREFIX = "!";
     private static final String FOOD_COMPONENT_KEY = "minecraft:food";
     private static final String CONSUMABLE_COMPONENT_KEY = "minecraft:consumable";
@@ -68,6 +69,31 @@ public class ItemEditorModel extends StandardEditorModel {
         "minecraft:tooltip_display",
         "minecraft:enchantment_glint_override",
         "minecraft:custom_name"
+    );
+    private static final String TOOLTIP_DISPLAY_COMPONENT_KEY = "minecraft:tooltip_display";
+    private static final String HIDE_TOOLTIP_COMPONENT_KEY = "minecraft:hide_tooltip";
+    private static final String POTION_CONTENTS_COMPONENT_KEY = "minecraft:potion_contents";
+    private static final String WRITABLE_BOOK_COMPONENT_KEY = "minecraft:writable_book_content";
+    private static final String SHOW_IN_TOOLTIP_FIELD = "show_in_tooltip";
+    private static final String LEVELS_FIELD = "levels";
+    private static final Set<String> COMPONENTS_WITH_TOOLTIP_BOOLEAN = Set.of(
+            "minecraft:enchantments",
+            "minecraft:stored_enchantments",
+            "minecraft:attribute_modifiers",
+            "minecraft:unbreakable",
+            "minecraft:can_break",
+            "minecraft:can_place_on",
+            "minecraft:dyed_color",
+            "minecraft:trim",
+            "minecraft:jukebox_playable"
+    );
+    private static final Set<String> TOMBSTONE_COMPONENT_IDS = Set.of(
+            "minecraft:lore",
+            "minecraft:attribute_modifiers",
+            "minecraft:rarity",
+            "minecraft:repair_cost",
+            "minecraft:enchantments",
+            "minecraft:stored_enchantments"
     );
     private static final int MIN_NUTRITION = 0;
     private static final int MAX_DURATION_TICKS = 20 * 60 * 60;
@@ -245,12 +271,18 @@ public class ItemEditorModel extends StandardEditorModel {
     @Override
     public void apply() {
         var context = getContext();
+        CompoundTag stagedLegacy = copyLegacyPayload(context.getTag());
         super.apply();
         applyFoodComponent();
 
         var registryAccess = getRegistryAccess();
         var rebuilt = ClientUtil.saveItemStack(registryAccess, context.getItemStack());
         if (rebuilt instanceof net.minecraft.nbt.CompoundTag compound) {
+            if (stagedLegacy != null && !stagedLegacy.isEmpty()) {
+                compound.put(KEY_LEGACY_TAG, stagedLegacy);
+            } else {
+                compound.remove(KEY_LEGACY_TAG);
+            }
             sanitizeInvalidDamageTombstone(compound, context.getItemStack());
             context.setTag(compound);
             ItemStack parsed = ClientUtil.parseItemStack(registryAccess, compound);
@@ -556,6 +588,12 @@ public class ItemEditorModel extends StandardEditorModel {
         }
 
         CompoundTag oldRoot = context.getTag();
+        CompoundTag legacy = copyLegacyPayload(oldRoot);
+        if (legacy != null && !legacy.isEmpty()) {
+            compound.put(KEY_LEGACY_TAG, legacy);
+        } else {
+            compound.remove(KEY_LEGACY_TAG);
+        }
         Set<String> doNotCopyBack = suppressedKeys.isEmpty() ? Collections.emptySet() : suppressedKeys;
         compound = mergeComponentsPreservingUnknown(oldRoot, compound, doNotCopyBack);
 
@@ -626,6 +664,10 @@ public class ItemEditorModel extends StandardEditorModel {
             CompoundTag oldRoot, CompoundTag newRoot, Set<String> keysNotToCopy) {
         CompoundTag merged = newRoot.copy();
 
+        if (!merged.contains(KEY_LEGACY_TAG) && oldRoot != null) {
+            oldRoot.getCompound(KEY_LEGACY_TAG).ifPresent(oldLegacy -> merged.put(KEY_LEGACY_TAG, oldLegacy.copy()));
+        }
+
         if (!merged.contains(KEY_COMPONENTS)) {
             if (oldRoot != null) {
                 oldRoot.getCompound(KEY_COMPONENTS).ifPresent(oldComps -> merged.put(KEY_COMPONENTS, oldComps.copy()));
@@ -659,6 +701,7 @@ public class ItemEditorModel extends StandardEditorModel {
             }
         }
 
+        applyComponentMigrations(merged);
         return merged;
     }
 
@@ -676,6 +719,562 @@ public class ItemEditorModel extends StandardEditorModel {
         Set<String> doNotCopyBack = suppressedComponentKeys();
         CompoundTag merged = mergeComponentsPreservingUnknown(getContext().getTag(), compound.copy(), doNotCopyBack);
         return merged.toString();
+    }
+
+    private static CompoundTag copyLegacyPayload(CompoundTag container) {
+        if (container == null) return null;
+        return container.getCompound(KEY_LEGACY_TAG)
+                .filter(legacy -> !legacy.isEmpty())
+                .map(CompoundTag::copy)
+                .orElse(null);
+    }
+
+    private static void applyComponentMigrations(CompoundTag root) {
+        migrateLegacyEnchantments(root);
+        migrateLegacyHideFlags(root);
+        migrateLegacyAttributeModifiers(root);
+        migrateLegacyAdventurePredicates(root);
+        migrateLegacyEntityTag(root);
+        migrateLegacyPotionContents(root);
+        migrateLegacyWritableBookPages(root);
+    }
+
+    private static void migrateLegacyEnchantments(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        migrateLegacyEnchantmentList(legacyTag, root, "Enchantments", "minecraft:enchantments");
+        migrateLegacyEnchantmentList(legacyTag, root, "StoredEnchantments", "minecraft:stored_enchantments");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyEnchantmentList(CompoundTag legacyTag, CompoundTag root, String legacyKey, String componentKey) {
+        ListTag enchantList = legacyTag.getList(legacyKey).orElse(null);
+        if (enchantList == null || enchantList.isEmpty()) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        CompoundTag components = ensureComponentsTag(root);
+        if (components.contains(componentKey)) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        CompoundTag levels = new CompoundTag();
+        boolean hasData = false;
+        for (Tag element : enchantList) {
+            if (!(element instanceof CompoundTag enchantment)) {
+                continue;
+            }
+            String id = enchantment.getString("id").orElse("");
+            if (id.isEmpty()) {
+                continue;
+            }
+            if (!id.contains(":")) {
+                id = "minecraft:" + id;
+            }
+            ResourceLocation rl = ResourceLocation.tryParse(id);
+            if (rl == null) {
+                continue;
+            }
+            int level = enchantment.getIntOr("lvl", 0);
+            if (level <= 0) {
+                continue;
+            }
+            levels.putInt(rl.toString(), level);
+            hasData = true;
+        }
+        if (hasData) {
+            CompoundTag component = new CompoundTag();
+            component.put(LEVELS_FIELD, levels);
+            components.put(componentKey, component);
+        }
+        legacyTag.remove(legacyKey);
+    }
+
+    private static void migrateLegacyHideFlags(CompoundTag root) {
+        CompoundTag components = root.getCompound(KEY_COMPONENTS).orElse(null);
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        boolean hideTooltip = false;
+        EnumSet<ItemHideFlagsCategoryModel.HideFlag> hiddenFlags = EnumSet.noneOf(ItemHideFlagsCategoryModel.HideFlag.class);
+
+        if (components != null) {
+            if (components.contains(HIDE_TOOLTIP_COMPONENT_KEY)) {
+                hideTooltip = true;
+                components.remove(HIDE_TOOLTIP_COMPONENT_KEY);
+            }
+            List<String> keys = List.copyOf(components.keySet());
+            for (String key : keys) {
+                if (!key.startsWith(TOMBSTONE_PREFIX)) {
+                    continue;
+                }
+                String target = key.substring(1);
+                if (TOOLTIP_DISPLAY_COMPONENT_KEY.equals(target)
+                        || HIDE_TOOLTIP_COMPONENT_KEY.equals(target)
+                        || TOMBSTONE_COMPONENT_IDS.contains(target)) {
+                    components.remove(key);
+                }
+            }
+        }
+
+        if (legacyTag != null && legacyTag.contains("HideFlags")) {
+            int mask = legacyTag.getIntOr("HideFlags", 0);
+            if (mask != 0) {
+                for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
+                    if (flag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
+                        if ((mask & flag.getValue()) != 0) {
+                            hideTooltip = true;
+                        }
+                        continue;
+                    }
+                    if ((mask & flag.getValue()) != 0) {
+                        hiddenFlags.add(flag);
+                    }
+                }
+            }
+            legacyTag.remove("HideFlags");
+        }
+
+        if (!hideTooltip && hiddenFlags.isEmpty()) {
+            if (legacyTag != null && legacyTag.isEmpty()) {
+                root.remove(KEY_LEGACY_TAG);
+            }
+            return;
+        }
+
+        CompoundTag comps = ensureComponentsTag(root);
+        Set<String> hiddenComponentIds = new LinkedHashSet<>();
+        for (ItemHideFlagsCategoryModel.HideFlag flag : hiddenFlags) {
+            for (DataComponentType<?> type : flag.hiddenComponents()) {
+                String id = componentId(type);
+                if (id == null) {
+                    continue;
+                }
+                hiddenComponentIds.add(id);
+                if (COMPONENTS_WITH_TOOLTIP_BOOLEAN.contains(id)) {
+                    setComponentTooltipVisibility(comps, id, false);
+                }
+            }
+        }
+
+        if (!hiddenComponentIds.isEmpty() || hideTooltip || !comps.contains(TOOLTIP_DISPLAY_COMPONENT_KEY)) {
+            writeTooltipDisplayTag(comps, hideTooltip, hiddenComponentIds);
+        }
+
+        if (legacyTag != null && legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyAttributeModifiers(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        ListTag legacyList = legacyTag.getList("AttributeModifiers").orElse(null);
+        if (legacyList == null) {
+            return;
+        }
+        CompoundTag components = ensureComponentsTag(root);
+        if (!components.contains("minecraft:attribute_modifiers")) {
+            ListTag modifiers = new ListTag();
+            Set<UUID> usedUuids = new HashSet<>();
+            Set<ResourceLocation> usedModifierIds = new HashSet<>();
+            for (Tag element : legacyList) {
+                if (!(element instanceof CompoundTag legacyModifier)) {
+                    continue;
+                }
+                String attributeId = normalizeNamespacedId(legacyModifier.getStringOr("AttributeName", ""));
+                ResourceLocation attributeKey = ResourceLocation.tryParse(attributeId);
+                if (attributeKey == null) {
+                    continue;
+                }
+                int operation = legacyModifier.getIntOr("Operation", 0);
+                String operationName = switch (operation) {
+                    case 1 -> "add_multiplied_base";
+                    case 2 -> "add_multiplied_total";
+                    default -> "add_value";
+                };
+                double amount = legacyModifier.getDoubleOr("Amount", 0d);
+                String slot = legacyModifier.getStringOr("Slot", "").trim();
+                UUID uuid = readLegacyModifierUuid(legacyModifier);
+                if (uuid == null || !usedUuids.add(uuid)) {
+                    uuid = generateModifierUuid(legacyModifier, usedUuids);
+                }
+                ResourceLocation modifierId = createModifierId(uuid, usedModifierIds);
+
+                CompoundTag modifier = new CompoundTag();
+                modifier.putString("type", attributeKey.toString());
+                modifier.putDouble("amount", amount);
+                modifier.putString("operation", operationName);
+                modifier.putString("id", modifierId.toString());
+                if (!slot.isEmpty()) {
+                    modifier.putString("slot", slot);
+                }
+                modifiers.add(modifier);
+            }
+            if (!modifiers.isEmpty()) {
+                CompoundTag component = new CompoundTag();
+                component.put("modifiers", modifiers);
+                components.put("minecraft:attribute_modifiers", component);
+            }
+        }
+        legacyTag.remove("AttributeModifiers");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyAdventurePredicates(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        migrateLegacyAdventurePredicateList(legacyTag, root, "CanDestroy", "minecraft:can_break");
+        migrateLegacyAdventurePredicateList(legacyTag, root, "CanPlaceOn", "minecraft:can_place_on");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyAdventurePredicateList(CompoundTag legacyTag, CompoundTag root, String legacyKey, String componentKey) {
+        ListTag legacyList = legacyTag.getList(legacyKey).orElse(null);
+        if (legacyList == null || legacyList.isEmpty()) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        CompoundTag components = ensureComponentsTag(root);
+        if (components.contains(componentKey)) {
+            legacyTag.remove(legacyKey);
+            return;
+        }
+        ListTag predicates = new ListTag();
+        for (Tag element : legacyList) {
+            if (!(element instanceof StringTag selectorTag)) {
+                continue;
+            }
+            String selector = normalizeBlockSelector(selectorTag.value());
+            if (selector == null || selector.isEmpty()) {
+                continue;
+            }
+            CompoundTag predicate = new CompoundTag();
+            predicate.putString("blocks", selector);
+            predicates.add(predicate);
+        }
+        if (!predicates.isEmpty()) {
+            CompoundTag component = new CompoundTag();
+            component.put("predicates", predicates);
+            components.put(componentKey, component);
+        }
+        legacyTag.remove(legacyKey);
+    }
+
+    private static void migrateLegacyEntityTag(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        CompoundTag entityTag = legacyTag.getCompound("EntityTag").orElse(null);
+        if (entityTag != null) {
+            CompoundTag components = ensureComponentsTag(root);
+            if (!components.contains("minecraft:entity_data")) {
+                components.put("minecraft:entity_data", entityTag.copy());
+            }
+            legacyTag.remove("EntityTag");
+        }
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyPotionContents(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null) {
+            return;
+        }
+        boolean hasLegacyPotion = legacyTag.contains("Potion")
+                || legacyTag.contains("CustomPotionColor")
+                || legacyTag.contains("custom_potion_effects");
+        if (!hasLegacyPotion) {
+            return;
+        }
+
+        CompoundTag components = ensureComponentsTag(root);
+        if (!components.contains(POTION_CONTENTS_COMPONENT_KEY)) {
+            CompoundTag potionContents = new CompoundTag();
+            String potionId = normalizeNamespacedId(legacyTag.getStringOr("Potion", "").trim());
+            if (!potionId.isEmpty()) {
+                potionContents.putString("potion", potionId);
+            }
+            legacyTag.getInt("CustomPotionColor").ifPresent(color -> {
+                if (color != 0) {
+                    potionContents.putInt("custom_color", color);
+                }
+            });
+
+            ListTag customEffects = legacyTag.getList("custom_potion_effects").orElse(null);
+            if (customEffects != null && !customEffects.isEmpty()) {
+                ListTag migratedEffects = new ListTag();
+                for (Tag element : customEffects) {
+                    if (!(element instanceof CompoundTag effect)) {
+                        continue;
+                    }
+                    String id = normalizeNamespacedId(effect.getStringOr("id", ""));
+                    if (id.isEmpty()) {
+                        id = normalizeNamespacedId(effect.getStringOr("Id", ""));
+                    }
+                    if (id.isEmpty()) {
+                        continue;
+                    }
+                    CompoundTag migrated = new CompoundTag();
+                    migrated.putString("id", id);
+                    migrated.putInt("amplifier", Math.max(0, effect.getIntOr("amplifier", effect.getIntOr("Amplifier", 0))));
+                    migrated.putInt("duration", Math.max(1, effect.getIntOr("duration", effect.getIntOr("Duration", 1))));
+                    migrated.putBoolean("ambient", effect.getBooleanOr("ambient", effect.getBooleanOr("Ambient", false)));
+                    boolean showParticles = effect.getBoolean("show_particles")
+                            .or(() -> effect.getBoolean("ShowParticles"))
+                            .orElse(true);
+                    boolean showIcon = effect.getBoolean("show_icon")
+                            .or(() -> effect.getBoolean("ShowIcon"))
+                            .orElse(true);
+                    migrated.putBoolean("show_particles", showParticles);
+                    migrated.putBoolean("show_icon", showIcon);
+                    migratedEffects.add(migrated);
+                }
+                if (!migratedEffects.isEmpty()) {
+                    potionContents.put("custom_effects", migratedEffects);
+                }
+            }
+
+            if (!potionContents.isEmpty()) {
+                components.put(POTION_CONTENTS_COMPONENT_KEY, potionContents);
+            }
+        }
+
+        legacyTag.remove("Potion");
+        legacyTag.remove("CustomPotionColor");
+        legacyTag.remove("custom_potion_effects");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static void migrateLegacyWritableBookPages(CompoundTag root) {
+        CompoundTag legacyTag = root.getCompound(KEY_LEGACY_TAG).orElse(null);
+        if (legacyTag == null || !legacyTag.contains("pages")) {
+            return;
+        }
+        ListTag pages = legacyTag.getList("pages").orElse(null);
+        if (pages == null) {
+            legacyTag.remove("pages");
+            if (legacyTag.isEmpty()) {
+                root.remove(KEY_LEGACY_TAG);
+            }
+            return;
+        }
+
+        CompoundTag components = ensureComponentsTag(root);
+        if (!components.contains(WRITABLE_BOOK_COMPONENT_KEY)) {
+            ListTag migratedPages = new ListTag();
+            for (int i = 0; i < pages.size() && migratedPages.size() < WritableBookContent.MAX_PAGES; i++) {
+                String page = pages.getString(i).orElse("");
+                if (page.contains("\r")) {
+                    page = page.replace("\r", "");
+                }
+                if (page.length() > WritableBookContent.PAGE_EDIT_LENGTH) {
+                    page = page.substring(0, WritableBookContent.PAGE_EDIT_LENGTH);
+                }
+                migratedPages.add(StringTag.valueOf(page));
+            }
+            if (!migratedPages.isEmpty()) {
+                CompoundTag writableBook = new CompoundTag();
+                writableBook.put("pages", migratedPages);
+                components.put(WRITABLE_BOOK_COMPONENT_KEY, writableBook);
+            }
+        }
+
+        legacyTag.remove("pages");
+        if (legacyTag.isEmpty()) {
+            root.remove(KEY_LEGACY_TAG);
+        }
+    }
+
+    private static String normalizeBlockSelector(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String selector = raw.trim();
+        if (selector.isEmpty()) {
+            return null;
+        }
+        if (selector.startsWith("#")) {
+            String value = selector.substring(1);
+            ResourceLocation rl = value.contains(":")
+                    ? ResourceLocation.tryParse(value)
+                    : ResourceLocation.tryParse("minecraft:" + value);
+            return rl == null ? null : "#" + rl;
+        }
+        String value = selector.contains(":") ? selector : "minecraft:" + selector;
+        ResourceLocation rl = ResourceLocation.tryParse(value);
+        return rl == null ? null : rl.toString();
+    }
+
+    private static String normalizeNamespacedId(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        String candidate = raw.trim();
+        if (!candidate.contains(":")) {
+            candidate = "minecraft:" + candidate;
+        }
+        ResourceLocation rl = ResourceLocation.tryParse(candidate);
+        return rl == null ? "" : rl.toString();
+    }
+
+    private static UUID readLegacyModifierUuid(CompoundTag tag) {
+        UUID parsed = parseUuidString(tag.getStringOr("UUID", ""));
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = parseUuidString(tag.getStringOr("id", ""));
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = parseUuidString(tag.getStringOr("uuid", ""));
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tag.getIntArray("UUID").map(ItemEditorModel::uuidFromIntArray).orElse(null);
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tag.getIntArray("id").map(ItemEditorModel::uuidFromIntArray).orElse(null);
+        if (parsed != null) {
+            return parsed;
+        }
+        return tag.getIntArray("uuid").map(ItemEditorModel::uuidFromIntArray).orElse(null);
+    }
+
+    private static UUID generateModifierUuid(CompoundTag legacyModifier, Set<UUID> usedIds) {
+        CompoundTag seedTag = legacyModifier.copy();
+        seedTag.remove("UUID");
+        seedTag.remove("uuid");
+        seedTag.remove("id");
+        String seed = seedTag.toString();
+        int salt = 0;
+        while (true) {
+            UUID generated = UUID.nameUUIDFromBytes((seed + "#" + salt).getBytes(StandardCharsets.UTF_8));
+            if (usedIds.add(generated)) {
+                return generated;
+            }
+            salt++;
+        }
+    }
+
+    private static ResourceLocation createModifierId(UUID uuid, Set<ResourceLocation> usedIds) {
+        String compact = uuid.toString().replace("-", "");
+        String basePath = "m_" + compact.substring(0, 12);
+        ResourceLocation direct = ResourceLocation.fromNamespaceAndPath("cadeditor", basePath);
+        if (usedIds.add(direct)) {
+            return direct;
+        }
+        int suffix = 1;
+        while (true) {
+            ResourceLocation withSuffix = ResourceLocation.fromNamespaceAndPath(
+                    "cadeditor",
+                    basePath + "_" + Integer.toHexString(suffix++)
+            );
+            if (usedIds.add(withSuffix)) {
+                return withSuffix;
+            }
+        }
+    }
+
+    private static UUID parseUuidString(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        try {
+            return UUID.fromString(trimmed);
+        } catch (IllegalArgumentException ignored) {
+        }
+        String candidate = trimmed;
+        int underscore = candidate.lastIndexOf('_');
+        if (underscore >= 0 && underscore + 1 < candidate.length()) {
+            candidate = candidate.substring(underscore + 1);
+        } else if (candidate.contains(":")) {
+            candidate = candidate.substring(candidate.lastIndexOf(':') + 1);
+        }
+        candidate = candidate.replace("-", "");
+        if (candidate.length() != 32) {
+            return null;
+        }
+        try {
+            long most = Long.parseUnsignedLong(candidate.substring(0, 16), 16);
+            long least = Long.parseUnsignedLong(candidate.substring(16), 16);
+            return new UUID(most, least);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static UUID uuidFromIntArray(int[] data) {
+        if (data == null || data.length != 4) {
+            return null;
+        }
+        long most = ((long) data[0] << 32) | (data[1] & 0xffffffffL);
+        long least = ((long) data[2] << 32) | (data[3] & 0xffffffffL);
+        return new UUID(most, least);
+    }
+
+    private static void writeTooltipDisplayTag(CompoundTag components, boolean hideTooltip, Set<String> hiddenComponentIds) {
+        if (!hideTooltip && hiddenComponentIds.isEmpty()) {
+            components.remove(TOOLTIP_DISPLAY_COMPONENT_KEY);
+            return;
+        }
+        CompoundTag tooltip = components.getCompound(TOOLTIP_DISPLAY_COMPONENT_KEY).orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            components.put(TOOLTIP_DISPLAY_COMPONENT_KEY, created);
+            return created;
+        });
+        if (hideTooltip) {
+            tooltip.putBoolean("hide_tooltip", true);
+        } else {
+            tooltip.remove("hide_tooltip");
+        }
+        if (!hiddenComponentIds.isEmpty()) {
+            ListTag list = new ListTag();
+            for (String id : hiddenComponentIds) {
+                list.add(StringTag.valueOf(id));
+            }
+            tooltip.put("hidden_components", list);
+        } else {
+            tooltip.remove("hidden_components");
+        }
+        if (tooltip.isEmpty()) {
+            components.remove(TOOLTIP_DISPLAY_COMPONENT_KEY);
+        }
+    }
+
+    private static void setComponentTooltipVisibility(CompoundTag components, String componentId, boolean show) {
+        components.getCompound(componentId).ifPresent(comp -> {
+            if (show) {
+                comp.remove(SHOW_IN_TOOLTIP_FIELD);
+            } else {
+                comp.putBoolean(SHOW_IN_TOOLTIP_FIELD, false);
+            }
+        });
+    }
+
+    private static String componentId(DataComponentType<?> type) {
+        if (type == null) {
+            return null;
+        }
+        ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+        return id == null ? null : id.toString();
     }
 
     private static boolean hasComponent(CompoundTag root, String key) {
