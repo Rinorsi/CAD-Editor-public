@@ -17,7 +17,7 @@ import com.github.rinorsi.cadeditor.client.util.ScreenScalingManager;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,7 +46,7 @@ public final class ModScreenHandler {
 
     public static void openListSelectionScreen(MutableComponent title, String attributeName, List<? extends ListSelectionElementModel> items,
                                                Consumer<String> action, boolean multiSelect,
-                                               Consumer<List<ResourceLocation>> multiAction, Set<ResourceLocation> initiallySelected) {
+                                               Consumer<List<Identifier>> multiAction, Set<Identifier> initiallySelected) {
         openListSelectionScreen(title, attributeName, items, action, multiSelect, multiAction, initiallySelected,
                 Collections.emptyList(), null);
     }
@@ -60,8 +60,8 @@ public final class ModScreenHandler {
     public static void openListSelectionScreen(MutableComponent title, String attributeName,
                                                List<? extends ListSelectionElementModel> items, Consumer<String> action,
                                                boolean multiSelect,
-                                               Consumer<List<ResourceLocation>> multiAction,
-                                               Set<ResourceLocation> initiallySelected,
+                                               Consumer<List<Identifier>> multiAction,
+                                               Set<Identifier> initiallySelected,
                                                List<ListSelectionFilter> filters,
                                                String initialFilterId) {
         openScaledScreen(mvc(ListSelectionScreenMVC.INSTANCE,

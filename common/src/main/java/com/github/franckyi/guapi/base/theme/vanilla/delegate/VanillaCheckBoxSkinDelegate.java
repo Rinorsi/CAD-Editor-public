@@ -7,17 +7,17 @@ import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 @SuppressWarnings("this-escape")
 public class VanillaCheckBoxSkinDelegate extends AbstractButton implements VanillaWidgetSkinDelegate {
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(com.github.rinorsi.cadeditor.common.ModConstants.MOD_ID, "textures/gui/checkbox.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(com.github.rinorsi.cadeditor.common.ModConstants.MOD_ID, "textures/gui/checkbox.png");
     protected final CheckBox node;
     private boolean selected;
 
     public VanillaCheckBoxSkinDelegate(CheckBox node) {
-        super(node.getX(), node.getY(), node.getWidth(), 16, node.getLabel());
+        super(node.getX(), node.getY(), 16, 16, node.getLabel());
         this.node = node;
         this.selected = node.isChecked();
         initLabeledWidget(node);
@@ -50,7 +50,7 @@ public class VanillaCheckBoxSkinDelegate extends AbstractButton implements Vanil
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         Minecraft mc = Minecraft.getInstance();
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, getX(), getY(), isHoveredOrFocused() ? 16f : 0f, isSelected() ? 16f : 0f, 16, 16, 32, 32);
         guiGraphics.drawString(mc.font, getMessage(), getX() + 20, getY() + (height - mc.font.lineHeight - 1) / 2, 14737632 | Mth.ceil(alpha * 255.0F) << 24);

@@ -13,7 +13,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.trim.ArmorTrim;
 import net.minecraft.world.item.equipment.trim.TrimMaterial;
@@ -38,12 +38,12 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
         ArmorTrim trim = stack.get(DataComponents.TRIM);
         if (trim != null) {
             patternId = trim.pattern().unwrapKey()
-                    .map(ResourceKey::location)
-                    .map(ResourceLocation::toString)
+                    .map(ResourceKey::identifier)
+                    .map(Identifier::toString)
                     .orElse("");
             materialId = trim.material().unwrapKey()
-                    .map(ResourceKey::location)
-                    .map(ResourceLocation::toString)
+                    .map(ResourceKey::identifier)
+                    .map(Identifier::toString)
                     .orElse("");
         }
         patternEntry = new TrimPatternSelectionEntryModel(this, patternId,
@@ -94,7 +94,7 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
         if (lookup == null) {
             return Optional.empty();
         }
-        ResourceLocation rl = id.isBlank() ? null : ResourceLocation.tryParse(id);
+        Identifier rl = id.isBlank() ? null : Identifier.tryParse(id);
         if (rl == null) {
             return Optional.empty();
         }
@@ -105,7 +105,7 @@ public class ItemTrimCategoryModel extends ItemEditorCategoryModel {
         if (lookup == null) {
             return Optional.empty();
         }
-        ResourceLocation rl = id.isBlank() ? null : ResourceLocation.tryParse(id);
+        Identifier rl = id.isBlank() ? null : Identifier.tryParse(id);
         if (rl == null) {
             return Optional.empty();
         }

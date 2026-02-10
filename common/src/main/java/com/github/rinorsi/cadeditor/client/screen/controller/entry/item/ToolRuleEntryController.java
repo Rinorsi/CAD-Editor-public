@@ -18,7 +18,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
@@ -176,7 +176,7 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
     }
 
     private void openBlockSelection() {
-        Set<ResourceLocation> initiallySelected = new LinkedHashSet<>(model.getBlockIds());
+        Set<Identifier> initiallySelected = new LinkedHashSet<>(model.getBlockIds());
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.BLOCK, "tool_rule_blocks",
                 ClientCache.getBlockSelectionItems(), null, true,
@@ -196,7 +196,7 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
     }
 
     private void openTagSelection() {
-        Set<ResourceLocation> initiallySelected = new LinkedHashSet<>(model.getTagIds());
+        Set<Identifier> initiallySelected = new LinkedHashSet<>(model.getTagIds());
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.gui("tool_rule_tags"), "tool_rule_tags",
                 ClientCache.getBlockTagSelectionItems(), null, true,
@@ -404,8 +404,8 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
     }
 
     private static final class InlineSelection {
-        final Set<ResourceLocation> blockIds = new LinkedHashSet<>();
-        final Set<ResourceLocation> tagIds = new LinkedHashSet<>();
+        final Set<Identifier> blockIds = new LinkedHashSet<>();
+        final Set<Identifier> tagIds = new LinkedHashSet<>();
     }
 
     private InlineSelection parseInlineSelection(String raw) {
@@ -422,7 +422,7 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
 
             if (!s.contains(":")) s = "minecraft:" + s;
 
-            ResourceLocation id = ResourceLocation.tryParse(s);
+            Identifier id = Identifier.tryParse(s);
             if (id == null) continue;
 
             if (isTag) out.tagIds.add(id);
@@ -432,14 +432,14 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
     }
 
     private String toInlineTextFromModel() {
-        LinkedHashSet<ResourceLocation> blocks = new LinkedHashSet<>(model.getBlockIds());
-        LinkedHashSet<ResourceLocation> tags   = new LinkedHashSet<>(model.getTagIds());
+        LinkedHashSet<Identifier> blocks = new LinkedHashSet<>(model.getBlockIds());
+        LinkedHashSet<Identifier> tags   = new LinkedHashSet<>(model.getTagIds());
         StringBuilder sb = new StringBuilder();
-        for (ResourceLocation id : blocks) {
+        for (Identifier id : blocks) {
             if (sb.length() > 0) sb.append(", ");
             sb.append(id.toString());
         }
-        for (ResourceLocation id : tags) {
+        for (Identifier id : tags) {
             if (sb.length() > 0) sb.append(", ");
             sb.append('#').append(id.toString());
         }

@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import com.github.franckyi.databindings.api.BooleanProperty;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Supplier;
@@ -12,11 +12,11 @@ import java.util.function.Supplier;
 public class SelectableItemListSelectionElementModel extends ItemListSelectionElementModel implements SelectableListSelectionElementModel {
     private final BooleanProperty selectedProperty = BooleanProperty.create(false);
 
-    public SelectableItemListSelectionElementModel(String name, ResourceLocation id, ItemStack itemStack) {
+    public SelectableItemListSelectionElementModel(String name, Identifier id, ItemStack itemStack) {
         super(name, id, itemStack);
     }
 
-    public SelectableItemListSelectionElementModel(String name, ResourceLocation id, Supplier<ItemStack> itemSupplier) {
+    public SelectableItemListSelectionElementModel(String name, Identifier id, Supplier<ItemStack> itemSupplier) {
         super(name, id, itemSupplier);
     }
 

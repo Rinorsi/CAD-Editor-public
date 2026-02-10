@@ -5,7 +5,7 @@ import com.github.franckyi.guapi.api.node.TreeView;
 import com.github.franckyi.guapi.api.node.builder.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Collection;
@@ -57,11 +57,11 @@ public interface NodeFactory {
 
     HBoxBuilder createHBox(Consumer<HBoxBuilder> with);
 
-    ImageViewBuilder createImageView(ResourceLocation id);
+    ImageViewBuilder createImageView(Identifier id);
 
-    ImageViewBuilder createImageView(ResourceLocation id, int imageWidth, int imageHeight);
+    ImageViewBuilder createImageView(Identifier id, int imageWidth, int imageHeight);
 
-    ImageViewBuilder createImageView(ResourceLocation id, Consumer<ImageViewBuilder> with);
+    ImageViewBuilder createImageView(Identifier id, Consumer<ImageViewBuilder> with);
 
     ItemViewBuilder createItemView();
 
@@ -123,17 +123,17 @@ public interface NodeFactory {
 
     TextAreaBuilder createTextArea(Consumer<TextAreaBuilder> with);
 
-    TexturedButtonBuilder createTexturedButton(ResourceLocation id, boolean drawButton);
+    TexturedButtonBuilder createTexturedButton(Identifier id, boolean drawButton);
 
-    TexturedButtonBuilder createTexturedButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton);
+    TexturedButtonBuilder createTexturedButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton);
 
-    TexturedButtonBuilder createTexturedButton(ResourceLocation id, boolean drawButton, Consumer<TexturedButtonBuilder> with);
+    TexturedButtonBuilder createTexturedButton(Identifier id, boolean drawButton, Consumer<TexturedButtonBuilder> with);
 
-    TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, boolean drawButton);
+    TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, boolean drawButton);
 
-    TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton);
+    TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton);
 
-    TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with);
+    TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with);
 
     ToggleButtonBuilder createToggleButton();
 

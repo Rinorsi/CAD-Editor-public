@@ -5,7 +5,7 @@ import com.github.rinorsi.cadeditor.client.ModScreenHandler;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.SelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.SelectionEntryView;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class SelectionEntryController<M extends SelectionEntryModel, V extends SelectionEntryView> extends StringEntryController<M, V> {
     public SelectionEntryController(M model, V view) {
@@ -30,7 +30,7 @@ public class SelectionEntryController<M extends SelectionEntryModel, V extends S
                 model.getSelectionItems(), model::setValue);
     }
 
-    protected ResourceLocation parseResourceLocation(String value) {
+    protected Identifier parseResourceLocation(String value) {
         return ClientUtil.parseResourceLocation(value);
     }
 }

@@ -18,7 +18,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.AdventureModePredicate;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.JukeboxPlayable;
@@ -190,7 +190,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private static String componentName(DataComponentType<?> type) {
-        ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+        Identifier id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
         return id == null ? String.valueOf(type) : id.toString();
     }
 
@@ -304,7 +304,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             DataComponentType<Object> t = null;
             try {
                 t = BuiltInRegistries.DATA_COMPONENT_TYPE
-                        .get(ResourceLocation.withDefaultNamespace("tooltip_display"))
+                        .get(Identifier.withDefaultNamespace("tooltip_display"))
                         .map(Holder.Reference::value)
                         .map(value -> (DataComponentType<Object>) value)
                         .orElse(null);
@@ -337,7 +337,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             ListTag hiddenList = compound.getList("hidden_components").orElse(new ListTag());
             for (Tag entry : hiddenList) {
                 if (!(entry instanceof StringTag stringTag)) continue;
-                ResourceLocation id = ResourceLocation.tryParse(stringTag.value());
+                Identifier id = Identifier.tryParse(stringTag.value());
                 if (id == null) continue;
                 DataComponentType<?> dc = BuiltInRegistries.DATA_COMPONENT_TYPE.get(id)
                         .map(Holder.Reference::value)
@@ -366,7 +366,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             if (!components.isEmpty()) {
                 ListTag hidden = new ListTag();
                 for (DataComponentType<?> component : components) {
-                    ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component);
+                    Identifier id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(component);
                     if (id != null) {
                         hidden.add(StringTag.valueOf(id.toString()));
                     }

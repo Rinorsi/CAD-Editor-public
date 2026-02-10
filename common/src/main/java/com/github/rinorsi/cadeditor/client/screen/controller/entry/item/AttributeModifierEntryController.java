@@ -8,7 +8,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.AttributeModi
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.AttributeModifierEntryView;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static com.github.franckyi.guapi.api.GuapiHelper.translated;
 
@@ -45,7 +45,7 @@ public class AttributeModifierEntryController extends EntryController<AttributeM
     }
 
     private void updateAttributePreview(String value) {
-        ResourceLocation id = ClientUtil.parseResourceLocation(value);
+        Identifier id = ClientUtil.parseResourceLocation(value);
         if (id == null) {
             view.getAttributePreviewLabel().setVisible(false);
             return;

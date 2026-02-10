@@ -1,6 +1,7 @@
 package com.github.rinorsi.cadeditor.common;
 
 import com.github.rinorsi.cadeditor.common.logic.ServerEditorCommandLogic;
+import com.github.rinorsi.cadeditor.common.logic.PermissionLogic;
 import com.github.rinorsi.cadeditor.common.network.EditorCommandPacket;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -68,7 +69,7 @@ public final class ServerCommandHandler {
             }
             command.then(subCommand);
         }
-        command.requires(source -> source.hasPermission(CommonConfiguration.INSTANCE.getPermissionLevel()));
+        command.requires(PermissionLogic::hasPermission);
         var commandNode = dispatcher.register(command);
         dispatcher.register(Commands.literal("ibe").redirect(commandNode));
     }

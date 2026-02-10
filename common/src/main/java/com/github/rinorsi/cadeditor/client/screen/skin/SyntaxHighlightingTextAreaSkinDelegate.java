@@ -10,7 +10,7 @@ import com.github.rinorsi.cadeditor.mixin.MultiLineEditBoxMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldStringViewAccessor;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

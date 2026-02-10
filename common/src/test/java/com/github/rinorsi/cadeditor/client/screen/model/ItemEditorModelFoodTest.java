@@ -18,7 +18,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -188,7 +188,7 @@ class ItemEditorModelFoodTest {
     }
 
     private static Item getItem(String id) {
-        ResourceLocation location = ResourceLocation.parse(id);
+        Identifier location = Identifier.parse(id);
         return BuiltInRegistries.ITEM.getOptional(location)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown item id: " + id));
     }
@@ -205,12 +205,12 @@ class ItemEditorModelFoodTest {
         ItemAttributeModifiers modifiers = ItemAttributeModifiers.EMPTY;
         modifiers = modifiers.withModifierAdded(
                 damageAttr,
-                new AttributeModifier(ResourceLocation.withDefaultNamespace("18481079-2fa9-3c5c-aa38-fefac3636197"),
+                new AttributeModifier(Identifier.withDefaultNamespace("18481079-2fa9-3c5c-aa38-fefac3636197"),
                         4.0, AttributeModifier.Operation.ADD_VALUE),
                 EquipmentSlotGroup.MAINHAND);
         modifiers = modifiers.withModifierAdded(
                 speedAttr,
-                new AttributeModifier(ResourceLocation.withDefaultNamespace("db990990-cabc-3dcc-8fc5-fbc9e518c6c3"),
+                new AttributeModifier(Identifier.withDefaultNamespace("db990990-cabc-3dcc-8fc5-fbc9e518c6c3"),
                         -2.4000000953674316, AttributeModifier.Operation.ADD_VALUE),
                 EquipmentSlotGroup.MAINHAND);
         return modifiers;

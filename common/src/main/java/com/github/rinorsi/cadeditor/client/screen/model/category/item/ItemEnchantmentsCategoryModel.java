@@ -15,7 +15,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -84,7 +84,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
 
     private EnchantmentEntryModel createEnchantment(Object2IntMap.Entry<Holder<Enchantment>> entry) {
         Holder<Enchantment> holder = entry.getKey();
-        String id = holder.unwrapKey().map(key -> key.location().toString()).orElse("");
+        String id = holder.unwrapKey().map(key -> key.identifier().toString()).orElse("");
         return createEnchantment(id, entry.getIntValue());
     }
 
@@ -96,8 +96,8 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         return new EnchantmentEntryModel(this, id, level, this::addEnchantment);
     }
 
-    public Set<ResourceLocation> getExistingEnchantmentIds() {
-        Set<ResourceLocation> set = new HashSet<>();
+    public Set<Identifier> getExistingEnchantmentIds() {
+        Set<Identifier> set = new HashSet<>();
         getEntries().stream()
                 .filter(EnchantmentEntryModel.class::isInstance)
                 .map(EnchantmentEntryModel.class::cast)
@@ -109,7 +109,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     }
 
     public void addEnchantmentEntryIfAbsent(String id, int level) {
-        ResourceLocation rl = normalizeId(id);
+        Identifier rl = normalizeId(id);
         if (rl == null || getExistingEnchantmentIds().contains(rl)) {
             return;
         }
@@ -119,8 +119,8 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         updateEntryListIndexes();
     }
 
-    public void syncSelection(Set<ResourceLocation> selectedIds, EnchantmentEntryModel currentEntry) {
-        Set<ResourceLocation> selected = selectedIds == null
+    public void syncSelection(Set<Identifier> selectedIds, EnchantmentEntryModel currentEntry) {
+        Set<Identifier> selected = selectedIds == null
                 ? Set.of()
                 : selectedIds.stream()
                 .filter(Objects::nonNull)
@@ -136,7 +136,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
             if (entry == currentEntry) {
                 continue;
             }
-            ResourceLocation id = normalizeId(entry.getValue());
+            Identifier id = normalizeId(entry.getValue());
             if (id != null && !selected.contains(id)) {
                 toRemove.add(entry);
             }
@@ -146,7 +146,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         }
 
         if (currentEntry != null) {
-            ResourceLocation currentId = normalizeId(currentEntry.getValue());
+            Identifier currentId = normalizeId(currentEntry.getValue());
             if (selected.isEmpty()) {
                 currentEntry.setValue("");
             } else if (currentId == null || !selected.contains(currentId)) {
@@ -155,9 +155,9 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         }
 
         int level = currentEntry == null ? 1 : Math.max(1, currentEntry.getLevel());
-        ResourceLocation currentResolved = currentEntry == null ? null : normalizeId(currentEntry.getValue());
-        Set<ResourceLocation> existing = getExistingEnchantmentIds();
-        for (ResourceLocation id : selected) {
+        Identifier currentResolved = currentEntry == null ? null : normalizeId(currentEntry.getValue());
+        Set<Identifier> existing = getExistingEnchantmentIds();
+        for (Identifier id : selected) {
             if (currentResolved != null && currentResolved.equals(id)) {
                 continue;
             }
@@ -169,9 +169,9 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         updateEntryListIndexes();
     }
 
-    private ResourceLocation normalizeId(String id) {
+    private Identifier normalizeId(String id) {
         String value = id.contains(":") ? id : "minecraft:" + id;
-        return ResourceLocation.tryParse(value);
+        return Identifier.tryParse(value);
     }
 
     private void addEnchantment(String id, int lvl) {
@@ -202,7 +202,7 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
             if (lvl <= 0) {
                 continue;
             }
-            ResourceLocation rl = ResourceLocation.tryParse(id);
+            Identifier rl = Identifier.tryParse(id);
             if (rl == null) {
                 continue;
             }

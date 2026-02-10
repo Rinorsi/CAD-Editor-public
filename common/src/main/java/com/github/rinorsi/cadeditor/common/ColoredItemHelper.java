@@ -8,7 +8,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
@@ -22,12 +22,12 @@ public final class ColoredItemHelper {
     private ColoredItemHelper() {
     }
 
-    public static ItemStack createColoredPotionItem(ResourceLocation potionId, int color) {
+    public static ItemStack createColoredPotionItem(Identifier potionId, int color) {
         ItemStack stack = new ItemStack(Items.POTION);
         var lookupOpt = registryAccess().lookup(Registries.POTION);
         if (lookupOpt.isPresent()) {
             var lookup = lookupOpt.get();
-            ResourceLocation rl = potionId == null ? ResourceLocation.parse("minecraft:empty") : potionId;
+            Identifier rl = potionId == null ? Identifier.parse("minecraft:empty") : potionId;
             ResourceKey<Potion> key = ResourceKey.create(Registries.POTION, rl);
             Holder<Potion> holder = lookup.get(key).orElse(null);
             PotionContents contents;

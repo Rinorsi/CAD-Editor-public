@@ -17,7 +17,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -35,7 +35,7 @@ import java.util.UUID;
 
 public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel {
     private ListTag newAttributeModifiers;
-    private final Map<UUID, ResourceLocation> modifierIds = new HashMap<>();
+    private final Map<UUID, Identifier> modifierIds = new HashMap<>();
 
     public ItemAttributeModifiersCategoryModel(ItemEditorModel editor) {
         super(ModTexts.ATTRIBUTE_MODIFIERS, editor);
@@ -118,7 +118,7 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
                 continue;
             }
             String attrName = NbtHelper.getString(tag, "AttributeName", "");
-            ResourceLocation attrRl = ResourceLocation.tryParse(attrName);
+            Identifier attrRl = Identifier.tryParse(attrName);
             if (attrRl == null) continue;
             ResourceKey<Attribute> attrKey = ResourceKey.create(Registries.ATTRIBUTE, attrRl);
             var holderOpt = attrLookup.get(attrKey);
@@ -133,7 +133,7 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
                 uuid = deterministicModifierUuid(tag);
             }
             AttributeModifier.Operation operation = operationFromIndex(op);
-            ResourceLocation modifierId = resolveModifierId(uuid);
+            Identifier modifierId = resolveModifierId(uuid);
             AttributeModifier modifier = new AttributeModifier(modifierId, amount, operation);
             modifierIds.put(uuid, modifierId);
             componentEntries.add(new ItemAttributeModifiers.Entry(holder, modifier, group));
@@ -258,30 +258,30 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         };
     }
 
-    private static UUID uuidFromResourceLocation(ResourceLocation id) {
+    private static UUID uuidFromResourceLocation(Identifier id) {
         return UUID.nameUUIDFromBytes(("rl:" + id).getBytes(StandardCharsets.UTF_8));
     }
 
-    private ResourceLocation resolveModifierId(UUID uuid) {
-        ResourceLocation existing = modifierIds.get(uuid);
+    private Identifier resolveModifierId(UUID uuid) {
+        Identifier existing = modifierIds.get(uuid);
         if (existing != null) {
             return existing;
         }
-        ResourceLocation generated = createGeneratedModifierId(uuid);
+        Identifier generated = createGeneratedModifierId(uuid);
         modifierIds.put(uuid, generated);
         return generated;
     }
 
-    private ResourceLocation createGeneratedModifierId(UUID uuid) {
+    private Identifier createGeneratedModifierId(UUID uuid) {
         String compact = uuid.toString().replace("-", "");
         String basePath = "m_" + compact.substring(0, 12);
-        ResourceLocation candidate = ResourceLocation.fromNamespaceAndPath("cadeditor", basePath);
+        Identifier candidate = Identifier.fromNamespaceAndPath("cadeditor", basePath);
         if (!modifierIds.containsValue(candidate)) {
             return candidate;
         }
         int suffix = 1;
         while (true) {
-            ResourceLocation withSuffix = ResourceLocation.fromNamespaceAndPath(
+            Identifier withSuffix = Identifier.fromNamespaceAndPath(
                     "cadeditor",
                     basePath + "_" + Integer.toHexString(suffix++)
             );
@@ -320,7 +320,7 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     }
 
     private boolean addModifierEntry(ItemAttributeModifiers.Entry entry, Set<String> seen) {
-        String attrName = entry.attribute().unwrapKey().map(k -> k.location().toString()).orElse("");
+        String attrName = entry.attribute().unwrapKey().map(k -> k.identifier().toString()).orElse("");
         AttributeModifier modifier = entry.modifier();
         UUID uuid = uuidFromResourceLocation(modifier.id());
         modifierIds.put(uuid, modifier.id());

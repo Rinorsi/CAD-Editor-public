@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
@@ -12,7 +12,7 @@ public class EntityListSelectionElementModel extends ItemListSelectionElementMod
     private final Component displayName;
     private final String displayNameLowercase;
 
-    public EntityListSelectionElementModel(EntityType<?> entityType, ResourceLocation id) {
+    public EntityListSelectionElementModel(EntityType<?> entityType, Identifier id) {
         super(entityType.getDescriptionId(), id, () -> buildIcon(entityType));
         this.displayName = entityType.getDescription().copy();
         this.displayNameLowercase = displayName.getString().toLowerCase(Locale.ROOT);

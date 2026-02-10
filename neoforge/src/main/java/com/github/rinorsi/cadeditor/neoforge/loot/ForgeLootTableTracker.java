@@ -3,7 +3,7 @@ package com.github.rinorsi.cadeditor.neoforge.loot;
 import com.github.rinorsi.cadeditor.common.ModConstants;
 import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ReloadableServerRegistries;
 import net.minecraft.server.ReloadableServerResources;
@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 public final class ForgeLootTableTracker {
-    private static final ResourceLocation LISTENER_ID = ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "loot_table_index_tracker");
+    private static final Identifier LISTENER_ID = Identifier.fromNamespaceAndPath(ModConstants.MOD_ID, "loot_table_index_tracker");
 
     private ForgeLootTableTracker() {}
 
@@ -79,10 +79,10 @@ public final class ForgeLootTableTracker {
             return;
         }
         try {
-            Collection<ResourceLocation> keys = registries.lookup()
+            Collection<Identifier> keys = registries.lookup()
                     .lookupOrThrow(Registries.LOOT_TABLE)
                     .listElements()
-                    .map(reference -> reference.key().location())
+                    .map(reference -> reference.key().identifier())
                     .toList();
             LootTableIndex.updateAll(new ArrayList<>(keys));
         } catch (Throwable ignored) {

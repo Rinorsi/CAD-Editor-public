@@ -5,17 +5,17 @@ import com.github.franckyi.databindings.api.IntegerProperty;
 import com.github.franckyi.guapi.api.Color;
 import com.github.franckyi.guapi.api.event.MouseButtonEvent;
 import com.github.franckyi.guapi.api.node.TexturedToggleButton;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public abstract class AbstractTexturedToggleButton extends AbstractTexturedButton implements TexturedToggleButton {
     private final BooleanProperty activeProperty = BooleanProperty.create();
     private final IntegerProperty borderColorProperty = IntegerProperty.create(Color.fromRGBForRender(1.0, 1.0, 1.0));
 
-    protected AbstractTexturedToggleButton(ResourceLocation textureId, boolean drawButton) {
+    protected AbstractTexturedToggleButton(Identifier textureId, boolean drawButton) {
         super(textureId, drawButton);
     }
 
-    protected AbstractTexturedToggleButton(ResourceLocation textureId, int imageWidth, int imageHeight, boolean drawButton) {
+    protected AbstractTexturedToggleButton(Identifier textureId, int imageWidth, int imageHeight, boolean drawButton) {
         super(textureId, imageWidth, imageHeight, drawButton);
     }
 

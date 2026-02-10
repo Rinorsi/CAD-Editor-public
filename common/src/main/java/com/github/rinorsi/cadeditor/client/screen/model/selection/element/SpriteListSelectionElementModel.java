@@ -1,14 +1,14 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Supplier;
 
 public class SpriteListSelectionElementModel extends ListSelectionElementModel {
     private final Supplier<TextureAtlasSprite> spriteFactory;
 
-    public SpriteListSelectionElementModel(String name, ResourceLocation id, Supplier<TextureAtlasSprite> spriteFactory) {
+    public SpriteListSelectionElementModel(String name, Identifier id, Supplier<TextureAtlasSprite> spriteFactory) {
         super(name, id);
         this.spriteFactory = spriteFactory;
     }

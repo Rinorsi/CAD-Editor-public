@@ -1,8 +1,8 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 
 import java.util.Locale;
@@ -13,7 +13,7 @@ public class SoundEventListSelectionElementModel extends ListSelectionElementMod
     private final String searchName;
     private final String subtitleSearch;
 
-    public SoundEventListSelectionElementModel(ResourceLocation id, SoundEvent event) {
+    public SoundEventListSelectionElementModel(Identifier id, SoundEvent event) {
         super(id.toString(), id);
         this.namespace = id.getNamespace();
         Component translated = Component.translatable(Util.makeDescriptionId("sound_event", id));

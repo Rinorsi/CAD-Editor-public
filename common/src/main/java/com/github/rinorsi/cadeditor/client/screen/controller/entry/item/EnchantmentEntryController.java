@@ -9,7 +9,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.EnchantmentEn
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.EnchantmentEntryView;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashSet;
 import java.util.List;
@@ -49,8 +49,8 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
     @Override
     protected void openSelectionScreen() {
         ItemEnchantmentsCategoryModel category = (ItemEnchantmentsCategoryModel) model.getCategory();
-        Set<ResourceLocation> selected = new HashSet<>(category.getExistingEnchantmentIds());
-        ResourceLocation currentId = parseResourceLocation(model.getValue());
+        Set<Identifier> selected = new HashSet<>(category.getExistingEnchantmentIds());
+        Identifier currentId = parseResourceLocation(model.getValue());
         if (currentId != null) {
             selected.add(currentId);
         }
@@ -67,7 +67,7 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
     }
 
     private void updatePreview(String value) {
-        ResourceLocation id = parseResourceLocation(value);
+        Identifier id = parseResourceLocation(value);
         if (id == null) {
             view.setPreviewVisible(false);
             return;

@@ -12,7 +12,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class ToolRuleEntryModel extends EntryModel {
-    private final List<ResourceLocation> blockIds = new ArrayList<>();
-    private final List<ResourceLocation> tagIds = new ArrayList<>();
-    private final List<ResourceLocation> defaultBlockIds = new ArrayList<>();
-    private final List<ResourceLocation> defaultTagIds = new ArrayList<>();
+    private final List<Identifier> blockIds = new ArrayList<>();
+    private final List<Identifier> tagIds = new ArrayList<>();
+    private final List<Identifier> defaultBlockIds = new ArrayList<>();
+    private final List<Identifier> defaultTagIds = new ArrayList<>();
     private final ObjectProperty<DropBehavior> behaviorProperty = ObjectProperty.create(DropBehavior.INHERIT);
     private DropBehavior defaultBehavior = DropBehavior.INHERIT;
     private String speedText = "";
@@ -43,7 +43,7 @@ public class ToolRuleEntryModel extends EntryModel {
             rule.blocks().unwrapKey().ifPresent(tagKey -> tagIds.add(tagKey.location()));
             if (tagIds.isEmpty()) {
                 rule.blocks().stream()
-                        .map(holder -> holder.unwrapKey().map(ResourceKey::location).orElse(null))
+                        .map(holder -> holder.unwrapKey().map(ResourceKey::identifier).orElse(null))
                         .filter(id -> id != null)
                         .forEach(blockIds::add);
             }
@@ -56,20 +56,20 @@ public class ToolRuleEntryModel extends EntryModel {
         captureDefaults();
     }
 
-    public List<ResourceLocation> getBlockIds() {
+    public List<Identifier> getBlockIds() {
         return List.copyOf(blockIds);
     }
 
-    public void setBlockIds(List<ResourceLocation> ids) {
+    public void setBlockIds(List<Identifier> ids) {
         blockIds.clear();
         ids.stream().distinct().forEach(blockIds::add);
     }
 
-    public List<ResourceLocation> getTagIds() {
+    public List<Identifier> getTagIds() {
         return List.copyOf(tagIds);
     }
 
-    public void setTagIds(List<ResourceLocation> ids) {
+    public void setTagIds(List<Identifier> ids) {
         tagIds.clear();
         ids.stream().distinct().forEach(tagIds::add);
     }
@@ -157,7 +157,7 @@ public class ToolRuleEntryModel extends EntryModel {
         return entries;
     }
 
-    private void addSectionLines(List<Component> tooltip, MutableComponent title, List<ResourceLocation> ids, boolean tags) {
+    private void addSectionLines(List<Component> tooltip, MutableComponent title, List<Identifier> ids, boolean tags) {
         if (ids.isEmpty()) {
             return;
         }
@@ -199,7 +199,7 @@ public class ToolRuleEntryModel extends EntryModel {
         Optional<Boolean> behavior = behaviorProperty.getValue().toOptional();
         List<Tool.Rule> rules = new ArrayList<>();
 
-        for (ResourceLocation tagId : tagIds) {
+        for (Identifier tagId : tagIds) {
             TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, tagId);
             Optional<HolderSet.Named<Block>> named = lookup.get(tagKey);
             if (named.isEmpty()) {
@@ -210,7 +210,7 @@ public class ToolRuleEntryModel extends EntryModel {
 
         if (!blockIds.isEmpty()) {
             List<Holder<Block>> holders = new ArrayList<>();
-            for (ResourceLocation blockId : blockIds) {
+            for (Identifier blockId : blockIds) {
                 ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, blockId);
                 Optional<Holder.Reference<Block>> holder = lookup.get(key);
                 if (holder.isEmpty()) {
@@ -239,7 +239,7 @@ public class ToolRuleEntryModel extends EntryModel {
             tagIds.add(rule.blocks().unwrapKey().get().location());
         } else {
             rule.blocks().stream()
-                    .map(holder -> holder.unwrapKey().map(ResourceKey::location).orElse(null))
+                    .map(holder -> holder.unwrapKey().map(ResourceKey::identifier).orElse(null))
                     .filter(id -> id != null)
                     .forEach(blockIds::add);
         }

@@ -11,7 +11,7 @@ import com.github.rinorsi.cadeditor.client.screen.view.entry.item.FoodUsingConve
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.registries.BuiltInRegistries;
 
@@ -53,7 +53,7 @@ public class FoodUsingConvertsToEntryController extends SelectionEntryController
                         return;
                     }
                     try {
-                        ResourceLocation id = ResourceLocation.parse(selection);
+                        Identifier id = Identifier.parse(selection);
                         BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> model.useStack(new ItemStack(item)));
                     } catch (Exception ignored) {
                     }
@@ -69,7 +69,7 @@ public class FoodUsingConvertsToEntryController extends SelectionEntryController
             if (stack.isEmpty()) {
                 continue;
             }
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "food_convert_vault_item_" + i);
+            Identifier id = Identifier.fromNamespaceAndPath("cadeditor", "food_convert_vault_item_" + i);
             elements.add(new VaultItemListSelectionElementModel(id, stack));
             stacksById.put(id.toString(), stack.copy());
         }
@@ -105,7 +105,7 @@ public class FoodUsingConvertsToEntryController extends SelectionEntryController
                         return;
                     }
                     try {
-                        ResourceLocation id = ResourceLocation.parse(selection);
+                        Identifier id = Identifier.parse(selection);
                         BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                             model.useStack(new ItemStack(item));
                             if (afterSelection != null) {

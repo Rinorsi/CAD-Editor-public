@@ -20,7 +20,7 @@ public class MonochromeButtonSkinDelegate<N extends Button> extends VanillaButto
     }
 
     @Override
-    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         int x = getX();
         int y = getY();
         int width = getWidth();

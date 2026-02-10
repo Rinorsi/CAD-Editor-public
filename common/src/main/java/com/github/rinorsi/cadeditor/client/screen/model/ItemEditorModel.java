@@ -15,7 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.tags.ItemTags;
@@ -697,7 +697,7 @@ public class ItemEditorModel extends StandardEditorModel {
 
     private String describeStackForLogs(ItemStack stack) {
         if (stack.isEmpty()) return "<empty>";
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id + " tag=" + stackTagForLogs(stack);
     }
 
@@ -763,7 +763,7 @@ public class ItemEditorModel extends StandardEditorModel {
             if (!id.contains(":")) {
                 id = "minecraft:" + id;
             }
-            ResourceLocation rl = ResourceLocation.tryParse(id);
+            Identifier rl = Identifier.tryParse(id);
             if (rl == null) {
                 continue;
             }
@@ -869,13 +869,13 @@ public class ItemEditorModel extends StandardEditorModel {
         if (!components.contains("minecraft:attribute_modifiers")) {
             ListTag modifiers = new ListTag();
             Set<UUID> usedUuids = new HashSet<>();
-            Set<ResourceLocation> usedModifierIds = new HashSet<>();
+            Set<Identifier> usedModifierIds = new HashSet<>();
             for (Tag element : legacyList) {
                 if (!(element instanceof CompoundTag legacyModifier)) {
                     continue;
                 }
                 String attributeId = normalizeNamespacedId(legacyModifier.getStringOr("AttributeName", ""));
-                ResourceLocation attributeKey = ResourceLocation.tryParse(attributeId);
+                Identifier attributeKey = Identifier.tryParse(attributeId);
                 if (attributeKey == null) {
                     continue;
                 }
@@ -891,7 +891,7 @@ public class ItemEditorModel extends StandardEditorModel {
                 if (uuid == null || !usedUuids.add(uuid)) {
                     uuid = generateModifierUuid(legacyModifier, usedUuids);
                 }
-                ResourceLocation modifierId = createModifierId(uuid, usedModifierIds);
+                Identifier modifierId = createModifierId(uuid, usedModifierIds);
 
                 CompoundTag modifier = new CompoundTag();
                 modifier.putString("type", attributeKey.toString());
@@ -1099,13 +1099,13 @@ public class ItemEditorModel extends StandardEditorModel {
         }
         if (selector.startsWith("#")) {
             String value = selector.substring(1);
-            ResourceLocation rl = value.contains(":")
-                    ? ResourceLocation.tryParse(value)
-                    : ResourceLocation.tryParse("minecraft:" + value);
+            Identifier rl = value.contains(":")
+                    ? Identifier.tryParse(value)
+                    : Identifier.tryParse("minecraft:" + value);
             return rl == null ? null : "#" + rl;
         }
         String value = selector.contains(":") ? selector : "minecraft:" + selector;
-        ResourceLocation rl = ResourceLocation.tryParse(value);
+        Identifier rl = Identifier.tryParse(value);
         return rl == null ? null : rl.toString();
     }
 
@@ -1117,7 +1117,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (!candidate.contains(":")) {
             candidate = "minecraft:" + candidate;
         }
-        ResourceLocation rl = ResourceLocation.tryParse(candidate);
+        Identifier rl = Identifier.tryParse(candidate);
         return rl == null ? "" : rl.toString();
     }
 
@@ -1161,16 +1161,16 @@ public class ItemEditorModel extends StandardEditorModel {
         }
     }
 
-    private static ResourceLocation createModifierId(UUID uuid, Set<ResourceLocation> usedIds) {
+    private static Identifier createModifierId(UUID uuid, Set<Identifier> usedIds) {
         String compact = uuid.toString().replace("-", "");
         String basePath = "m_" + compact.substring(0, 12);
-        ResourceLocation direct = ResourceLocation.fromNamespaceAndPath("cadeditor", basePath);
+        Identifier direct = Identifier.fromNamespaceAndPath("cadeditor", basePath);
         if (usedIds.add(direct)) {
             return direct;
         }
         int suffix = 1;
         while (true) {
-            ResourceLocation withSuffix = ResourceLocation.fromNamespaceAndPath(
+            Identifier withSuffix = Identifier.fromNamespaceAndPath(
                     "cadeditor",
                     basePath + "_" + Integer.toHexString(suffix++)
             );
@@ -1261,7 +1261,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (type == null) {
             return null;
         }
-        ResourceLocation id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
+        Identifier id = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(type);
         return id == null ? null : id.toString();
     }
 

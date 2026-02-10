@@ -11,7 +11,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -94,13 +94,13 @@ public final class ClientUtil {
                 });
     }
 
-    public static ResourceLocation parseResourceLocation(String value) {
+    public static Identifier parseResourceLocation(String value) {
         if (value == null || value.isEmpty()) {
             return null;
         }
-        ResourceLocation location = ResourceLocation.tryParse(value);
+        Identifier location = Identifier.tryParse(value);
         if (location == null && !value.contains(":")) {
-            location = ResourceLocation.tryParse("minecraft:" + value);
+            location = Identifier.tryParse("minecraft:" + value);
         }
         return location;
     }

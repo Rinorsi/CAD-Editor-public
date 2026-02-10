@@ -8,7 +8,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 
 public class BlockSpawnerCategoryModel extends BlockEditorCategoryModel {
@@ -174,7 +174,7 @@ public class BlockSpawnerCategoryModel extends BlockEditorCategoryModel {
             return null;
         }
         String id = entityData.getStringOr("id", "");
-        ResourceLocation location = ClientUtil.parseResourceLocation(id);
+        Identifier location = ClientUtil.parseResourceLocation(id);
         return location == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(null);
     }
 
@@ -220,7 +220,7 @@ public class BlockSpawnerCategoryModel extends BlockEditorCategoryModel {
             sanitized.remove("id");
             return sanitized;
         }
-        ResourceLocation parsed = ClientUtil.parseResourceLocation(id);
+        Identifier parsed = ClientUtil.parseResourceLocation(id);
         if (parsed != null) {
             sanitized.putString("id", parsed.toString());
         } else {
@@ -295,7 +295,7 @@ public class BlockSpawnerCategoryModel extends BlockEditorCategoryModel {
             return "";
         }
         String trimmed = value.trim();
-        ResourceLocation parsed = ClientUtil.parseResourceLocation(trimmed);
+        Identifier parsed = ClientUtil.parseResourceLocation(trimmed);
         return parsed == null ? trimmed : parsed.toString();
     }
 

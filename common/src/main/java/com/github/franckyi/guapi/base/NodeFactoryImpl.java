@@ -7,7 +7,7 @@ import com.github.franckyi.guapi.api.node.builder.*;
 import com.github.franckyi.guapi.base.node.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Collection;
@@ -131,17 +131,17 @@ public class NodeFactoryImpl implements NodeFactory {
     }
 
     @Override
-    public ImageViewBuilder createImageView(ResourceLocation id) {
+    public ImageViewBuilder createImageView(Identifier id) {
         return new ImageViewImpl(id);
     }
 
     @Override
-    public ImageViewBuilder createImageView(ResourceLocation id, int imageWidth, int imageHeight) {
+    public ImageViewBuilder createImageView(Identifier id, int imageWidth, int imageHeight) {
         return new ImageViewImpl(id, imageWidth, imageHeight);
     }
 
     @Override
-    public ImageViewBuilder createImageView(ResourceLocation id, Consumer<ImageViewBuilder> with) {
+    public ImageViewBuilder createImageView(Identifier id, Consumer<ImageViewBuilder> with) {
         return createImageView(id).with(with);
     }
 
@@ -296,32 +296,32 @@ public class NodeFactoryImpl implements NodeFactory {
     }
 
     @Override
-    public TexturedButtonBuilder createTexturedButton(ResourceLocation id, boolean drawButton) {
+    public TexturedButtonBuilder createTexturedButton(Identifier id, boolean drawButton) {
         return new TexturedButtonImpl(id, drawButton);
     }
 
     @Override
-    public TexturedButtonBuilder createTexturedButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton) {
+    public TexturedButtonBuilder createTexturedButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton) {
         return new TexturedButtonImpl(id, imageWidth, imageHeight, drawButton);
     }
 
     @Override
-    public TexturedButtonBuilder createTexturedButton(ResourceLocation id, boolean drawButton, Consumer<TexturedButtonBuilder> with) {
+    public TexturedButtonBuilder createTexturedButton(Identifier id, boolean drawButton, Consumer<TexturedButtonBuilder> with) {
         return createTexturedButton(id, drawButton).with(with);
     }
 
     @Override
-    public TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, boolean drawButton) {
+    public TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, boolean drawButton) {
         return new TexturedToggleButtonImpl(id, drawButton);
     }
 
     @Override
-    public TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton) {
+    public TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton) {
         return new TexturedToggleButtonImpl(id, imageWidth, imageHeight, drawButton);
     }
 
     @Override
-    public TexturedToggleButtonBuilder createTexturedToggleButton(ResourceLocation id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with) {
+    public TexturedToggleButtonBuilder createTexturedToggleButton(Identifier id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with) {
         return createTexturedToggleButton(id, drawButton).with(with);
     }
 

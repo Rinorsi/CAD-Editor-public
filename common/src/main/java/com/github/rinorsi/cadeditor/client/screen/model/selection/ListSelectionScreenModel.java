@@ -3,7 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.selection;
 import com.github.franckyi.guapi.api.mvc.Model;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,8 +14,8 @@ public record ListSelectionScreenModel(MutableComponent title, String initialVal
                                        List<? extends ListSelectionElementModel> items,
                                        Consumer<String> action,
                                        boolean multiSelect,
-                                       Consumer<List<ResourceLocation>> multiAction,
-                                       Set<ResourceLocation> initiallySelected,
+                                       Consumer<List<Identifier>> multiAction,
+                                       Set<Identifier> initiallySelected,
                                        List<ListSelectionFilter> filters,
                                        String initialFilterId) implements Model {
 
@@ -29,8 +29,8 @@ public record ListSelectionScreenModel(MutableComponent title, String initialVal
                                     List<? extends ListSelectionElementModel> items,
                                     Consumer<String> action,
                                     boolean multiSelect,
-                                    Consumer<List<ResourceLocation>> multiAction,
-                                    Set<ResourceLocation> initiallySelected) {
+                                    Consumer<List<Identifier>> multiAction,
+                                    Set<Identifier> initiallySelected) {
         this(title, initialValue, items, action, multiSelect, multiAction, initiallySelected, Collections.emptyList(), null);
     }
 
@@ -54,11 +54,11 @@ public record ListSelectionScreenModel(MutableComponent title, String initialVal
         return multiSelect;
     }
 
-    public Consumer<List<ResourceLocation>> getMultiAction() {
+    public Consumer<List<Identifier>> getMultiAction() {
         return multiAction;
     }
 
-    public Set<ResourceLocation> getInitiallySelected() {
+    public Set<Identifier> getInitiallySelected() {
         return initiallySelected;
     }
 

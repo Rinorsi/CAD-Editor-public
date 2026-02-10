@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPosition
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -64,7 +64,7 @@ public final class RenderHelper {
         drawVLine(guiGraphics, x0, y1, y0 + 1, color);
     }
 
-    public static void drawTexture(GuiGraphics guiGraphics, ResourceLocation id, int x, int y, int width, int height, int imageX, int imageY, int imageWidth, int imageHeight) {
+    public static void drawTexture(GuiGraphics guiGraphics, Identifier id, int x, int y, int width, int height, int imageX, int imageY, int imageWidth, int imageHeight) {
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, id, x, y, (float) imageX, (float) imageY, width, height, imageWidth, imageHeight);
     }
 

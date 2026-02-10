@@ -44,7 +44,7 @@ public class RaritySelectionEntryModel extends SelectionEntryModel {
         List<ListSelectionElementModel> list = new ArrayList<>();
         for (String s : VALUES) {
             String key = "cadeditor.gui.rarity." + s;
-            list.add(new ListSelectionElementModel(key, net.minecraft.resources.ResourceLocation.parse("minecraft:" + s)));
+            list.add(new ListSelectionElementModel(key, net.minecraft.resources.Identifier.parse("minecraft:" + s)));
         }
         return list;
     }

@@ -8,7 +8,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -213,8 +213,8 @@ public class FoodComponentState {
 
     public String getConsumeSoundId() {
         return consumeSound
-                .flatMap(holder -> holder.unwrapKey().map(ResourceKey::location))
-                .map(ResourceLocation::toString)
+                .flatMap(holder -> holder.unwrapKey().map(ResourceKey::identifier))
+                .map(Identifier::toString)
                 .orElse("");
     }
 
@@ -223,7 +223,7 @@ public class FoodComponentState {
             consumeSound = Optional.empty();
             return true;
         }
-        ResourceLocation location = ClientUtil.parseResourceLocation(id);
+        Identifier location = ClientUtil.parseResourceLocation(id);
         if (location == null) {
             return false;
         }
@@ -292,7 +292,7 @@ public class FoodComponentState {
             DebugLog.infoKey("cadeditor.debug.food.convert_blank");
             return Optional.empty();
         }
-        ResourceLocation rl = ResourceLocation.tryParse(usingConvertsToId);
+        Identifier rl = Identifier.tryParse(usingConvertsToId);
         if (rl == null) {
             LOGGER.warn("Failed to parse using_converts_to id '{}'", usingConvertsToId);
             return Optional.empty();
@@ -361,7 +361,7 @@ public class FoodComponentState {
         }
         ItemStack sanitized = prepareConvertStack(stack);
         customUsingConvertsTo = Optional.of(sanitized);
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(sanitized.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(sanitized.getItem());
         usingConvertsToId = id != null ? id.toString() : "";
         originalUsingConvertsTo = filterStackById(originalUsingConvertsTo, usingConvertsToId);
     }
@@ -394,7 +394,7 @@ public class FoodComponentState {
         if (stack.isEmpty()) {
             return "<empty>";
         }
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         StringBuilder builder = new StringBuilder(id.toString());
         builder.append(" x").append(stack.getCount());
         Component name = stack.get(DataComponents.CUSTOM_NAME);

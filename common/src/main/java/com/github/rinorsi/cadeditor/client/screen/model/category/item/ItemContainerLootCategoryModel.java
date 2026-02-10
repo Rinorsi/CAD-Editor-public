@@ -9,7 +9,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SeededContainerLoot;
 
@@ -75,7 +75,7 @@ public class ItemContainerLootCategoryModel extends ItemEditorCategoryModel {
         }
 
         try {
-            ResourceLocation id = ResourceLocation.parse(idRaw);
+            Identifier id = Identifier.parse(idRaw);
             CompoundTag loot = new CompoundTag();
             loot.putString("loot_table", id.toString());
             long seedValue = 0L;

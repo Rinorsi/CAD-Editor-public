@@ -14,7 +14,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.LodestoneTracker;
@@ -45,7 +45,7 @@ public class ItemLodestoneCategoryModel extends ItemEditorCategoryModel {
             if (target.isPresent()) {
                 GlobalPos pos = target.get();
                 hasTarget = true;
-                dimensionId = pos.dimension().location().toString();
+                dimensionId = pos.dimension().identifier().toString();
                 BlockPos bp = pos.pos();
                 posX = bp.getX();
                 posY = bp.getY();
@@ -77,7 +77,7 @@ public class ItemLodestoneCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getParent().getContext().getItemStack();
         boolean invalid = false;
         if (hasTarget) {
-            ResourceLocation id = ResourceLocation.tryParse(dimensionId);
+            Identifier id = Identifier.tryParse(dimensionId);
             if (id == null) {
                 dimensionEntry.setValid(false);
                 invalid = true;

@@ -7,14 +7,14 @@ import com.github.franckyi.guapi.api.node.TextField;
 import com.github.franckyi.guapi.api.node.TexturedButton;
 import com.github.rinorsi.cadeditor.client.ModTextures;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Predicate;
 
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class NBTTagView implements View {
-    private final ResourceLocation texture;
+    private final Identifier texture;
     private final MutableComponent tooltip;
     private Predicate<String> validator;
     private HBox root;
@@ -23,12 +23,12 @@ public class NBTTagView implements View {
     private TextField valueField;
     private TexturedButton suggestionButton;
 
-    public NBTTagView(ResourceLocation texture, MutableComponent tooltip, Predicate<String> validator) {
+    public NBTTagView(Identifier texture, MutableComponent tooltip, Predicate<String> validator) {
         this(texture, tooltip);
         this.validator = validator;
     }
 
-    public NBTTagView(ResourceLocation texture, MutableComponent tooltip) {
+    public NBTTagView(Identifier texture, MutableComponent tooltip) {
         this.texture = texture;
         this.tooltip = tooltip;
     }

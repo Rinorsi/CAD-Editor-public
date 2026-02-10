@@ -28,7 +28,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagKey;
@@ -191,10 +191,10 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         itemDamageBase = itemDamageFunction != null ? itemDamageFunction.base() : 1f;
         itemDamageFactor = itemDamageFunction != null ? itemDamageFunction.factor() : 0f;
         blockSoundId = blocksAttacks != null && blocksAttacks.blockSound().isPresent()
-                ? blocksAttacks.blockSound().get().unwrapKey().map(holder -> holder.location().toString()).orElse("")
+                ? blocksAttacks.blockSound().get().unwrapKey().map(holder -> holder.identifier().toString()).orElse("")
                 : "";
         disableSoundId = blocksAttacks != null && blocksAttacks.disableSound().isPresent()
-                ? blocksAttacks.disableSound().get().unwrapKey().map(holder -> holder.location().toString()).orElse("")
+                ? blocksAttacks.disableSound().get().unwrapKey().map(holder -> holder.identifier().toString()).orElse("")
                 : "";
         blocksAttacksToggleEntry = new BooleanEntryModel(this, ModTexts.gui("blocks_attacks_enabled"), blocksAttacksEnabled, this::setBlocksAttacksEnabled);
         getEntries().add(blocksAttacksToggleEntry);
@@ -629,7 +629,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void openRepairableItemSelection() {
-        Set<ResourceLocation> initiallySelected = extractItemIds(repairableItemsRaw);
+        Set<Identifier> initiallySelected = extractItemIds(repairableItemsRaw);
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.gui("select_item"),
                 "repairable_items",
@@ -643,7 +643,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
                             entries.add(entry);
                         }
                     }
-                    for (ResourceLocation rl : selected) {
+                    for (Identifier rl : selected) {
                         entries.add(rl.toString());
                     }
                     String joined = String.join(", ", entries).trim();
@@ -656,7 +656,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void openRepairableTagSelection() {
-        Set<ResourceLocation> initiallySelected = extractTagIds(repairableItemsRaw);
+        Set<Identifier> initiallySelected = extractTagIds(repairableItemsRaw);
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.gui("select_tag"),
                 "repairable_tags",
@@ -670,7 +670,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
                             entries.add(entry);
                         }
                     }
-                    for (ResourceLocation rl : selected) {
+                    for (Identifier rl : selected) {
                         entries.add("#" + rl);
                     }
                     String joined = String.join(", ", entries).trim();
@@ -768,7 +768,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         }
         repairableItemsEntry.setValid(true);
         DebugLog.info(() -> "[Repairable] Applying explicit items: " + holders.stream()
-                .map(holder -> holder.unwrapKey().map(key -> key.location().toString()).orElse("?"))
+                .map(holder -> holder.unwrapKey().map(key -> key.identifier().toString()).orElse("?"))
                 .toList());
         stack.set(DataComponents.REPAIRABLE, new Repairable(HolderSet.direct(holders)));
     }
@@ -780,10 +780,10 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
             getParent().removeComponentFromDataTag("minecraft:use_cooldown");
             return;
         }
-        Optional<ResourceLocation> group = Optional.empty();
+        Optional<Identifier> group = Optional.empty();
         String sanitized = sanitizeId(useCooldownGroupId);
         if (!sanitized.isBlank()) {
-            ResourceLocation parsed = tryParse(sanitized);
+            Identifier parsed = tryParse(sanitized);
             if (parsed != null) {
                 group = Optional.of(parsed);
             }
@@ -872,12 +872,12 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         for (String entry : ids) {
             if (entry.isBlank()) continue;
             if (entry.startsWith("#")) {
-                ResourceLocation rl = tryParse(entry.substring(1));
+                Identifier rl = tryParse(entry.substring(1));
                 if (rl == null) continue;
                 TagKey<Item> tag = TagKey.create(Registries.ITEM, rl);
                 lookup.get(tag).ifPresent(named -> named.stream().forEach(holders::add));
             } else {
-                ResourceLocation rl = tryParse(entry);
+                Identifier rl = tryParse(entry);
                 if (rl == null) continue;
                 ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, rl);
                 lookup.get(key).ifPresent(holders::add);
@@ -891,7 +891,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         if (lookupOpt.isEmpty()) {
             return Optional.empty();
         }
-        ResourceLocation rl = tryParse(tagId);
+        Identifier rl = tryParse(tagId);
         if (rl == null) {
             return Optional.empty();
         }
@@ -911,7 +911,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         if (lookupOpt.isEmpty()) {
             return Optional.empty();
         }
-        ResourceLocation rl = tryParse(sanitized.substring(1));
+        Identifier rl = tryParse(sanitized.substring(1));
         if (rl == null) {
             return Optional.empty();
         }
@@ -924,7 +924,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         if (sanitized.isBlank() || !sanitized.startsWith("#")) {
             return Optional.empty();
         }
-        ResourceLocation rl = tryParse(sanitized.substring(1));
+        Identifier rl = tryParse(sanitized.substring(1));
         if (rl == null) {
             return Optional.empty();
         }
@@ -943,7 +943,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         if (sanitized.isBlank()) {
             return Optional.empty();
         }
-        ResourceLocation rl = tryParse(sanitized);
+        Identifier rl = tryParse(sanitized);
         if (rl == null) {
             return Optional.empty();
         }
@@ -966,12 +966,12 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         return out;
     }
 
-    private Set<ResourceLocation> extractTagIds(String raw) {
-        Set<ResourceLocation> set = new LinkedHashSet<>();
+    private Set<Identifier> extractTagIds(String raw) {
+        Set<Identifier> set = new LinkedHashSet<>();
         for (String entry : parseIdentifierList(raw)) {
             String trimmed = entry.startsWith("#") ? entry.substring(1) : null;
             if (trimmed != null && !trimmed.isBlank()) {
-                ResourceLocation rl = tryParse(trimmed);
+                Identifier rl = tryParse(trimmed);
                 if (rl != null) {
                     set.add(rl);
                 }
@@ -980,13 +980,13 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         return set;
     }
 
-    private Set<ResourceLocation> extractItemIds(String raw) {
-        Set<ResourceLocation> set = new LinkedHashSet<>();
+    private Set<Identifier> extractItemIds(String raw) {
+        Set<Identifier> set = new LinkedHashSet<>();
         for (String entry : parseIdentifierList(raw)) {
             if (entry.startsWith("#")) {
                 continue;
             }
-            ResourceLocation rl = tryParse(entry);
+            Identifier rl = tryParse(entry);
             if (rl != null) {
                 set.add(rl);
             }
@@ -1000,7 +1000,7 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
             return "#" + named.key().location();
         }
         return set.stream()
-                .map(holder -> holder.unwrapKey().map(key -> key.location().toString()).orElse(""))
+                .map(holder -> holder.unwrapKey().map(key -> key.identifier().toString()).orElse(""))
                 .filter(s -> !s.isBlank())
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("");
@@ -1023,17 +1023,17 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         return result.trim();
     }
 
-    private ResourceLocation tryParse(String value) {
+    private Identifier tryParse(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
         String sanitized = value.trim();
         try {
-            return ResourceLocation.parse(sanitized);
+            return Identifier.parse(sanitized);
         } catch (Exception ignored) {
             if (!sanitized.contains(":")) {
                 try {
-                    return ResourceLocation.parse("minecraft:" + sanitized);
+                    return Identifier.parse("minecraft:" + sanitized);
                 } catch (Exception ignored2) {
                     return null;
                 }

@@ -12,7 +12,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -31,7 +31,7 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
     private static final String BASE_TAG = "base";
     private static final String LEGACY_BASE_TAG = "Base";
 
-    private final Map<ResourceLocation, AttributeState> attributeStates = new LinkedHashMap<>();
+    private final Map<Identifier, AttributeState> attributeStates = new LinkedHashMap<>();
 
     public EntityAttributesCategoryModel(EntityEditorModel editor) {
         super(ModTexts.ENTITY_ATTRIBUTES, editor);
@@ -44,7 +44,7 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
             return;
         }
 
-        Map<ResourceLocation, CompoundTag> existing = readExistingAttributes(data);
+        Map<Identifier, CompoundTag> existing = readExistingAttributes(data);
         HolderLookup.Provider registries = ClientUtil.registryAccess();
         if (registries == null) {
             existing.forEach((id, tag) -> {
@@ -99,9 +99,9 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
         }
     }
 
-    private void addAttributeEntry(Holder.Reference<Attribute> holder, LivingEntity living, Map<ResourceLocation, CompoundTag> existing) {
+    private void addAttributeEntry(Holder.Reference<Attribute> holder, LivingEntity living, Map<Identifier, CompoundTag> existing) {
         AttributeInstance instance = living.getAttribute(holder);
-        ResourceLocation id = holder.key().location();
+        Identifier id = holder.key().identifier();
         CompoundTag backing = existing.remove(id);
         if (instance == null && backing == null) {
             return;
@@ -114,15 +114,15 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
         getEntries().add(new DoubleEntryModel(this, label, state.baseValue, value -> state.setBaseValue(value)));
     }
 
-    private AttributeState addOrUpdateState(Holder<Attribute> holder, ResourceLocation id, CompoundTag backing, double baseValue) {
+    private AttributeState addOrUpdateState(Holder<Attribute> holder, Identifier id, CompoundTag backing, double baseValue) {
         AttributeState state = attributeStates.computeIfAbsent(id, key ->
                 new AttributeState(key, backing == null ? new CompoundTag() : backing.copy(), baseValue, backing != null));
         state.setBaseValue(baseValue);
         return state;
     }
 
-    private Map<ResourceLocation, CompoundTag> readExistingAttributes(CompoundTag data) {
-        Map<ResourceLocation, CompoundTag> existing = new LinkedHashMap<>();
+    private Map<Identifier, CompoundTag> readExistingAttributes(CompoundTag data) {
+        Map<Identifier, CompoundTag> existing = new LinkedHashMap<>();
         if (!data.contains(ATTRIBUTES_TAG)) {
             return existing;
         }
@@ -138,7 +138,7 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
             if (idString.isEmpty()) {
                 idString = compound.getString(LEGACY_ID_TAG).orElse("");
             }
-            ResourceLocation id = ResourceLocation.tryParse(idString);
+            Identifier id = Identifier.tryParse(idString);
             if (id == null) {
                 continue;
             }
@@ -174,14 +174,14 @@ public class EntityAttributesCategoryModel extends EntityCategoryModel {
     }
 
     private final class AttributeState {
-        private final ResourceLocation id;
+        private final Identifier id;
         private final CompoundTag tag;
         private final boolean hadExisting;
         private final double originalValue;
         private double baseValue;
         private boolean dirty;
 
-        private AttributeState(ResourceLocation id, CompoundTag tag, double baseValue, boolean hadExisting) {
+        private AttributeState(Identifier id, CompoundTag tag, double baseValue, boolean hadExisting) {
             this.id = id;
             this.tag = tag;
             this.baseValue = baseValue;

@@ -2,7 +2,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 
@@ -13,12 +13,12 @@ public class EnchantmentListSelectionElementModel extends ItemListSelectionEleme
     private final Holder<Enchantment> enchantment;
     private final Component categoryLabel;
 
-    public EnchantmentListSelectionElementModel(String name, ResourceLocation id, Holder<Enchantment> enchantment,
+    public EnchantmentListSelectionElementModel(String name, Identifier id, Holder<Enchantment> enchantment,
                                                 ItemStack item, Component categoryLabel) {
         this(name, id, enchantment, () -> item == null ? ItemStack.EMPTY : item.copy(), categoryLabel);
     }
 
-    public EnchantmentListSelectionElementModel(String name, ResourceLocation id, Holder<Enchantment> enchantment,
+    public EnchantmentListSelectionElementModel(String name, Identifier id, Holder<Enchantment> enchantment,
                                                 Supplier<ItemStack> itemSupplier, Component categoryLabel) {
         super(name, id, itemSupplier);
         this.enchantment = enchantment;

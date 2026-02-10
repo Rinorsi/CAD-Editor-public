@@ -7,7 +7,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotionSelecti
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.item.PotionSelectionEntryView;
 import com.github.rinorsi.cadeditor.common.ColoredItemHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class PotionSelectionEntryController extends SelectionEntryController<PotionSelectionEntryModel, PotionSelectionEntryView> {
     public PotionSelectionEntryController(PotionSelectionEntryModel model, PotionSelectionEntryView view) {
@@ -26,7 +26,7 @@ public class PotionSelectionEntryController extends SelectionEntryController<Pot
     }
 
     private void updatePotionItem() {
-        view.getPotionView().setItem(ColoredItemHelper.createColoredPotionItem(ResourceLocation.tryParse(model.getValue()), model.getCustomColor()));
+        view.getPotionView().setItem(ColoredItemHelper.createColoredPotionItem(Identifier.tryParse(model.getValue()), model.getCustomColor()));
     }
 
     private void updatePotionColor(String value) {

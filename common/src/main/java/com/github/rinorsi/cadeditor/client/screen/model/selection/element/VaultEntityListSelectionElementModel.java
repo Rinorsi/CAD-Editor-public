@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 
@@ -14,7 +14,7 @@ public class VaultEntityListSelectionElementModel extends ListSelectionElementMo
     private final Component displayName;
     private final String searchLabel;
 
-    public VaultEntityListSelectionElementModel(ResourceLocation id, CompoundTag tag) {
+    public VaultEntityListSelectionElementModel(Identifier id, CompoundTag tag) {
         super(buildName(tag), id);
         this.searchLabel = buildName(tag);
         this.displayName = Component.literal(searchLabel);

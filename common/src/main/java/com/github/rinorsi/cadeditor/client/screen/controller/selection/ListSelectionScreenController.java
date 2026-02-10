@@ -10,7 +10,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSe
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SelectableListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.view.selection.ListSelectionScreenView;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -112,7 +112,7 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
 
     private void initializeSelectableItem(ListSelectionElementModel item) {
         if (item instanceof SelectableListSelectionElementModel selectable) {
-            ResourceLocation id = item.getId();
+            Identifier id = item.getId();
             selectable.setSelected(model.getInitiallySelected().contains(id));
             selectable.selectedProperty().addListener(this::refreshButton);
         }
@@ -135,12 +135,12 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
             if (model.getMultiAction() == null) {
                 return;
             }
-            List<ResourceLocation> selectedIds = model.getElements().stream()
+            List<Identifier> selectedIds = model.getElements().stream()
                     .filter(SelectableListSelectionElementModel.class::isInstance)
                     .map(SelectableListSelectionElementModel.class::cast)
                     .filter(SelectableListSelectionElementModel::isSelected)
                     .map(item -> ((ListSelectionElementModel) item).getId())
-                    .collect(Collectors.toCollection(() -> new ArrayList<ResourceLocation>()));
+                    .collect(Collectors.toCollection(() -> new ArrayList<Identifier>()));
             model.getMultiAction().accept(selectedIds);
         });
     }

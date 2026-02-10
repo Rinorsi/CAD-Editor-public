@@ -14,7 +14,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -84,7 +84,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         if (effect != null) {
             MobEffectInstance instance = effect.effect();
             String id = instance.getEffect().unwrapKey()
-                    .map(key -> key.location().toString())
+                    .map(key -> key.identifier().toString())
                     .orElse("minecraft:empty");
             return new FoodEffectEntryModel(this,
                     id,
@@ -97,12 +97,12 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
                     this::addFoodEffect);
         }
         String defaultId = MobEffects.SPEED.unwrapKey()
-                .map(key -> key.location().toString())
+                .map(key -> key.identifier().toString())
                 .orElse("minecraft:speed");
         return new FoodEffectEntryModel(this, defaultId, 0, 1, false, true, true, 1.0f, this::addFoodEffect);
     }
 
-    private FoodEffectEntryModel createFoodEffectEntryFor(ResourceLocation id) {
+    private FoodEffectEntryModel createFoodEffectEntryFor(Identifier id) {
         var registryOpt = ClientUtil.registryAccess().lookup(Registries.MOB_EFFECT);
         if (registryOpt.isPresent()) {
             var holder = registryOpt.get().get(ResourceKey.create(Registries.MOB_EFFECT, id));
@@ -133,7 +133,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         var registryOpt = ClientUtil.registryAccess().lookup(Registries.MOB_EFFECT);
         if (registryOpt.isEmpty()) return;
 
-        ResourceLocation rl = ResourceLocation.tryParse(id);
+        Identifier rl = Identifier.tryParse(id);
         if (rl == null) return;
 
         Holder<MobEffect> holder = registryOpt.get()
@@ -165,7 +165,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void openEffectSelection() {
-        Set<ResourceLocation> current = collectEffectIds();
+        Set<Identifier> current = collectEffectIds();
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.EFFECTS.copy(),
                 "",
@@ -177,11 +177,11 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         );
     }
 
-    private void applySelectedEffects(List<ResourceLocation> selected) {
-        Map<ResourceLocation, FoodEffectEntryModel> existing = new LinkedHashMap<>();
+    private void applySelectedEffects(List<Identifier> selected) {
+        Map<Identifier, FoodEffectEntryModel> existing = new LinkedHashMap<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof FoodEffectEntryModel effectEntry) {
-                ResourceLocation id = ResourceLocation.tryParse(effectEntry.getValue());
+                Identifier id = Identifier.tryParse(effectEntry.getValue());
                 if (id != null) {
                     existing.putIfAbsent(id, effectEntry);
                 }
@@ -189,7 +189,7 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         }
         List<FoodEffectEntryModel> desired = new ArrayList<>();
         if (selected != null) {
-            for (ResourceLocation id : selected) {
+            for (Identifier id : selected) {
                 FoodEffectEntryModel entry = existing.remove(id);
                 if (entry == null) {
                     entry = createFoodEffectEntryFor(id);
@@ -210,11 +210,11 @@ public class ItemFoodEffectsCategoryModel extends ItemEditorCategoryModel {
         updateEntryListIndexes();
     }
 
-    private Set<ResourceLocation> collectEffectIds() {
-        Set<ResourceLocation> ids = new LinkedHashSet<>();
+    private Set<Identifier> collectEffectIds() {
+        Set<Identifier> ids = new LinkedHashSet<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof FoodEffectEntryModel effectEntry) {
-                ResourceLocation id = ResourceLocation.tryParse(effectEntry.getValue());
+                Identifier id = Identifier.tryParse(effectEntry.getValue());
                 if (id != null) {
                     ids.add(id);
                 }

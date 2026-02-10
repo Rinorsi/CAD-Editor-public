@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Locale;
 
@@ -9,7 +9,7 @@ public class TagListSelectionElementModel extends ListSelectionElementModel {
     private final Component displayName;
     private final String lowerDisplay;
 
-    public TagListSelectionElementModel(ResourceLocation id) {
+    public TagListSelectionElementModel(Identifier id) {
         super(id.toString(), id);
         this.displayName = Component.literal("#" + id);
         this.lowerDisplay = displayName.getString().toLowerCase(Locale.ROOT);

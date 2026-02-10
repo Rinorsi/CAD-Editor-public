@@ -6,8 +6,8 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.BlockSelectionEntr
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import net.minecraft.advancements.critereon.BlockPredicate;
-import net.minecraft.advancements.critereon.DataComponentMatchers;
+import net.minecraft.advancements.criterion.BlockPredicate;
+import net.minecraft.advancements.criterion.DataComponentMatchers;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
@@ -18,7 +18,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.AdventureModePredicate;
 import net.minecraft.world.item.ItemStack;
@@ -106,7 +106,7 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
                         continue;
                     }
                     if (selector.startsWith("#")) {
-                        ResourceLocation tagId = ResourceLocation.tryParse(selector.substring(1));
+                        Identifier tagId = Identifier.tryParse(selector.substring(1));
                         if (tagId == null) {
                             continue;
                         }
@@ -114,7 +114,7 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
                         lookup.get(tagKey).ifPresent(holders -> predicates.add(new BlockPredicate(Optional.of(holders), Optional.empty(), Optional.empty(), DataComponentMatchers.ANY)));
                         continue;
                     }
-                    ResourceLocation rl = ResourceLocation.tryParse(selector);
+                    Identifier rl = Identifier.tryParse(selector);
                     if (rl == null) {
                         continue;
                     }

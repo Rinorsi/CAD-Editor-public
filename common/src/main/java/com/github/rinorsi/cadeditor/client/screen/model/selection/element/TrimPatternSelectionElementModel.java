@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Supplier;
@@ -12,13 +12,13 @@ public class TrimPatternSelectionElementModel extends ItemListSelectionElementMo
     private final Component displayName;
     private final String searchText;
 
-    public TrimPatternSelectionElementModel(Component displayName, ResourceLocation id, ItemStack icon) {
+    public TrimPatternSelectionElementModel(Component displayName, Identifier id, ItemStack icon) {
         super(displayName.getString(), id, icon);
         this.displayName = displayName;
         this.searchText = displayName.getString().toLowerCase(Locale.ROOT);
     }
 
-    public TrimPatternSelectionElementModel(Component displayName, ResourceLocation id, Supplier<ItemStack> iconSupplier) {
+    public TrimPatternSelectionElementModel(Component displayName, Identifier id, Supplier<ItemStack> iconSupplier) {
         super(displayName.getString(), id, iconSupplier);
         this.displayName = displayName;
         this.searchText = displayName.getString().toLowerCase(Locale.ROOT);

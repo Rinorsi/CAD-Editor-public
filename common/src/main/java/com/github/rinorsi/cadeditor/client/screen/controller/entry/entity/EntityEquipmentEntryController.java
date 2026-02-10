@@ -14,7 +14,7 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultItemListSelectionElementModel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -149,7 +149,7 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
                 return;
             }
             try {
-                ResourceLocation id = ResourceLocation.parse(selection);
+                Identifier id = Identifier.parse(selection);
                 BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                     model.setItemStack(new ItemStack(item));
                     placeholder = false;
@@ -171,7 +171,7 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
             if (stack.isEmpty()) {
                 continue;
             }
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "equipment_vault_item_" + i);
+            Identifier id = Identifier.fromNamespaceAndPath("cadeditor", "equipment_vault_item_" + i);
             elements.add(new VaultItemListSelectionElementModel(id, stack));
             stacksById.put(id.toString(), stack.copy());
         }

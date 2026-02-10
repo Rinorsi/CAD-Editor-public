@@ -20,7 +20,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -97,7 +97,7 @@ public class VillagerTradeItemsEntryController extends EntryController<VillagerT
             tooltip.add(ModTexts.choose(ModTexts.ITEM).copy().withStyle(ChatFormatting.GRAY));
             return;
         }
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
         tooltip.add(ModTexts.COUNT.copy().withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(": ").withStyle(ChatFormatting.DARK_GRAY))
@@ -112,7 +112,7 @@ public class VillagerTradeItemsEntryController extends EntryController<VillagerT
                 return;
             }
             try {
-                ResourceLocation id = ResourceLocation.parse(selection);
+                Identifier id = Identifier.parse(selection);
                 BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                     property.setValue(new ItemStack(item));
                     afterSelection.run();
@@ -145,7 +145,7 @@ public class VillagerTradeItemsEntryController extends EntryController<VillagerT
             if (stack.isEmpty()) {
                 continue;
             }
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "villager_trade_vault_item_" + i);
+            Identifier id = Identifier.fromNamespaceAndPath("cadeditor", "villager_trade_vault_item_" + i);
             elements.add(new VaultItemListSelectionElementModel(id, stack));
             stacksById.put(id.toString(), stack.copy());
         }

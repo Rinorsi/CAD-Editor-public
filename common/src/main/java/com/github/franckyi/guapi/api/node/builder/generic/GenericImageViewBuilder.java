@@ -1,10 +1,10 @@
 package com.github.franckyi.guapi.api.node.builder.generic;
 
 import com.github.franckyi.guapi.api.node.ImageView;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface GenericImageViewBuilder<N extends ImageView> extends ImageView, GenericControlBuilder<N> {
-    default N textureId(ResourceLocation value) {
+    default N textureId(Identifier value) {
         return with(n -> n.setTextureId(value));
     }
 

@@ -7,7 +7,7 @@ import com.github.rinorsi.cadeditor.client.screen.view.entry.item.PotionEffectEn
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.franckyi.guapi.api.util.Predicates;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -100,7 +100,7 @@ public class PotionEffectEntryController extends SelectionEntryController<Potion
     }
 
     private void updatePreview(String value) {
-        ResourceLocation id = parseResourceLocation(value);
+        Identifier id = parseResourceLocation(value);
         if (id == null) {
             view.setPreviewVisible(false);
             return;

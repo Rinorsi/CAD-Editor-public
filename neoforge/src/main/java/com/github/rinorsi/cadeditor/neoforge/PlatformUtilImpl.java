@@ -5,7 +5,7 @@ import com.github.rinorsi.cadeditor.common.network.PacketSerializer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
@@ -102,7 +102,7 @@ public class PlatformUtilImpl {
     }
 
     private static CustomPacketPayload.Type<?> createType(NetworkHandler<?> handler) {
-        ResourceLocation location = handler.getLocation();
+        Identifier location = handler.getLocation();
         return new CustomPacketPayload.Type<>(location);
     }
 

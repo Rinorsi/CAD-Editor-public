@@ -11,7 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -121,7 +121,7 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
     }
 
     private void openEffectSelection() {
-        Set<ResourceLocation> current = collectEffectIds();
+        Set<Identifier> current = collectEffectIds();
         ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
                 "", ClientCache.getEffectSelectionItems(),
                 value -> {}, true,
@@ -129,11 +129,11 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
                 current);
     }
 
-    private void applySelectedEffects(List<ResourceLocation> selected) {
-        Map<ResourceLocation, PotionEffectEntryModel> existing = new LinkedHashMap<>();
+    private void applySelectedEffects(List<Identifier> selected) {
+        Map<Identifier, PotionEffectEntryModel> existing = new LinkedHashMap<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof PotionEffectEntryModel effect) {
-                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                Identifier id = Identifier.tryParse(effect.getValue());
                 if (id != null) {
                     existing.putIfAbsent(id, effect);
                 }
@@ -141,7 +141,7 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         }
         List<PotionEffectEntryModel> desired = new ArrayList<>();
         if (selected != null) {
-            for (ResourceLocation id : selected) {
+            for (Identifier id : selected) {
                 PotionEffectEntryModel entry = existing.remove(id);
                 if (entry == null) {
                     entry = createEffectEntry(new CompoundTag());
@@ -163,11 +163,11 @@ public class EntityStatusEffectsCategoryModel extends EntityCategoryModel {
         updateEntryListIndexes();
     }
 
-    private Set<ResourceLocation> collectEffectIds() {
-        Set<ResourceLocation> ids = new LinkedHashSet<>();
+    private Set<Identifier> collectEffectIds() {
+        Set<Identifier> ids = new LinkedHashSet<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof PotionEffectEntryModel effect) {
-                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                Identifier id = Identifier.tryParse(effect.getValue());
                 if (id != null) {
                     ids.add(id);
                 }

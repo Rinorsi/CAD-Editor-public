@@ -1,18 +1,18 @@
 package com.github.rinorsi.cadeditor.common.network;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public abstract class NetworkHandler<P> {
     private static int count;
     private final Class<P> type;
-    private final ResourceLocation location;
+    private final Identifier location;
     private final int id;
     private final PacketSerializer<P> serializer;
 
     protected NetworkHandler(Class<P> type, String location, PacketSerializer<P> serializer) {
         this.type = type;
-        this.location = ResourceLocation.parse(location);
+        this.location = Identifier.parse(location);
         this.id = count++;
         this.serializer = serializer;
     }
@@ -21,7 +21,7 @@ public abstract class NetworkHandler<P> {
         return type;
     }
 
-    public ResourceLocation getLocation() {
+    public Identifier getLocation() {
         return location;
     }
 

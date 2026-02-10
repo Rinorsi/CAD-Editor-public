@@ -2,7 +2,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.entry;
 
 import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +38,6 @@ public class StringWithActionsEntryModel extends ValueEntryModel<String> {
         return Collections.unmodifiableList(buttons);
     }
 
-    public record ActionButton(ResourceLocation icon, MutableComponent tooltip, Runnable action) {
+    public record ActionButton(Identifier icon, MutableComponent tooltip, Runnable action) {
     }
 }

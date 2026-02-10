@@ -9,7 +9,7 @@ import com.github.rinorsi.cadeditor.common.EditorType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 
 public class VaultEntityEntryController extends EntryController<VaultEntityEntryModel, VaultEntityEntryView> {
@@ -33,22 +33,22 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
                 null, false, context -> model.setData(context.getTag())));
     }
 
-    private ResourceLocation getEntityIconTexture() {
+    private Identifier getEntityIconTexture() {
         Entity entity = model.getEntity();
         if (entity == null) {
-            return ResourceLocation.withDefaultNamespace("textures/entity_icon/missing.png");
+            return Identifier.withDefaultNamespace("textures/entity_icon/missing.png");
         }
         var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         var renderer = dispatcher.getRenderer(entity);
         EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, 0.0f);
-        ResourceLocation texture = null;
+        Identifier texture = null;
         if (texture == null) {
             for (var method : renderer.getClass().getMethods()) {
                 if (!method.getName().equals("getTextureLocation") || method.getParameterCount() != 1) continue;
                 Class<?> parameter = method.getParameterTypes()[0];
                 if (!parameter.isInstance(state)) continue;
                 try {
-                    texture = (ResourceLocation) method.invoke(renderer, state);
+                    texture = (Identifier) method.invoke(renderer, state);
                     break;
                 } catch (ReflectiveOperationException ignored) {
                 }
@@ -57,9 +57,9 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
         if (texture == null) {
             var typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
             if (typeKey != null) {
-                texture = ResourceLocation.fromNamespaceAndPath(typeKey.getNamespace(), "textures/entity/" + typeKey.getPath() + ".png");
+                texture = Identifier.fromNamespaceAndPath(typeKey.getNamespace(), "textures/entity/" + typeKey.getPath() + ".png");
             } else {
-                texture = ResourceLocation.withDefaultNamespace("textures/entity/missing.png");
+                texture = Identifier.withDefaultNamespace("textures/entity/missing.png");
             }
         }
         String rawPath = texture.getPath();
@@ -69,6 +69,6 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
         String iconPath = rawPath.contains("/entity/")
                 ? rawPath.replace("/entity/", "/entity_icon/")
                 : "textures/entity_icon/" + rawPath.substring("textures/".length());
-        return ResourceLocation.fromNamespaceAndPath(texture.getNamespace(), iconPath);
+        return Identifier.fromNamespaceAndPath(texture.getNamespace(), iconPath);
     }
 }

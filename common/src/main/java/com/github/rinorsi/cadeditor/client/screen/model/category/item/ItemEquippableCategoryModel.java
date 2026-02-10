@@ -17,7 +17,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -123,7 +123,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         }
 
         List<AllowedEntityEntryModel> entityEntries = getAllowedEntityEntries();
-        List<ResourceLocation> entityLocations = new ArrayList<>();
+        List<Identifier> entityLocations = new ArrayList<>();
         boolean entityValid = true;
         for (AllowedEntityEntryModel entry : entityEntries) {
             String trimmed = sanitizeId(entry.getValue());
@@ -131,7 +131,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
                 entry.setValid(true);
                 continue;
             }
-            ResourceLocation location = ClientUtil.parseResourceLocation(trimmed);
+            Identifier location = ClientUtil.parseResourceLocation(trimmed);
             if (location == null) {
                 entry.setValid(false);
                 entityValid = false;
@@ -148,7 +148,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
                 entityEntries.forEach(entry -> entry.setValid(false));
             } else {
                 for (int i = 0; i < entityLocations.size(); i++) {
-                    ResourceLocation id = entityLocations.get(i);
+                    Identifier id = entityLocations.get(i);
                     AllowedEntityEntryModel entry = getAllowedEntityEntry(i);
                     if (entry == null) {
                         continue;
@@ -229,8 +229,8 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         slot = equippable.slot();
         equipSoundId = holderId(equippable.equipSound());
         shearingSoundId = holderId(equippable.shearingSound());
-        assetId = equippable.assetId().map(ResourceKey::location).map(ResourceLocation::toString).orElse("");
-        cameraOverlayId = equippable.cameraOverlay().map(ResourceLocation::toString).orElse("");
+        assetId = equippable.assetId().map(ResourceKey::identifier).map(Identifier::toString).orElse("");
+        cameraOverlayId = equippable.cameraOverlay().map(Identifier::toString).orElse("");
         dispensable = equippable.dispensable();
         swappable = equippable.swappable();
         damageOnHurt = equippable.damageOnHurt();
@@ -239,7 +239,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         initialAllowedEntities.clear();
         equippable.allowedEntities().ifPresent(set -> {
             for (Holder<EntityType<?>> holder : set) {
-                holder.unwrapKey().ifPresent(key -> initialAllowedEntities.add(key.location().toString()));
+                holder.unwrapKey().ifPresent(key -> initialAllowedEntities.add(key.identifier().toString()));
             }
         });
     }
@@ -284,13 +284,13 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         if (value.isEmpty()) {
             return Optional.empty();
         }
-        ResourceLocation location = ClientUtil.parseResourceLocation(value);
+        Identifier location = ClientUtil.parseResourceLocation(value);
         return location == null
                 ? Optional.empty()
                 : Optional.of(ResourceKey.create(EquipmentAssets.ROOT_ID, location));
     }
 
-    private Optional<ResourceLocation> parseCameraOverlay() {
+    private Optional<Identifier> parseCameraOverlay() {
         String value = sanitizeId(cameraOverlayId);
         if (value.isEmpty()) {
             return Optional.empty();
@@ -306,7 +306,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         if (lookup == null) {
             return Optional.empty();
         }
-        ResourceLocation location = ClientUtil.parseResourceLocation(value);
+        Identifier location = ClientUtil.parseResourceLocation(value);
         if (location == null) {
             return Optional.empty();
         }
@@ -315,7 +315,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
     }
 
     private static String holderId(Holder<SoundEvent> holder) {
-        return holder.unwrapKey().map(key -> key.location().toString()).orElse("");
+        return holder.unwrapKey().map(key -> key.identifier().toString()).orElse("");
     }
 
     private static String sanitizeId(String id) {

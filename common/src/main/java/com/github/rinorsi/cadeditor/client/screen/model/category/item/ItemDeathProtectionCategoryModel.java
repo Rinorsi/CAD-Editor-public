@@ -10,7 +10,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
@@ -122,7 +122,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
         if (effect != null) {
             String id = effect.getEffect()
                     .unwrapKey()
-                    .map(key -> key.location().toString())
+                    .map(key -> key.identifier().toString())
                     .orElse("minecraft:empty");
             return new PotionEffectEntryModel(
                     this,
@@ -136,7 +136,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
             );
         }
         String defaultId = MobEffects.REGENERATION.unwrapKey()
-                .map(key -> key.location().toString())
+                .map(key -> key.identifier().toString())
                 .orElse("minecraft:regeneration");
         return new PotionEffectEntryModel(this, defaultId, 1, 900, false, true, true, this::collectEffect);
     }
@@ -148,7 +148,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
             return;
         }
         String value = entry.getValue();
-        ResourceLocation id = value == null ? null : ResourceLocation.tryParse(value);
+        Identifier id = value == null ? null : Identifier.tryParse(value);
         if (id == null) {
             entry.setValid(false);
             return;

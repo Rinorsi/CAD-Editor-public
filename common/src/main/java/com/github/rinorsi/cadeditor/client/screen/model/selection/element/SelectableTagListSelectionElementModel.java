@@ -1,7 +1,7 @@
 package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import com.github.franckyi.databindings.api.BooleanProperty;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Tag selection element that exposes a selection state for multi-select screens.
@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 public class SelectableTagListSelectionElementModel extends TagListSelectionElementModel implements SelectableListSelectionElementModel {
     private final BooleanProperty selectedProperty = BooleanProperty.create(false);
 
-    public SelectableTagListSelectionElementModel(ResourceLocation id) {
+    public SelectableTagListSelectionElementModel(Identifier id) {
         super(id);
     }
 

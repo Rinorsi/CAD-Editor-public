@@ -3,7 +3,7 @@ package com.github.rinorsi.cadeditor.fabric.loot;
 import com.github.rinorsi.cadeditor.common.loot.LootTableIndex;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public final class FabricLootTableTracker {
 
     private static void updateIndex(Registry<LootTable> registry) {
         try {
-            List<ResourceLocation> ids = new ArrayList<>();
+            List<Identifier> ids = new ArrayList<>();
             registry.keySet().forEach(ids::add);
             LootTableIndex.updateAll(ids);
         } catch (Throwable ignored) {

@@ -6,7 +6,7 @@ import com.github.franckyi.guapi.api.node.TextField;
 import com.github.franckyi.guapi.api.node.TexturedButton;
 import com.github.franckyi.guapi.api.node.builder.TexturedButtonBuilder;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class StringWithActionsEntryView extends LabeledEntryView {
         return textField;
     }
 
-    public void addButton(ResourceLocation icon, MutableComponent tooltip, Runnable action) {
+    public void addButton(Identifier icon, MutableComponent tooltip, Runnable action) {
         TexturedButtonBuilder button = texturedButton(icon, 16, 16, false);
         if (tooltip != null) {
             button.tooltip(tooltip);

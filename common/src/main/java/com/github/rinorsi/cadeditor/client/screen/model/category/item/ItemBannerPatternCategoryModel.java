@@ -12,7 +12,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BannerPattern;
@@ -117,8 +117,8 @@ public class ItemBannerPatternCategoryModel extends ItemEditorCategoryModel {
 
     private String formatLayer(BannerPatternLayers.Layer layer) {
         String patternId = layer.pattern().unwrapKey()
-                .map(ResourceKey::location)
-                .map(ResourceLocation::toString)
+                .map(ResourceKey::identifier)
+                .map(Identifier::toString)
                 .orElse("");
         return patternId + "|" + layer.color().getName();
     }
@@ -128,7 +128,7 @@ public class ItemBannerPatternCategoryModel extends ItemEditorCategoryModel {
         if (parts.length < 2) {
             return Optional.empty();
         }
-        ResourceLocation patternId = ResourceLocation.tryParse(parts[0].trim());
+        Identifier patternId = Identifier.tryParse(parts[0].trim());
         if (patternId == null || lookup == null) {
             return Optional.empty();
         }

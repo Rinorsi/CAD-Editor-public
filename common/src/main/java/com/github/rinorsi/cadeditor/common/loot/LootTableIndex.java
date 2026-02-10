@@ -1,6 +1,6 @@
 package com.github.rinorsi.cadeditor.common.loot;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,16 +13,16 @@ import java.util.concurrent.ConcurrentSkipListSet;
  * Cross‑platform cache of all loaded loot table IDs, populated by platform-specific hooks.
  */
 public final class LootTableIndex {
-    private static final Set<ResourceLocation> IDS = new ConcurrentSkipListSet<>();
+    private static final Set<Identifier> IDS = new ConcurrentSkipListSet<>();
 
     private LootTableIndex() {}
 
-    public static void updateAll(Collection<ResourceLocation> ids) {
+    public static void updateAll(Collection<Identifier> ids) {
         IDS.clear();
         if (ids != null) IDS.addAll(ids);
     }
 
-    public static List<ResourceLocation> getAll() {
+    public static List<Identifier> getAll() {
         return Collections.unmodifiableList(new ArrayList<>(IDS));
     }
 

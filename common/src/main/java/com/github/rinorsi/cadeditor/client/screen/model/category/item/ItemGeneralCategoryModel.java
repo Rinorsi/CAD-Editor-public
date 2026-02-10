@@ -7,7 +7,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelecti
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
@@ -32,7 +32,7 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
 
     private void setItemId(String id) {
         try {
-            ResourceLocation rl = ResourceLocation.parse(id);
+            Identifier rl = Identifier.parse(id);
             BuiltInRegistries.ITEM.getOptional(rl).ifPresent(item -> {
                 ItemStack old = getParent().getContext().getItemStack();
                 ItemStack repl = new ItemStack(item, old.getCount());

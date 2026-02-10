@@ -12,7 +12,7 @@ import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
@@ -98,7 +98,7 @@ public class EntityEntryController extends ValueEntryController<EntityEntryModel
 
     private void openSelectionScreen() {
         String current = view.getEntityField().getText();
-        ResourceLocation location = ClientUtil.parseResourceLocation(current);
+        Identifier location = ClientUtil.parseResourceLocation(current);
         String normalized = location != null ? location.toString() : current;
         ModScreenHandler.openListSelectionScreen(ModTexts.ENTITY, normalized,
                 ClientCache.getEntitySelectionItems(), model::setEntityId);
@@ -118,7 +118,7 @@ public class EntityEntryController extends ValueEntryController<EntityEntryModel
             if (tag == null || tag.isEmpty()) {
                 continue;
             }
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "entity_entry_vault_" + i);
+            Identifier id = Identifier.fromNamespaceAndPath("cadeditor", "entity_entry_vault_" + i);
             elements.add(new VaultEntityListSelectionElementModel(id, tag));
             entitiesById.put(id.toString(), tag.copy());
         }

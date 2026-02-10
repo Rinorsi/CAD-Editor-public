@@ -2,16 +2,16 @@ package com.github.franckyi.guapi.api.node;
 
 import com.github.franckyi.databindings.api.IntegerProperty;
 import com.github.franckyi.databindings.api.ObjectProperty;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface ImageView extends Control {
-    default ResourceLocation getTextureId() {
+    default Identifier getTextureId() {
         return textureIdProperty().getValue();
     }
 
-    ObjectProperty<ResourceLocation> textureIdProperty();
+    ObjectProperty<Identifier> textureIdProperty();
 
-    default void setTextureId(ResourceLocation value) {
+    default void setTextureId(Identifier value) {
         textureIdProperty().setValue(value);
     }
 

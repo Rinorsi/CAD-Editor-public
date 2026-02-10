@@ -26,7 +26,7 @@ public final class ScreenHandlerImpl implements ScreenHandler {
     private final ObjectProperty<Scene> currentSceneProperty = ObjectProperty.create();
     private final IntegerProperty widthProperty = IntegerProperty.create();
     private final IntegerProperty heightProperty = IntegerProperty.create();
-    private final Screen screen = new GuapiScreen();
+    private Screen screen;
     private Screen oldScreen;
 
     private ScreenHandlerImpl() {
@@ -79,11 +79,12 @@ public final class ScreenHandlerImpl implements ScreenHandler {
 
     @Override
     public Screen getGuapiScreen() {
-        return screen;
+        return getOrCreateScreen();
     }
 
     private void checkScreen() {
-        if (Minecraft.getInstance().screen != screen) {
+        Screen currentScreen = screen;
+        if (currentScreen == null || Minecraft.getInstance().screen != currentScreen) {
             scenes.clear();
             setCurrentScene(null);
         }
@@ -103,11 +104,18 @@ public final class ScreenHandlerImpl implements ScreenHandler {
 
     private void openScreen() {
         oldScreen = Minecraft.getInstance().screen;
-        Minecraft.getInstance().setScreen(screen);
+        Minecraft.getInstance().setScreen(getOrCreateScreen());
     }
 
     private void closeScreen() {
         Minecraft.getInstance().setScreen(oldScreen);
+    }
+
+    private Screen getOrCreateScreen() {
+        if (screen == null) {
+            screen = new GuapiScreen();
+        }
+        return screen;
     }
 
     private void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {

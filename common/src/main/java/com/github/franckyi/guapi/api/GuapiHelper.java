@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.net.URI;
@@ -148,15 +148,15 @@ public final class GuapiHelper {
         return node().createHBox(with);
     }
 
-    public static ImageViewBuilder imageView(ResourceLocation id) {
+    public static ImageViewBuilder imageView(Identifier id) {
         return node().createImageView(id);
     }
 
-    public static ImageViewBuilder imageView(ResourceLocation id, int imageWidth, int imageHeight) {
+    public static ImageViewBuilder imageView(Identifier id, int imageWidth, int imageHeight) {
         return node().createImageView(id, imageWidth, imageHeight);
     }
 
-    public static ImageViewBuilder imageView(ResourceLocation id, Consumer<ImageViewBuilder> with) {
+    public static ImageViewBuilder imageView(Identifier id, Consumer<ImageViewBuilder> with) {
         return node().createImageView(id, with);
     }
 
@@ -297,27 +297,27 @@ public final class GuapiHelper {
         return node().createTextArea(with);
     }
 
-    public static TexturedButtonBuilder texturedButton(ResourceLocation id, boolean drawButton) {
+    public static TexturedButtonBuilder texturedButton(Identifier id, boolean drawButton) {
         return node().createTexturedButton(id, drawButton);
     }
 
-    public static TexturedButtonBuilder texturedButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton) {
+    public static TexturedButtonBuilder texturedButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton) {
         return node().createTexturedButton(id, imageWidth, imageHeight, drawButton);
     }
 
-    public static TexturedButtonBuilder texturedButton(ResourceLocation id, boolean drawButton, Consumer<TexturedButtonBuilder> with) {
+    public static TexturedButtonBuilder texturedButton(Identifier id, boolean drawButton, Consumer<TexturedButtonBuilder> with) {
         return node().createTexturedButton(id, drawButton, with);
     }
 
-    public static TexturedToggleButtonBuilder texturedToggleButton(ResourceLocation id, boolean drawButton) {
+    public static TexturedToggleButtonBuilder texturedToggleButton(Identifier id, boolean drawButton) {
         return node().createTexturedToggleButton(id, drawButton);
     }
 
-    public static TexturedToggleButtonBuilder texturedToggleButton(ResourceLocation id, int imageWidth, int imageHeight, boolean drawButton) {
+    public static TexturedToggleButtonBuilder texturedToggleButton(Identifier id, int imageWidth, int imageHeight, boolean drawButton) {
         return node().createTexturedToggleButton(id, imageWidth, imageHeight, drawButton);
     }
 
-    public static TexturedToggleButtonBuilder texturedToggleButton(ResourceLocation id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with) {
+    public static TexturedToggleButtonBuilder texturedToggleButton(Identifier id, boolean drawButton, Consumer<TexturedToggleButtonBuilder> with) {
         return node().createTexturedToggleButton(id, drawButton, with);
     }
 

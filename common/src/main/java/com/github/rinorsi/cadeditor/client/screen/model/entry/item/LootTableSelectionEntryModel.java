@@ -6,7 +6,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSe
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.LootTableListSelectionElementModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -51,7 +51,7 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
                     String path = entry.getPath();
                     if (!path.startsWith("loot_tables/")) continue;
                     String clean = path.substring("loot_tables/".length(), path.length() - ".json".length());
-                    ResourceLocation id = ResourceLocation.fromNamespaceAndPath(entry.getNamespace(), clean);
+                    Identifier id = Identifier.fromNamespaceAndPath(entry.getNamespace(), clean);
                     out.add(new LootTableListSelectionElementModel(id));
                 }
             }
@@ -70,12 +70,12 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
                 Object rm = getRm.invoke(helperInst);
                 var listResources = rm.getClass().getMethod("listResources", String.class, java.util.function.Predicate.class);
                 @SuppressWarnings("unchecked")
-                var map = (java.util.Map<ResourceLocation, Object>) listResources.invoke(rm, "loot_tables", (java.util.function.Predicate<ResourceLocation>) rl -> rl.getPath().endsWith(".json"));
+                var map = (java.util.Map<Identifier, Object>) listResources.invoke(rm, "loot_tables", (java.util.function.Predicate<Identifier>) rl -> rl.getPath().endsWith(".json"));
                 for (var entry : map.keySet()) {
                     String path = entry.getPath();
                     if (!path.startsWith("loot_tables/")) continue;
                     String clean = path.substring("loot_tables/".length(), path.length() - ".json".length());
-                    ResourceLocation id = ResourceLocation.fromNamespaceAndPath(entry.getNamespace(), clean);
+                    Identifier id = Identifier.fromNamespaceAndPath(entry.getNamespace(), clean);
                     out.add(new LootTableListSelectionElementModel(id));
                 }
             } catch (Throwable ignored) {}
@@ -121,7 +121,7 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
                                                 String sub = rel.subpath(1, rel.getNameCount()).toString().replace('\\','/');
                                                 if (!sub.startsWith("loot_tables/")) return;
                                                 String clean = sub.substring("loot_tables/".length(), sub.length() - ".json".length());
-                                                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace, clean);
+                                                Identifier id = Identifier.fromNamespaceAndPath(namespace, clean);
                                                 out.add(new LootTableListSelectionElementModel(id));
                                             } catch (Throwable ignored2) {}
                                         });
@@ -160,7 +160,7 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
                                                         String sub = rel.subpath(1, rel.getNameCount()).toString().replace('\\','/');
                                                         if (!sub.startsWith("loot_tables/")) return;
                                                         String clean = sub.substring("loot_tables/".length(), sub.length() - ".json".length());
-                                                        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace, clean);
+                                                        Identifier id = Identifier.fromNamespaceAndPath(namespace, clean);
                                                         out.add(new LootTableListSelectionElementModel(id));
                                                     } catch (Throwable ignored2) {}
                                                 });
@@ -184,7 +184,7 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
                                                             String sub = rel.subpath(1, rel.getNameCount()).toString().replace('\\','/');
                                                             if (!sub.startsWith("loot_tables/")) return;
                                                             String clean = sub.substring("loot_tables/".length(), sub.length() - ".json".length());
-                                                            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace, clean);
+                                                            Identifier id = Identifier.fromNamespaceAndPath(namespace, clean);
                                                             out.add(new LootTableListSelectionElementModel(id));
                                                         } catch (Throwable ignored2) {}
                                                     });
@@ -210,7 +210,7 @@ public class LootTableSelectionEntryModel extends SelectionEntryModel {
         //         "blocks/oak_log", "blocks/diamond_ore", "gameplay/fishing/fish"
         //     };
         //     for (String p : commons) {
-        //         out.add(new ListSelectionElementModel("cadeditor.text.item", ResourceLocation.fromNamespaceAndPath(ns, p)));
+        //         out.add(new ListSelectionElementModel("cadeditor.text.item", Identifier.fromNamespaceAndPath(ns, p)));
         //     }
         // }
 

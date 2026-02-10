@@ -3,7 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 import com.github.rinorsi.cadeditor.common.ModConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
@@ -37,12 +37,12 @@ public class StringSuggestionListSelectionElementModel extends ListSelectionElem
                 || getId().toString().toLowerCase(Locale.ROOT).contains(lower);
     }
 
-    private static ResourceLocation toResourceLocation(String value) {
-        ResourceLocation parsed = ResourceLocation.tryParse(value);
+    private static Identifier toResourceLocation(String value) {
+        Identifier parsed = Identifier.tryParse(value);
         if (parsed != null) {
             return parsed;
         }
         String hex = HexFormat.of().formatHex(value.getBytes(StandardCharsets.UTF_8));
-        return ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, PREFIX + hex);
+        return Identifier.fromNamespaceAndPath(ModConstants.MOD_ID, PREFIX + hex);
     }
 }

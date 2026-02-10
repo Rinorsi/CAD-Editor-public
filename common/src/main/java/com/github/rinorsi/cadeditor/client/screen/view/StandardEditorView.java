@@ -7,7 +7,7 @@ import com.github.rinorsi.cadeditor.client.util.texteditor.StyleType;
 import com.github.rinorsi.cadeditor.client.util.texteditor.TextEditorActionHandler;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Arrays;
 import java.util.List;
@@ -78,7 +78,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
         }).align(CENTER_RIGHT));
     }
 
-    private TexturedButton createTextButton(StyleType target, ResourceLocation id, MutableComponent tooltipText) {
+    private TexturedButton createTextButton(StyleType target, Identifier id, MutableComponent tooltipText) {
         return texturedButton(id, 16, 16, false)
                 .tooltip(tooltipText)
                 .action(e -> {
@@ -89,7 +89,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
                 });
     }
 
-    private TexturedButton createTextColorButton(String color, ResourceLocation id, MutableComponent tooltipText) {
+    private TexturedButton createTextColorButton(String color, Identifier id, MutableComponent tooltipText) {
         return texturedButton(id, 7, 7, false)
                 .tooltip(tooltipText)
                 .action(e -> {

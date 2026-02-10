@@ -10,7 +10,7 @@ import com.github.rinorsi.cadeditor.client.UpdateLogRegistry;
 import com.github.rinorsi.cadeditor.client.util.ScreenScalingManager;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -107,11 +107,11 @@ public abstract class ScreenView implements View {
         });
     }
 
-    protected TexturedButtonBuilder createButton(ResourceLocation id, String tooltipText) {
+    protected TexturedButtonBuilder createButton(Identifier id, String tooltipText) {
         return createButton(id, translated(tooltipText));
     }
 
-    protected TexturedButtonBuilder createButton(ResourceLocation id, MutableComponent tooltipText) {
+    protected TexturedButtonBuilder createButton(Identifier id, MutableComponent tooltipText) {
         return texturedButton(id, 16, 16, false).tooltip(tooltipText);
     }
 

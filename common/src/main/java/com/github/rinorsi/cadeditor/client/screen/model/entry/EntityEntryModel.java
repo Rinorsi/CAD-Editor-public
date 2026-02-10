@@ -7,7 +7,7 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.Objects;
@@ -123,13 +123,13 @@ public class EntityEntryModel extends ValueEntryModel<CompoundTag> {
             value.remove("id");
             return value;
         }
-        ResourceLocation location = ClientUtil.parseResourceLocation(trimmed);
+        Identifier location = ClientUtil.parseResourceLocation(trimmed);
         value.putString("id", location != null ? location.toString() : trimmed);
         return value;
     }
 
     private static EntityType<?> findEntityType(String value) {
-        ResourceLocation location = ClientUtil.parseResourceLocation(value);
+        Identifier location = ClientUtil.parseResourceLocation(value);
         return location == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(null);
     }
 }

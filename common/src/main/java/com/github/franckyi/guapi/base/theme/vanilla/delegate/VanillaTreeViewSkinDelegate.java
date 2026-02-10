@@ -4,7 +4,7 @@ import com.github.franckyi.guapi.api.node.Node;
 import com.github.franckyi.guapi.api.node.TexturedButton;
 import com.github.franckyi.guapi.api.node.TreeView;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
@@ -50,7 +50,7 @@ public class VanillaTreeViewSkinDelegate<E extends TreeView.TreeItem<E>> extends
     }
 
     protected static class NodeEntry<E extends TreeView.TreeItem<E>> extends AbstractVanillaListNodeSkinDelegate.NodeEntry<TreeView<E>, E, NodeEntry<E>> {
-        private static final ResourceLocation TREE_VIEW_WIDGETS = ResourceLocation.fromNamespaceAndPath(com.github.rinorsi.cadeditor.common.ModConstants.MOD_ID, "textures/gui/tree_view_widgets.png");
+        private static final Identifier TREE_VIEW_WIDGETS = Identifier.fromNamespaceAndPath(com.github.rinorsi.cadeditor.common.ModConstants.MOD_ID, "textures/gui/tree_view_widgets.png");
         private TexturedButton button;
         private final int increment;
 

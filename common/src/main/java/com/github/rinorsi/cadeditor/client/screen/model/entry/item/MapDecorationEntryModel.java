@@ -9,7 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.component.MapDecorations;
 import net.minecraft.network.chat.Component;
 
@@ -46,8 +46,8 @@ public class MapDecorationEntryModel extends EntryModel {
         }
         if (entry != null) {
             entry.type().unwrapKey()
-                    .map(ResourceKey::location)
-                    .map(ResourceLocation::toString)
+                    .map(ResourceKey::identifier)
+                    .map(Identifier::toString)
                     .ifPresent(typeProperty::setValue);
             xTextProperty.setValue(formatDouble(entry.x()));
             zTextProperty.setValue(formatDouble(entry.z()));
@@ -86,7 +86,7 @@ public class MapDecorationEntryModel extends EntryModel {
         if (value == null || value.trim().isEmpty()) {
             return "";
         }
-        ResourceLocation normalized = DecorationTypeOption.normalizeId(value);
+        Identifier normalized = DecorationTypeOption.normalizeId(value);
         return normalized == null ? "" : normalized.toString();
     }
 
@@ -124,7 +124,7 @@ public class MapDecorationEntryModel extends EntryModel {
             setValid(false);
             return Optional.empty();
         }
-        ResourceLocation typeId = ResourceLocation.tryParse(type);
+        Identifier typeId = Identifier.tryParse(type);
         if (typeId == null) {
             setValid(false);
             return Optional.empty();
@@ -215,7 +215,7 @@ public class MapDecorationEntryModel extends EntryModel {
         return Type.MAP_DECORATION;
     }
 
-    public record DecorationTypeOption(ResourceLocation id, Component displayName) {
+    public record DecorationTypeOption(Identifier id, Component displayName) {
         private static final List<DecorationTypeOption> DEFAULT_OPTIONS = List.of(
                 of("minecraft:player"),
                 of("minecraft:player_off_map"),
@@ -248,7 +248,7 @@ public class MapDecorationEntryModel extends EntryModel {
                 of("minecraft:wind_charge")
         );
 
-        public DecorationTypeOption(ResourceLocation id, Component displayName) {
+        public DecorationTypeOption(Identifier id, Component displayName) {
             this.id = id;
             this.displayName = displayName;
         }
@@ -266,7 +266,7 @@ public class MapDecorationEntryModel extends EntryModel {
                 return DEFAULT_OPTIONS;
             }
             List<DecorationTypeOption> options = lookup.listElements()
-                    .map(holder -> of(holder.key().location()))
+                    .map(holder -> of(holder.key().identifier()))
                     .sorted(Comparator.comparing(DecorationTypeOption::getResourceId))
                     .toList();
             return options.isEmpty() ? DEFAULT_OPTIONS : options;
@@ -280,7 +280,7 @@ public class MapDecorationEntryModel extends EntryModel {
             if (options == null || options.isEmpty() || resourceId == null || resourceId.isBlank()) {
                 return null;
             }
-            ResourceLocation normalized = normalize(resourceId);
+            Identifier normalized = normalize(resourceId);
             if (normalized == null) {
                 return null;
             }
@@ -293,31 +293,31 @@ public class MapDecorationEntryModel extends EntryModel {
             return null;
         }
 
-        public static ResourceLocation normalizeId(String resourceId) {
+        public static Identifier normalizeId(String resourceId) {
             return normalize(resourceId);
         }
 
-        private static ResourceLocation normalize(String resourceId) {
+        private static Identifier normalize(String resourceId) {
             String value = resourceId.trim();
             if (!value.contains(":")) {
                 value = "minecraft:" + value;
             }
-            return ResourceLocation.tryParse(value);
+            return Identifier.tryParse(value);
         }
 
         private static DecorationTypeOption of(String id) {
-            ResourceLocation parsed = normalize(id);
+            Identifier parsed = normalize(id);
             if (parsed == null) {
                 throw new IllegalArgumentException("Invalid map decoration id: " + id);
             }
             return new DecorationTypeOption(parsed, toDisplayName(parsed));
         }
 
-        private static DecorationTypeOption of(ResourceLocation id) {
+        private static DecorationTypeOption of(Identifier id) {
             return new DecorationTypeOption(id, toDisplayName(id));
         }
 
-        private static Component toDisplayName(ResourceLocation id) {
+        private static Component toDisplayName(Identifier id) {
             String display = id.getPath();
             if (display == null || display.isBlank()) {
                 display = id.toString();

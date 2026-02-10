@@ -10,7 +10,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Path;
@@ -62,7 +62,7 @@ public final class PlatformUtilImpl {
     }
 
     private static CustomPacketPayload.Type<?> createType(NetworkHandler<?> handler) {
-        ResourceLocation location = handler.getLocation();
+        Identifier location = handler.getLocation();
         return new CustomPacketPayload.Type<>(location);
     }
 

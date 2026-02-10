@@ -18,7 +18,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -59,7 +59,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         originalBaseEntryCount = 0;
         if (contents != null) {
             potionId = contents.potion()
-                    .flatMap(h -> h.unwrapKey().map(k -> java.util.Optional.of(k.location().toString())).orElse(java.util.Optional.empty()))
+                    .flatMap(h -> h.unwrapKey().map(k -> java.util.Optional.of(k.identifier().toString())).orElse(java.util.Optional.empty()))
                     .orElse("");
             customColor = contents.customColor().orElse(Color.NONE);
             originalBaseEffectTags = resolveBasePotionEffects(potionId);
@@ -137,7 +137,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             var effectLookup = effectLookupOpt.get();
             for (CompoundTag c : effectiveEffects) {
                 String id = NbtHelper.getString(c, "id", "");
-                ResourceLocation rl = ResourceLocation.tryParse(id);
+                Identifier rl = Identifier.tryParse(id);
                 if (rl == null) {
                     continue;
                 }
@@ -166,7 +166,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         PotionContents contents = null;
         if (potionLookupOpt.isPresent()) {
             var potionLookup = potionLookupOpt.get();
-            ResourceLocation rl = potionStr.isEmpty() ? ResourceLocation.parse("minecraft:empty") : ResourceLocation.tryParse(potionStr);
+            Identifier rl = potionStr.isEmpty() ? Identifier.parse("minecraft:empty") : Identifier.tryParse(potionStr);
             java.util.Optional<Holder<Potion>> pot = java.util.Optional.empty();
             if (!baseEffectsModified && rl != null) {
                 var potHolder = potionLookup.get(ResourceKey.create(Registries.POTION, rl));
@@ -224,7 +224,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
                     this::collectPotionEffect, baseEffect, tag);
         }
         String defaultId = MobEffects.SPEED.unwrapKey()
-                .map(key -> key.location().toString())
+                .map(key -> key.identifier().toString())
                 .orElse("minecraft:movement_speed");
         return new PotionEffectEntryModel(this, defaultId, 0, 1, false, true, true, this::collectPotionEffect);
     }
@@ -250,7 +250,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         if (lookupOpt.isEmpty()) {
             return List.of();
         }
-        ResourceLocation rl = ResourceLocation.tryParse(potionId);
+        Identifier rl = Identifier.tryParse(potionId);
         if (rl == null) {
             return List.of();
         }
@@ -277,7 +277,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
 
     private static CompoundTag toTag(MobEffectInstance e) {
         CompoundTag tag = new CompoundTag();
-        String id = e.getEffect().unwrapKey().map(k -> k.location().toString()).orElse("");
+        String id = e.getEffect().unwrapKey().map(k -> k.identifier().toString()).orElse("");
         tag.putString("id", id);
         tag.putInt("amplifier", e.getAmplifier());
         tag.putInt("duration", e.getDuration());
@@ -288,7 +288,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private void openCustomEffectSelection() {
-        Set<ResourceLocation> current = collectCustomEffectIds();
+        Set<Identifier> current = collectCustomEffectIds();
         ModScreenHandler.openListSelectionScreen(ModTexts.EFFECTS.copy(),
                 "", ClientCache.getEffectSelectionItems(),
                 value -> {}, true,
@@ -296,11 +296,11 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
                 current);
     }
 
-    private void applyCustomSelection(List<ResourceLocation> selected) {
-        Map<ResourceLocation, PotionEffectEntryModel> existing = new LinkedHashMap<>();
+    private void applyCustomSelection(List<Identifier> selected) {
+        Map<Identifier, PotionEffectEntryModel> existing = new LinkedHashMap<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof PotionEffectEntryModel effect && !effect.isBaseEffect()) {
-                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                Identifier id = Identifier.tryParse(effect.getValue());
                 if (id != null) {
                     existing.putIfAbsent(id, effect);
                 }
@@ -308,7 +308,7 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         }
         List<PotionEffectEntryModel> desired = new ArrayList<>();
         if (selected != null) {
-            for (ResourceLocation id : selected) {
+            for (Identifier id : selected) {
                 PotionEffectEntryModel entry = existing.remove(id);
                 if (entry == null) {
                     entry = (PotionEffectEntryModel) createPotionEffectEntry(null, false);
@@ -338,11 +338,11 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
         updateEntryListIndexes();
     }
 
-    private Set<ResourceLocation> collectCustomEffectIds() {
-        Set<ResourceLocation> ids = new LinkedHashSet<>();
+    private Set<Identifier> collectCustomEffectIds() {
+        Set<Identifier> ids = new LinkedHashSet<>();
         for (EntryModel entry : getEntries()) {
             if (entry instanceof PotionEffectEntryModel effect && !effect.isBaseEffect()) {
-                ResourceLocation id = ResourceLocation.tryParse(effect.getValue());
+                Identifier id = Identifier.tryParse(effect.getValue());
                 if (id != null) {
                     ids.add(id);
                 }

@@ -16,7 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
@@ -78,7 +78,7 @@ public final class ClientVaultActionLogic {
             if (stack.isEmpty()) {
                 continue;
             }
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cadeditor", "vault_item_" + i);
+            Identifier id = Identifier.fromNamespaceAndPath("cadeditor", "vault_item_" + i);
             elements.add(new VaultItemListSelectionElementModel(id, stack));
             stacksById.put(id.toString(), stack.copy());
         }
