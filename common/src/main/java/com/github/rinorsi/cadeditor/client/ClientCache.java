@@ -818,6 +818,7 @@ public final class ClientCache {
         return List.copyOf(filters);
     }
 
+    @SuppressWarnings("deprecation")
     private static Supplier<TextureAtlasSprite> mobEffectSpriteSupplier(Holder<MobEffect> holder) {
         return () -> {
             var texture = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS);
