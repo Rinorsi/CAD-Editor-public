@@ -66,19 +66,6 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             originalBaseEntryCount = originalBaseEffectTags.size();
             originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
             contents.customEffects().forEach(e -> getEntries().add(createPotionEffectEntry(toTag(e), false)));
-        } else {
-            CompoundTag data = getData();
-            CompoundTag legacy = data == null ? null : data.getCompound("tag").orElse(null);
-            potionId = NbtHelper.getString(legacy, "Potion", "");
-            customColor = NbtHelper.getInt(legacy, "CustomPotionColor", Color.NONE);
-            originalBaseEffectTags = resolveBasePotionEffects(potionId);
-            originalBaseEntryCount = originalBaseEffectTags.size();
-            originalBaseEffectTags.forEach(tag -> getEntries().add(createPotionEffectEntry(tag, true)));
-            ListTag customEffects = legacy == null ? new ListTag() : legacy.getListOrEmpty("custom_potion_effects");
-            customEffects.stream()
-                    .map(CompoundTag.class::cast)
-                    .map(t -> createPotionEffectEntry(t, false))
-                    .forEach(getEntries()::add);
         }
         selectedPotionId = potionId;
         selectedCustomColor = customColor;
@@ -183,16 +170,6 @@ public class ItemPotionEffectsCategoryModel extends ItemEditorCategoryModel {
             stack.set(DataComponents.POTION_CONTENTS, contents);
         } else {
             stack.remove(DataComponents.POTION_CONTENTS);
-        }
-        CompoundTag data = getData();
-        CompoundTag legacy = data == null ? null : data.getCompound("tag").orElse(null);
-        if (legacy != null) {
-            legacy.remove("Potion");
-            legacy.remove("CustomPotionColor");
-            legacy.remove("custom_potion_effects");
-            if (legacy.isEmpty()) {
-                data.remove("tag");
-            }
         }
     }
 

@@ -65,6 +65,7 @@
   "cadeditor.gui.always_show_name": "Toujours afficher le nom",
   "cadeditor.gui.ambient": "Ambiant (effets de particules plus transparents)",
   "cadeditor.gui.amount": "Quantité",
+  "cadeditor.gui.amount_nonfinite_command_hint": "Infinity/NaN est autorisé dans l'éditeur, mais /give vanilla ne le lit pas ; l'export remplace automatiquement par +/-2048 (NaN -> 2048).",
   "cadeditor.gui.amplifier": "Amplificateur (0 = niveau I, etc.)",
   "cadeditor.gui.aqua": "Turquoise",
   "cadeditor.gui.armor_color": "Couleur de l'armure",

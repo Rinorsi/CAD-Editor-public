@@ -29,21 +29,20 @@ import java.util.List;
 import java.util.Optional;
 
 public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
-    private final String tagName;
+    private final boolean canBreak;
     private ListTag newBlocks;
 
-    public ItemBlockListCategoryModel(Component name, ItemEditorModel editor, String tagName) {
+    public ItemBlockListCategoryModel(Component name, ItemEditorModel editor, boolean canBreak) {
         super(name, editor);
-        this.tagName = tagName;
+        this.canBreak = canBreak;
     }
 
     @Override
     protected void setupEntries() {
-        // 1) Prefer 1.21 components
         var data = getData();
         if (data != null) {
             var components = data.getCompound("components").orElse(null);
-            String key = "CanDestroy".equals(tagName) ? "minecraft:can_break" : "minecraft:can_place_on";
+            String key = canBreak ? "minecraft:can_break" : "minecraft:can_place_on";
             if (components != null) {
                 var comp = components.getCompound(key).orElse(null);
                 if (comp != null) {
@@ -56,17 +55,6 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
                         }
                     }
                 }
-            }
-        }
-        if (!getEntries().isEmpty()) {
-            return;
-        }
-        // 2) Fallback to legacy lists
-        CompoundTag legacyTag = data == null ? null : data.getCompound("tag").orElse(null);
-        ListTag nbtList = NbtHelper.getListOrEmpty(legacyTag, tagName);
-        for (Tag element : nbtList) {
-            if (element instanceof StringTag stringTag) {
-                getEntries().add(createBlockEntry(stringTag.value()));
             }
         }
     }
@@ -124,22 +112,10 @@ public class ItemBlockListCategoryModel extends ItemEditorCategoryModel {
             }
         }
         AdventureModePredicate predicate = predicates.isEmpty() ? null : new AdventureModePredicate(predicates);
-        boolean isDestroy = "CanDestroy".equals(tagName);
         if (predicate != null) {
-            if (isDestroy) stack.set(DataComponents.CAN_BREAK, predicate); else stack.set(DataComponents.CAN_PLACE_ON, predicate);
+            if (canBreak) stack.set(DataComponents.CAN_BREAK, predicate); else stack.set(DataComponents.CAN_PLACE_ON, predicate);
         } else {
-            if (isDestroy) stack.remove(DataComponents.CAN_BREAK); else stack.remove(DataComponents.CAN_PLACE_ON);
-        }
-
-        CompoundTag data = getData();
-        if (data != null) {
-            CompoundTag legacyTag = data.getCompound("tag").orElse(null);
-            if (legacyTag != null && legacyTag.contains(tagName)) {
-                legacyTag.remove(tagName);
-                if (legacyTag.isEmpty()) {
-                    data.remove("tag");
-                }
-            }
+            if (canBreak) stack.remove(DataComponents.CAN_BREAK); else stack.remove(DataComponents.CAN_PLACE_ON);
         }
     }
 

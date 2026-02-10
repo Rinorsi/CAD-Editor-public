@@ -40,6 +40,9 @@ import java.util.regex.Pattern;
 
 public class ItemEditorContext extends EditorContext<ItemEditorContext> {
     private static final Pattern SIMPLE_KEY = Pattern.compile("[a-z0-9_\\-+.]+");
+    private static final double COMMAND_EXPORT_POS_INF = 2048.0d;
+    private static final double COMMAND_EXPORT_NEG_INF = -2048.0d;
+    private static final double COMMAND_EXPORT_NAN = 2048.0d;
     private static final Set<String> BOOLEAN_HINTS = Set.of(
             "enchantment_glint_override",
             "keep_hanging",
@@ -55,7 +58,12 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
             "hide_additional_tooltip",
             "hide_enchantment_tooltip",
             "hide_tooltips",
-            "glint_override"
+            "glint_override",
+            "bold",
+            "italic",
+            "underlined",
+            "strikethrough",
+            "obfuscated"
     );
     private ItemStack itemStack;
 
@@ -130,12 +138,12 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
     }
 
     private static boolean isEnchantmentContainer(String parent, String grandParent) {
-        return equalsAnyIgnoreCase(parent, "Enchantments", "StoredEnchantments", "minecraft:enchantments")
+        return equalsAnyIgnoreCase(parent, "minecraft:enchantments")
                 || (equalsAnyIgnoreCase(parent, "levels") && equalsAnyIgnoreCase(grandParent, "minecraft:enchantments"));
     }
 
     private static boolean isEffectContainer(String parent, String grandParent) {
-        return equalsAnyIgnoreCase(parent, "effects", "custom_potion_effects", "status_effects")
+        return equalsAnyIgnoreCase(parent, "effects", "status_effects")
                 || (equalsAnyIgnoreCase(parent, "entries") && equalsAnyIgnoreCase(grandParent, "minecraft:food"));
     }
 
@@ -202,10 +210,6 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         CompoundTag components = data.getCompound("components")
                 .map(CompoundTag::copy)
                 .orElseGet(CompoundTag::new);
-        if (data.contains("tag") && !components.contains("minecraft:custom_data")) {
-            data.getCompound("tag").filter(tag -> !tag.isEmpty())
-                    .ifPresent(legacy -> components.put("minecraft:custom_data", legacy.copy()));
-        }
         StringBuilder builder = new StringBuilder("/give @p ").append(id);
         String componentSpec = formatComponentList(components);
         if (!componentSpec.isEmpty()) {
@@ -472,8 +476,12 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
     }
 
     private static String formatFloating(double value) {
-        if (Double.isNaN(value) || Double.isInfinite(value)) {
-            return Double.toString(value);
+        if (Double.isNaN(value)) {
+            return formatCommandFallback(COMMAND_EXPORT_NAN);
+        }
+        if (Double.isInfinite(value)) {
+            double fallback = value > 0 ? COMMAND_EXPORT_POS_INF : COMMAND_EXPORT_NEG_INF;
+            return formatCommandFallback(fallback);
         }
         double roundedTenth = Math.round(value * 10.0) / 10.0;
         if (Math.abs(value - roundedTenth) < 1e-6) {
@@ -483,6 +491,10 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         if (Math.abs(value - roundedThousandth) < 1e-7) {
             return trimTrailingZeros(Double.toString(roundedThousandth));
         }
+        return trimTrailingZeros(BigDecimal.valueOf(value).stripTrailingZeros().toPlainString());
+    }
+
+    private static String formatCommandFallback(double value) {
         return trimTrailingZeros(BigDecimal.valueOf(value).stripTrailingZeros().toPlainString());
     }
 

@@ -25,12 +25,19 @@ public class AttributeModifierEntryController extends EntryController<AttributeM
             if (view.getAmountField().isValid()) {
                 model.setAmount(Double.parseDouble(value));
             }
+            updateAmountTooltip(value);
         });
-        model.amountProperty().addListener(value -> view.getAmountField().setText(Double.toString(value)));
+        model.amountProperty().addListener(value -> {
+            String text = Double.toString(value);
+            view.getAmountField().setText(text);
+            updateAmountTooltip(text);
+        });
         view.getAttributeNameField().textProperty().bindBidirectional(model.attributeNameProperty());
         view.getSlotButton().valueProperty().bindBidirectional(model.slotProperty());
         view.getOperationButton().valueProperty().bindBidirectional(model.operationProperty());
-        view.getAmountField().setText(Double.toString(model.getAmount()));
+        String initialAmount = Double.toString(model.getAmount());
+        view.getAmountField().setText(initialAmount);
+        updateAmountTooltip(initialAmount);
         view.getAmountField().validProperty().addListener(model::setValid);
         view.getAttributeNameField().getSuggestions().setAll(ClientCache.getAttributeSuggestions());
         view.getAttributeListButton().onAction(this::openAttributeList);
@@ -54,6 +61,25 @@ public class AttributeModifierEntryController extends EntryController<AttributeM
             view.getAttributePreviewLabel().setLabel(translated(item.getName()).withStyle(ChatFormatting.GRAY));
             view.getAttributePreviewLabel().setVisible(true);
         }, () -> view.getAttributePreviewLabel().setVisible(false));
+    }
+
+    private void updateAmountTooltip(String value) {
+        view.getAmountField().getTooltip().setAll(ModTexts.AMOUNT);
+        Double parsed = parseAmount(value);
+        if (parsed != null && !Double.isFinite(parsed)) {
+            view.getAmountField().getTooltip().add(ModTexts.AMOUNT_NONFINITE_COMMAND_HINT);
+        }
+    }
+
+    private static Double parseAmount(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
 }

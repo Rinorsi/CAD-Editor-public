@@ -78,7 +78,7 @@ public final class ClientUtil {
         if (stack == null || stack.isEmpty()) {
             CompoundTag tag = new CompoundTag();
             tag.putString("id", BuiltInRegistries.ITEM.getKey((stack == null ? Items.AIR : stack.getItem())).toString());
-            tag.putByte("Count", (byte) (stack == null ? 0 : stack.getCount()));
+            tag.putInt("count", stack == null ? 0 : stack.getCount());
             return tag;
         }
         RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, lookup);
@@ -89,7 +89,7 @@ public final class ClientUtil {
                 .orElseGet(() -> {
                     CompoundTag tag = new CompoundTag();
                     tag.putString("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
-                    tag.putByte("Count", (byte) stack.getCount());
+                    tag.putInt("count", stack.getCount());
                     return tag;
                 });
     }

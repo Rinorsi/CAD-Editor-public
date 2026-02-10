@@ -48,20 +48,6 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
                     .map(this::createEnchantment)
                     .forEach(getEntries()::add);
         }
-        if (!any) {
-            CompoundTag data = getData();
-            CompoundTag legacyTag = data != null ? data.getCompound("tag").orElse(null) : null;
-            if (legacyTag != null) {
-                String legacyKey = editingStored ? "StoredEnchantments" : "Enchantments";
-                ListTag enchantList = legacyTag.getList(legacyKey).orElse(null);
-                if (enchantList != null) {
-                    enchantList.stream()
-                            .map(CompoundTag.class::cast)
-                            .map(this::createEnchantment)
-                            .forEach(getEntries()::add);
-                }
-            }
-        }
     }
 
     @Override
@@ -94,10 +80,15 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
     }
 
     public Set<ResourceLocation> getExistingEnchantmentIds() {
+        return getExistingEnchantmentIdsExcluding(null);
+    }
+
+    public Set<ResourceLocation> getExistingEnchantmentIdsExcluding(EnchantmentEntryModel excluded) {
         Set<ResourceLocation> set = new HashSet<>();
         getEntries().stream()
                 .filter(EnchantmentEntryModel.class::isInstance)
                 .map(EnchantmentEntryModel.class::cast)
+                .filter(entry -> entry != excluded)
                 .map(EnchantmentEntryModel::getValue)
                 .map(this::normalizeId)
                 .filter(Objects::nonNull)
@@ -114,6 +105,31 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         int insertIndex = canAddEntryInList() ? Math.max(getEntries().size() - 1, getEntryListStart()) : getEntries().size();
         getEntries().add(insertIndex, entry);
         updateEntryListIndexes();
+    }
+
+    public void removeEnchantmentEntry(EnchantmentEntryModel entry) {
+        if (entry == null) {
+            return;
+        }
+        if (getEntries().remove(entry)) {
+            updateEntryListIndexes();
+        }
+    }
+
+    public void removeUnselectedEnchantmentEntries(Set<ResourceLocation> selectedIds, EnchantmentEntryModel exemptEntry) {
+        boolean changed = getEntries().removeIf(entry -> {
+            if (!(entry instanceof EnchantmentEntryModel enchantmentEntry)) {
+                return false;
+            }
+            if (enchantmentEntry == exemptEntry) {
+                return false;
+            }
+            ResourceLocation id = normalizeId(enchantmentEntry.getValue());
+            return id == null || selectedIds == null || !selectedIds.contains(id);
+        });
+        if (changed) {
+            updateEntryListIndexes();
+        }
     }
 
     private ResourceLocation normalizeId(String id) {
@@ -170,26 +186,10 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
                 stack.set(DataComponents.ENCHANTMENTS, applied);
             }
         }
-        clearLegacyEnchantments();
     }
 
     private ItemStack getStack() {
         return getParent().getContext().getItemStack();
-    }
-
-    private void clearLegacyEnchantments() {
-        CompoundTag data = getData();
-        if (data == null) {
-            return;
-        }
-        CompoundTag tag = data.getCompound("tag").orElse(null);
-        if (tag == null) {
-            return;
-        }
-        String key = editingStored ? "StoredEnchantments" : "Enchantments";
-        if (tag.contains(key)) {
-            tag.remove(key);
-        }
     }
 
     private boolean shouldEditStored(ItemStack stack) {

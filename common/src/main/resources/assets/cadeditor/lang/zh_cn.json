@@ -67,6 +67,7 @@
   "cadeditor.gui.always_show_name": "始终显示名称",
   "cadeditor.gui.ambient": "环境效果（粒子更淡）",
   "cadeditor.gui.amount": "数值",
+  "cadeditor.gui.amount_nonfinite_command_hint": "Infinity/NaN 在编辑器里可用，但原版 /give 不支持；复制指令时会自动替换为 +/-2048（NaN -> 2048）。",
   "cadeditor.gui.amplifier": "等级（0 为 I，依次递增）",
   "cadeditor.gui.aqua": "青色",
   "cadeditor.gui.armor_color": "盔甲颜色",

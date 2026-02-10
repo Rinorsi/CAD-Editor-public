@@ -17,6 +17,7 @@ public final class ModTexts {
     public static final MutableComponent ADD = translated("cadeditor.gui.add").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent AMBIENT = translated("cadeditor.gui.ambient");
     public static final MutableComponent AMOUNT = translated("cadeditor.gui.amount");
+    public static final MutableComponent AMOUNT_NONFINITE_COMMAND_HINT = translated("cadeditor.gui.amount_nonfinite_command_hint").withStyle(ChatFormatting.YELLOW);
     public static final MutableComponent AMPLIFIER = translated("cadeditor.gui.amplifier");
     public static final MutableComponent AQUA = translated("cadeditor.gui.aqua").withStyle(ChatFormatting.AQUA);
     public static final MutableComponent ARMOR_COLOR = translated("cadeditor.gui.armor_color");

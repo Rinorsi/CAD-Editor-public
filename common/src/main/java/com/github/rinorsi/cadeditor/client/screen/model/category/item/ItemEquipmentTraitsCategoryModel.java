@@ -269,9 +269,6 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
             int max = stack.getMaxDamage();
             int clamped = Math.max(0, Math.min(value, Math.max(0, max - 1)));
             stack.setDamageValue(clamped);
-            if (clamped == 0) {
-                stack.remove(DataComponents.DAMAGE);
-            }
         }
     }
 

@@ -6,7 +6,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -24,39 +23,22 @@ public final class ColoredItemHelper {
 
     public static ItemStack createColoredPotionItem(ResourceLocation potionId, int color) {
         ItemStack stack = new ItemStack(Items.POTION);
+        Holder<Potion> holder = null;
         var lookupOpt = registryAccess().lookup(Registries.POTION);
         if (lookupOpt.isPresent()) {
             var lookup = lookupOpt.get();
             ResourceLocation rl = potionId == null ? ResourceLocation.parse("minecraft:empty") : potionId;
             ResourceKey<Potion> key = ResourceKey.create(Registries.POTION, rl);
-            Holder<Potion> holder = lookup.get(key).orElse(null);
-            PotionContents contents;
-            java.util.List<net.minecraft.world.effect.MobEffectInstance> effects = java.util.List.of();
-            if (holder != null) {
-                contents = new PotionContents(java.util.Optional.of(holder),
-                        color != Color.NONE ? java.util.Optional.of(color) : java.util.Optional.empty(),
-                        effects,
-                        java.util.Optional.empty());
-            } else {
-                contents = new PotionContents(java.util.Optional.empty(),
-                        color != Color.NONE ? java.util.Optional.of(color) : java.util.Optional.empty(),
-                        effects,
-                        java.util.Optional.empty());
-            }
-            stack.set(DataComponents.POTION_CONTENTS, contents);
-            return stack;
+            holder = lookup.get(key).orElse(null);
         }
-        // Fallback legacy path
-        CompoundTag data = new CompoundTag();
-        CompoundTag tag = new CompoundTag();
-        tag.putString("Potion", potionId == null ? "minecraft:empty" : potionId.toString());
-        if (color != Color.NONE) {
-            tag.putInt("CustomPotionColor", color);
-        }
-        data.putString("id", "minecraft:potion");
-        data.putInt("Count", 1);
-        data.put("tag", tag);
-        return ClientUtil.parseItemStack(data);
+        PotionContents contents = new PotionContents(
+                java.util.Optional.ofNullable(holder),
+                color != Color.NONE ? java.util.Optional.of(color) : java.util.Optional.empty(),
+                java.util.List.of(),
+                java.util.Optional.empty()
+        );
+        stack.set(DataComponents.POTION_CONTENTS, contents);
+        return stack;
     }
 
     public static ItemStack createColoredArmorItem(ItemStack armorItem, int color) {

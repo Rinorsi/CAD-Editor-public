@@ -67,6 +67,7 @@
   "cadeditor.gui.always_show_name": "Always Show Name",
   "cadeditor.gui.ambient": "Ambient (fainter particles)",
   "cadeditor.gui.amount": "Amount",
+  "cadeditor.gui.amount_nonfinite_command_hint": "Infinity/NaN is supported in the editor, but vanilla /give cannot parse it; exported commands replace it with +/-2048 (NaN -> 2048).",
   "cadeditor.gui.amplifier": "Amplifier (0 = I, increasing upward)",
   "cadeditor.gui.aqua": "Aqua",
   "cadeditor.gui.armor_color": "Armor Color",

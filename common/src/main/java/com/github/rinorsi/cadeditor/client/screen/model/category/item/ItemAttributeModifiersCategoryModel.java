@@ -48,9 +48,6 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         modifierIds.clear();
         boolean hasEntries = addComponentEntries(stack.get(DataComponents.ATTRIBUTE_MODIFIERS));
         if (!hasEntries) {
-            hasEntries = addLegacyEntries();
-        }
-        if (!hasEntries) {
             addDefaultEntries(stack);
         }
     }
@@ -95,16 +92,6 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
     public void apply() {
         newAttributeModifiers = new ListTag();
         super.apply();
-        CompoundTag data = getData();
-        if (data != null) {
-            CompoundTag legacyTag = data.getCompound("tag").orElse(null);
-            if (legacyTag != null && legacyTag.contains("AttributeModifiers")) {
-                legacyTag.remove("AttributeModifiers");
-                if (legacyTag.isEmpty()) {
-                    data.remove("tag");
-                }
-            }
-        }
         ItemStack stack = getParent().getContext().getItemStack();
         var attrLookupOpt = ClientUtil.registryAccess().lookup(Registries.ATTRIBUTE);
         if (attrLookupOpt.isEmpty()) {
@@ -333,19 +320,6 @@ public class ItemAttributeModifiersCategoryModel extends ItemEditorCategoryModel
         }
         getEntries().add(new AttributeModifierEntryModel(this, attrName, slot, opIndex, amount, uuid, this::addAttributeModifier));
         return true;
-    }
-
-    private boolean addLegacyEntries() {
-        CompoundTag root = getTag();
-        ListTag legacyList = root == null ? new ListTag() : NbtHelper.getListOrEmpty(root, "AttributeModifiers");
-        boolean added = false;
-        for (Tag tag : legacyList) {
-            if (tag instanceof CompoundTag compound) {
-                getEntries().add(createModifierEntry(compound));
-                added = true;
-            }
-        }
-        return added;
     }
 
     private void addDefaultEntries(ItemStack stack) {

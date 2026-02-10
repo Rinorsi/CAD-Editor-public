@@ -66,7 +66,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         selectedFlags.clear();
         initial.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
         initial.addAll(readComponentVisibility(stack));
-        initial.addAll(readLegacyFlags(stack));
 
         for (HideFlag flag : HideFlag.values()) {
             boolean selected = initial.contains(flag);
@@ -75,20 +74,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             }
             getEntries().add(new HideFlagEntryModel(this, flag, selected, value -> setFlag(flag, value)));
         }
-    }
-
-    private EnumSet<HideFlag> readLegacyFlags(ItemStack stack) {
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        CompoundTag root = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
-        int mask = getTag() != null ? getTag().getIntOr("HideFlags", 0) : 0;
-        if (mask != 0) {
-            for (HideFlag flag : HideFlag.values()) {
-                if ((mask & flag.getValue()) != 0) {
-                    flags.add(flag);
-                }
-            }
-        }
-        return flags;
     }
 
     @Override
@@ -116,9 +101,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         if (!tooltipApplied) {
             featureLog("apply.tooltip_display_missing", () -> "TooltipDisplay unavailable; tooltip suppression incomplete");
         }
-        if (getTag() != null) {
-            getTag().remove("HideFlags");
-        }
 
         syncEntriesWithStack(stack);
     }
@@ -136,7 +118,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         EnumSet<HideFlag> actual = EnumSet.noneOf(HideFlag.class);
         actual.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
         actual.addAll(readComponentVisibility(stack));
-        actual.addAll(readLegacyFlags(stack));
 
         selectedFlags.clear();
         selectedFlags.addAll(actual);

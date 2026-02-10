@@ -64,6 +64,7 @@
   "cadeditor.gui.always_show_name": "Всегда отображать имя",
   "cadeditor.gui.ambient": "Окружение (более прозрачные частицы)",
   "cadeditor.gui.amount": "Значение",
+  "cadeditor.gui.amount_nonfinite_command_hint": "Infinity/NaN можно использовать в редакторе, но vanilla /give это не парсит; при экспорте автоматически подставляется +/-2048 (NaN -> 2048).",
   "cadeditor.gui.amplifier": "Усиление (0 = I, далее по порядку)",
   "cadeditor.gui.aqua": "Голубой",
   "cadeditor.gui.armor_color": "Цвет брони",

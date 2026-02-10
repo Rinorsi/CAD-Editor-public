@@ -21,7 +21,7 @@ public class ListSelectionElementView implements View {
                 labels.add(idLabel = label());
                 labels.fillWidth().spacing(2).align(CENTER);
             }), 1);
-            root.fillHeight().spacing(5).align(CENTER);
+            root.fillHeight().spacing(5).align(CENTER_LEFT);
         });
     }
 

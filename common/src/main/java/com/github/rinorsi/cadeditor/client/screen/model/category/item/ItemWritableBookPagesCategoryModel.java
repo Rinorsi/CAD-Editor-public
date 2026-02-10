@@ -3,11 +3,8 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.WritableBookPagesEntryModel;
-import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.WritableBookContent;
@@ -64,8 +61,6 @@ public class ItemWritableBookPagesCategoryModel extends ItemEditorCategoryModel 
                     .toList();
             stack.set(DataComponents.WRITABLE_BOOK_CONTENT, new WritableBookContent(filterables));
         }
-
-        clearLegacyPages();
     }
 
     private List<String> readPages() {
@@ -81,21 +76,6 @@ public class ItemWritableBookPagesCategoryModel extends ItemEditorCategoryModel 
         if (!result.isEmpty()) {
             return result;
         }
-        CompoundTag data = getData();
-        if (data == null) {
-            return result;
-        }
-        CompoundTag tag = data.getCompound("tag").orElse(null);
-        if (tag == null) {
-            return result;
-        }
-        ListTag list = tag.getList("pages").orElse(null);
-        if (list == null) {
-            return result;
-        }
-        for (int i = 0; i < list.size() && result.size() < WritableBookContent.MAX_PAGES; i++) {
-            result.add(sanitizePage(list.getString(i).orElse("")));
-        }
         return result;
     }
 
@@ -106,21 +86,6 @@ public class ItemWritableBookPagesCategoryModel extends ItemEditorCategoryModel 
                 .map(this::sanitizePage)
                 .forEach(sanitized::add);
         stagedPages = List.copyOf(sanitized);
-    }
-
-    private void clearLegacyPages() {
-        CompoundTag data = getData();
-        if (data == null) {
-            return;
-        }
-        CompoundTag tag = data.getCompound("tag").orElse(null);
-        if (tag == null) {
-            return;
-        }
-        tag.remove("pages");
-        if (tag.isEmpty()) {
-            data.remove("tag");
-        }
     }
 
     private String sanitizePage(String text) {

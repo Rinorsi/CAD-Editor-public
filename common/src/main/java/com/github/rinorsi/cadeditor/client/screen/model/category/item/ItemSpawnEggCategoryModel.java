@@ -20,7 +20,7 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
     public ItemSpawnEggCategoryModel(ItemEditorModel editor, SpawnEggItem item) {
         super(ModTexts.SPAWN_EGG, editor);
         this.item = item;
-        spawnData = readSpawnData(editor.getContext().getItemStack(), editor.getContext().getTag());
+        spawnData = readSpawnData(editor.getContext().getItemStack());
     }
 
     @Override
@@ -47,14 +47,6 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
         if (stack == null) {
             return;
         }
-        CompoundTag itemData = getData();
-        CompoundTag legacyTag = itemData.getCompound("tag").orElse(null);
-        if (legacyTag != null && legacyTag.contains("EntityTag")) {
-            legacyTag.remove("EntityTag");
-            if (legacyTag.isEmpty()) {
-                itemData.remove("tag");
-            }
-        }
         if (spawnData == null || spawnData.isEmpty()
                 || !spawnData.contains("id")
                 || spawnData.getString("id").orElse("").isEmpty()) {
@@ -67,20 +59,11 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
         spawnData = sanitized;
     }
 
-    private static CompoundTag readSpawnData(ItemStack stack, CompoundTag rootTag) {
+    private static CompoundTag readSpawnData(ItemStack stack) {
         if (stack != null) {
             CustomData data = stack.get(DataComponents.ENTITY_DATA);
             if (data != null && !data.isEmpty()) {
                 return data.copyTag();
-            }
-        }
-        if (rootTag != null) {
-            CompoundTag legacy = rootTag.getCompound("tag").orElse(null);
-            if (legacy != null) {
-                CompoundTag entityTag = legacy.getCompound("EntityTag").orElse(null);
-                if (entityTag != null) {
-                    return entityTag.copy();
-                }
             }
         }
         return new CompoundTag();

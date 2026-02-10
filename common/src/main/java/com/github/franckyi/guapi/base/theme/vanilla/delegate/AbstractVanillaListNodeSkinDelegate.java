@@ -16,6 +16,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 @SuppressWarnings("this-escape")
 public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>, E, T extends AbstractVanillaListNodeSkinDelegate.NodeEntry<N, E, T>> extends AbstractSelectionList<T> implements VanillaWidgetSkinDelegate {
     protected final N node;
@@ -62,6 +64,36 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     @Override
     public int getRowLeft() {
         return node.getLeft() + node.getPadding().getLeft();
+    }
+
+    @Override
+    protected void renderSelection(GuiGraphics guiGraphics, int rowTop, int rowWidth, int rowHeight, int borderColor, int fillColor) {
+        renderSelectionAt(guiGraphics, rowTop, getRowLeft(), rowWidth, rowHeight, borderColor, fillColor);
+    }
+
+    @Override
+    protected void renderItem(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta, int index, int rowLeft, int rowTop, int rowWidth, int rowHeight) {
+        T entry = getEntry(index);
+        boolean hovered = Objects.equals(getHovered(), entry);
+        entry.renderBack(guiGraphics, index, rowTop, rowLeft, rowWidth, rowHeight, mouseX, mouseY, hovered, delta);
+        if (isSelectedItem(index)) {
+            int borderColor = isFocused() ? -1 : -8355712;
+            renderSelectionAt(guiGraphics, rowTop, rowLeft, rowWidth, rowHeight, borderColor, -16777216);
+        }
+        entry.render(guiGraphics, index, rowTop, rowLeft, rowWidth, rowHeight, mouseX, mouseY, hovered, delta);
+    }
+
+    private void renderSelectionAt(GuiGraphics guiGraphics, int rowTop, int rowLeft, int rowWidth, int rowHeight, int borderColor, int fillColor) {
+        int left = node.getLeft();
+        int right = node.getRight() - node.getPadding().getRight();
+        if (scrollbarVisible()) {
+            right = Math.min(right, node.getRight() - 6);
+        }
+        if (right <= left) {
+            right = left + rowWidth;
+        }
+        guiGraphics.fill(left, rowTop - 2, right, rowTop + rowHeight + 2, borderColor);
+        guiGraphics.fill(left + 1, rowTop - 1, right - 1, rowTop + rowHeight + 1, fillColor);
     }
 
     @Override

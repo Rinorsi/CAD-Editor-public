@@ -11,6 +11,7 @@ import com.github.rinorsi.cadeditor.client.screen.view.entry.item.EnchantmentEnt
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,10 +50,10 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
     @Override
     protected void openSelectionScreen() {
         ItemEnchantmentsCategoryModel category = (ItemEnchantmentsCategoryModel) model.getCategory();
-        Set<ResourceLocation> selected = new HashSet<>(category.getExistingEnchantmentIds());
+        Set<ResourceLocation> initiallySelected = new HashSet<>(category.getExistingEnchantmentIdsExcluding(model));
         ResourceLocation currentId = parseResourceLocation(model.getValue());
         if (currentId != null) {
-            selected.add(currentId);
+            initiallySelected.add(currentId);
         }
         List<? extends ListSelectionElementModel> items = model.getSelectionItems();
         ModScreenHandler.openListSelectionScreen(model.getSelectionScreenTitle(),
@@ -61,15 +62,38 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
                 model::setValue,
                 true,
                 ids -> {
-                    if (ids.isEmpty()) {
+                    List<ResourceLocation> selectedIds = new ArrayList<>(ids);
+                    Set<ResourceLocation> selectedSet = new HashSet<>(selectedIds);
+
+                    category.removeUnselectedEnchantmentEntries(selectedSet, model);
+
+                    List<ResourceLocation> newlySelected = selectedIds.stream()
+                            .filter(id -> !initiallySelected.contains(id))
+                            .toList();
+
+                    ResourceLocation chosenForCurrent = null;
+                    if (currentId != null && selectedSet.contains(currentId)) {
+                        chosenForCurrent = currentId;
+                    } else if (!newlySelected.isEmpty()) {
+                        chosenForCurrent = newlySelected.get(0);
+                    }
+
+                    if (chosenForCurrent == null) {
+                        category.removeEnchantmentEntry(model);
                         return;
                     }
-                    model.setValue(ids.get(0).toString());
-                    for (int i = 1; i < ids.size(); i++) {
-                        category.addEnchantmentEntryIfAbsent(ids.get(i).toString(), model.getLevel());
+
+                    model.setValue(chosenForCurrent.toString());
+                    Set<ResourceLocation> existingIds = category.getExistingEnchantmentIdsExcluding(model);
+                    for (ResourceLocation id : newlySelected) {
+                        if (id.equals(chosenForCurrent) || existingIds.contains(id)) {
+                            continue;
+                        }
+                        category.addEnchantmentEntryIfAbsent(id.toString(), model.getLevel());
+                        existingIds.add(id);
                     }
                 },
-                selected);
+                initiallySelected);
     }
 
     private void updatePreview(String value) {
