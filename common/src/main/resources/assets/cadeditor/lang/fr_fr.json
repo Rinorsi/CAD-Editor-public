@@ -433,6 +433,7 @@
   "cadeditor.key.vault": "Ouvrir les favoris",
   "cadeditor.message.copied_clipboard": "Commande %s copiée dans le presse-papier!",
   "cadeditor.message.copied_give_clipboard": "Commande /give copiée ! Si elle ne fonctionne pas dans le chat, essayez dans un bloc de commande.",
+  "cadeditor.message.copied_give_clipboard_sanitized": "Commande /give copiée. %s valeur(s) Infinity/NaN ont été remplacées par ±%s pour la compatibilité vanilla.",
   "cadeditor.message.crossbow_projectile_help": "Saisissez chaque projectile en SNBT, ex. {id:\"minecraft:arrow\",Count:1}. Appuyez sur + pour en ajouter davantage.",
   "cadeditor.message.snbt_invalid_cannot_apply": "Les données brutes contiennent des erreurs SNBT. Corrigez la syntaxe avant de partir ou d'enregistrer.",
   "cadeditor.message.container_loot_hint": "Les composants non par défaut de l'objet sont copiés vers l'entité de bloc lors du placement.",

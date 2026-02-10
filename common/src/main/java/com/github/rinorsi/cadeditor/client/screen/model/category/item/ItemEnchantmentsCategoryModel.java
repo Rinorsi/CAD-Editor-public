@@ -23,7 +23,10 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -113,6 +116,56 @@ public class ItemEnchantmentsCategoryModel extends ItemEditorCategoryModel {
         EnchantmentEntryModel entry = createEnchantment(rl.toString(), level);
         int insertIndex = canAddEntryInList() ? Math.max(getEntries().size() - 1, getEntryListStart()) : getEntries().size();
         getEntries().add(insertIndex, entry);
+        updateEntryListIndexes();
+    }
+
+    public void syncSelection(Set<ResourceLocation> selectedIds, EnchantmentEntryModel currentEntry) {
+        Set<ResourceLocation> selected = selectedIds == null
+                ? Set.of()
+                : selectedIds.stream()
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+
+        List<EnchantmentEntryModel> allEntries = getEntries().stream()
+                .filter(EnchantmentEntryModel.class::isInstance)
+                .map(EnchantmentEntryModel.class::cast)
+                .toList();
+
+        List<EnchantmentEntryModel> toRemove = new ArrayList<>();
+        for (EnchantmentEntryModel entry : allEntries) {
+            if (entry == currentEntry) {
+                continue;
+            }
+            ResourceLocation id = normalizeId(entry.getValue());
+            if (id != null && !selected.contains(id)) {
+                toRemove.add(entry);
+            }
+        }
+        if (!toRemove.isEmpty()) {
+            getEntries().removeAll(toRemove);
+        }
+
+        if (currentEntry != null) {
+            ResourceLocation currentId = normalizeId(currentEntry.getValue());
+            if (selected.isEmpty()) {
+                currentEntry.setValue("");
+            } else if (currentId == null || !selected.contains(currentId)) {
+                currentEntry.setValue(selected.iterator().next().toString());
+            }
+        }
+
+        int level = currentEntry == null ? 1 : Math.max(1, currentEntry.getLevel());
+        ResourceLocation currentResolved = currentEntry == null ? null : normalizeId(currentEntry.getValue());
+        Set<ResourceLocation> existing = getExistingEnchantmentIds();
+        for (ResourceLocation id : selected) {
+            if (currentResolved != null && currentResolved.equals(id)) {
+                continue;
+            }
+            if (!existing.contains(id)) {
+                addEnchantmentEntryIfAbsent(id.toString(), level);
+                existing.add(id);
+            }
+        }
         updateEntryListIndexes();
     }
 

@@ -505,6 +505,11 @@ public final class ModTexts {
             return prefixed(translated("cadeditor.message.copied_give_clipboard")).withStyle(ChatFormatting.GREEN);
         }
 
+        public static MutableComponent successCopyGiveCommandSanitized(int replacedCount, String replacementValue) {
+            return prefixed(translated("cadeditor.message.copied_give_clipboard_sanitized", replacedCount, replacementValue))
+                    .withStyle(ChatFormatting.YELLOW);
+        }
+
         public static MutableComponent toolRuleHelp() {
             return prefixed(translated("cadeditor.message.tool_rule_help")).withStyle(ChatFormatting.YELLOW);
         }

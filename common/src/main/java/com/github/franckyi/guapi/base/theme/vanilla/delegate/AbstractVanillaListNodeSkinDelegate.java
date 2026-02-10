@@ -129,10 +129,10 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     }
 
     protected void refreshSize() {
-        width = node.getWidth();
-        height = node.getHeight();
-        setX(node.getX());
-        setY(node.getY());
+        setSize(node.getWidth(), node.getHeight());
+        setPosition(node.getX(), node.getY());
+        // Keep entries positioned with the latest bounds on first frame/open.
+        setScrollAmount(scrollAmount());
         shouldRefreshSize = false;
     }
 
