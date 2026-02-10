@@ -4,6 +4,11 @@
     "date": "",
     "changelog": "\nCADE（Component And Data Editor）是在 IBE Editor（作者 Skye，MIT 许可）基础上重置与重构的个人维护版。本项目与 Skye 无隶属关系或官方背书；已在源码与许可证中完整保留原版权与署名。"
   },
+"0.5.0": {
+"type": "release",
+"date": "2026-02-10",
+"changelog": "音效选择器重做。\n- 新增骑兵更新相关组件适配。\n- 为字段增加了tooltip用来描述功能。（总有人不知道某个功能是干什么的，所以加上了）"
+},
 "0.4.0": {
 "type": "release",
 "date": "2026-02-10",
