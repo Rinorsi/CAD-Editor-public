@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 public class ListSelectionScreenController extends AbstractController<ListSelectionScreenModel, ListSelectionScreenView> {
     private static final Logger LOGGER = LogManager.getLogger("CAD-Editor/Selection");
     private ListSelectionFilter activeFilter;
+    private ListSelectionFilter activeCategoryFilter;
+    private ListSelectionFilter activeNamespaceFilter;
+    private boolean useDualFilters;
     private boolean showAllItems;
 
     public ListSelectionScreenController(ListSelectionScreenModel model, ListSelectionScreenView view) {
@@ -57,27 +60,63 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
     private void setupFilterButton() {
         var filters = model.getFilters();
         if (filters == null || filters.isEmpty()) {
-            view.getFilterButton().setVisible(false);
-            view.getFilterButton().setMinWidth(0);
-            view.getFilterButton().setPrefWidth(0);
-            view.getFilterButton().setMaxWidth(0);
+            hideFilterButton(view.getCategoryFilterButton());
+            hideFilterButton(view.getNamespaceFilterButton());
             return;
         }
-        view.getFilterButton().setVisible(true);
-        view.getFilterButton().setMinWidth(80);
-        view.getFilterButton().setPrefWidth(100);
-        view.getFilterButton().setMaxWidth(140);
-        view.getFilterButton().getValues().setAll(filters);
-        view.getFilterButton().setTextFactory(ListSelectionFilter::label);
+        List<ListSelectionFilter> categoryFilters = filters.stream()
+                .filter(filter -> filter.getId().startsWith("category:"))
+                .toList();
+        List<ListSelectionFilter> namespaceFilters = filters.stream()
+                .filter(filter -> filter.getId().startsWith("namespace:"))
+                .toList();
+        if (!categoryFilters.isEmpty() && !namespaceFilters.isEmpty()) {
+            useDualFilters = true;
+            activeFilter = null;
+            setupFilterButton(view.getCategoryFilterButton(), categoryFilters, 100, filter -> activeCategoryFilter = filter);
+            setupFilterButton(view.getNamespaceFilterButton(), namespaceFilters, 120, filter -> activeNamespaceFilter = filter);
+            return;
+        }
+        useDualFilters = false;
+        activeCategoryFilter = null;
+        activeNamespaceFilter = null;
+        hideFilterButton(view.getNamespaceFilterButton());
+        setupFilterButton(view.getCategoryFilterButton(), filters, 100, filter -> activeFilter = filter);
+    }
+
+    private void setupFilterButton(com.github.franckyi.guapi.api.node.EnumButton<ListSelectionFilter> button,
+                                   List<ListSelectionFilter> filters,
+                                   int prefWidth,
+                                   java.util.function.Consumer<ListSelectionFilter> setter) {
+        if (button == null || filters == null || filters.isEmpty()) {
+            if (button != null) {
+                hideFilterButton(button);
+            }
+            return;
+        }
+        button.setVisible(true);
+        button.setMinWidth(80);
+        button.setPrefWidth(prefWidth);
+        button.setMaxWidth(Math.max(140, prefWidth + 20));
+        button.getValues().setAll(filters);
+        button.setTextFactory(ListSelectionFilter::label);
         Optional<ListSelectionFilter> initial = filters.stream()
                 .filter(filter -> filter.getId().equals(model.getInitialFilterId()))
                 .findFirst();
-        activeFilter = initial.orElse(filters.get(0));
-        view.getFilterButton().setValue(activeFilter);
-        view.getFilterButton().valueProperty().addListener(() -> {
-            activeFilter = view.getFilterButton().getValue();
+        ListSelectionFilter selected = initial.orElse(filters.get(0));
+        setter.accept(selected);
+        button.setValue(selected);
+        button.valueProperty().addListener(() -> {
+            setter.accept(button.getValue());
             filter(view.getSearchField().getText());
         });
+    }
+
+    private void hideFilterButton(com.github.franckyi.guapi.api.node.EnumButton<ListSelectionFilter> button) {
+        button.setVisible(false);
+        button.setMinWidth(0);
+        button.setPrefWidth(0);
+        button.setMaxWidth(0);
     }
 
     private void setupLoadAllButton() {
@@ -93,7 +132,13 @@ public class ListSelectionScreenController extends AbstractController<ListSelect
     private void filter(String filter) {
         var stream = model.getElements()
                 .stream()
-                .filter(item -> activeFilter == null || activeFilter.test(item))
+                .filter(item -> {
+                    if (useDualFilters) {
+                        return (activeCategoryFilter == null || activeCategoryFilter.test(item))
+                                && (activeNamespaceFilter == null || activeNamespaceFilter.test(item));
+                    }
+                    return activeFilter == null || activeFilter.test(item);
+                })
                 .filter(item -> item.matches(filter));
         if (!showAllItems) {
             stream = stream.limit(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems());

@@ -16,7 +16,8 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 public class ListSelectionScreenView extends ScreenView {
     private ListView<ListSelectionElementModel> listView;
     private TextField searchField;
-    private EnumButton<ListSelectionFilter> filterButton;
+    private EnumButton<ListSelectionFilter> categoryFilterButton;
+    private EnumButton<ListSelectionFilter> namespaceFilterButton;
     private Button loadAllButton;
 
     public ListSelectionScreenView() {
@@ -28,16 +29,24 @@ public class ListSelectionScreenView extends ScreenView {
         return hBox(editor -> {
             editor.add(vBox(), 1);
             editor.add(vBox(center -> {
-                center.add(hBox(row -> {
-                    filterButton = enumButton();
-                    filterButton.setVisible(false);
-                    filterButton.setMinWidth(0);
-                    filterButton.setPrefWidth(0);
-                    filterButton.setMaxWidth(0);
-                    row.add(filterButton);
-                    row.add(searchField = textField().placeholder(ModTexts.SEARCH), 1);
-                    row.add(loadAllButton = button(ModTexts.LOAD_ALL));
-                    row.spacing(5);
+                center.add(hBox(filterRow -> {
+                    categoryFilterButton = enumButton();
+                    categoryFilterButton.setVisible(false);
+                    categoryFilterButton.setMinWidth(0);
+                    categoryFilterButton.setPrefWidth(0);
+                    categoryFilterButton.setMaxWidth(0);
+                    filterRow.add(categoryFilterButton);
+                    namespaceFilterButton = enumButton();
+                    namespaceFilterButton.setVisible(false);
+                    namespaceFilterButton.setMinWidth(0);
+                    namespaceFilterButton.setPrefWidth(0);
+                    namespaceFilterButton.setMaxWidth(0);
+                    filterRow.add(namespaceFilterButton);
+                    filterRow.add(loadAllButton = button(ModTexts.LOAD_ALL));
+                    filterRow.spacing(5);
+                }));
+                center.add(hBox(searchRow -> {
+                    searchRow.add(searchField = textField().placeholder(ModTexts.SEARCH), 1);
                 }));
                 center.add(listView = listView(ListSelectionElementModel.class, 25)
                         .renderer(item -> mvc(ListSelectionElementMVC.INSTANCE, item))
@@ -57,8 +66,16 @@ public class ListSelectionScreenView extends ScreenView {
         return searchField;
     }
 
+    public EnumButton<ListSelectionFilter> getCategoryFilterButton() {
+        return categoryFilterButton;
+    }
+
+    public EnumButton<ListSelectionFilter> getNamespaceFilterButton() {
+        return namespaceFilterButton;
+    }
+
     public EnumButton<ListSelectionFilter> getFilterButton() {
-        return filterButton;
+        return categoryFilterButton;
     }
 
     public Button getLoadAllButton() {

@@ -422,12 +422,28 @@ public final class ModTexts {
         return arrayTextWithArg("cadeditor.gui.command_copied", 4, arg);
     }
 
+    public static MutableComponent[] wikiTooltip(String key, int lines) {
+        return arrayText("cadeditor.gui.wiki." + key, lines);
+    }
+
     public static MutableComponent give(MutableComponent with) {
         return translated("cadeditor.gui.give", with);
     }
 
     public static MutableComponent soundFilterNamespace(String namespace) {
         return translated("cadeditor.gui.sound_filter_namespace", namespace);
+    }
+
+    public static MutableComponent soundFilterCategory(MutableComponent category) {
+        return translated("cadeditor.gui.sound_filter_category", category);
+    }
+
+    public static MutableComponent soundFilterNamespaceAll() {
+        return translated("cadeditor.gui.sound_filter_namespace_all");
+    }
+
+    public static MutableComponent soundFilterCategoryAll() {
+        return translated("cadeditor.gui.sound_filter_category_all");
     }
 
     public static MutableComponent fireworkPrimaryColor(int index) {

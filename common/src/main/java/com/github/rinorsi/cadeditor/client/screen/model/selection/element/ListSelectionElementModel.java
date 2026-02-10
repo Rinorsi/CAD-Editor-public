@@ -61,6 +61,6 @@ public class ListSelectionElementModel implements Model, Comparable<ListSelectio
     }
 
     public enum Type {
-        DEFAULT, ITEM, IMAGE, SPRITE, ENCHANTMENT, TAG
+        DEFAULT, ITEM, IMAGE, SPRITE, ENCHANTMENT, TAG, SOUND
     }
 }

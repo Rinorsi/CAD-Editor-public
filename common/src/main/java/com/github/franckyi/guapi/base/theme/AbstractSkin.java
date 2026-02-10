@@ -43,8 +43,18 @@ public abstract class AbstractSkin<N extends Node> implements Skin<N> {
             renderDebug(node, guiGraphics);
         }
         if (!node.getTooltip().isEmpty() && node.isHovered()) {
-            RenderHelper.drawTooltip(guiGraphics, node.getTooltip(), mouseX, mouseY);
+            RenderHelper.drawTooltip(guiGraphics, node.getTooltip(),
+                    getTooltipX(node, mouseX, mouseY),
+                    getTooltipY(node, mouseX, mouseY));
         }
+    }
+
+    protected int getTooltipX(N node, int mouseX, int mouseY) {
+        return mouseX;
+    }
+
+    protected int getTooltipY(N node, int mouseX, int mouseY) {
+        return mouseY;
     }
 
     @Override

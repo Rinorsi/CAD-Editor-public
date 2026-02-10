@@ -52,6 +52,7 @@ public final class ClientCache {
     private static List<TagListSelectionElementModel> blockTagSelectionItems;
     private static List<TagListSelectionElementModel> itemTagSelectionItems;
     private static List<TagListSelectionElementModel> damageTypeTagSelectionItems;
+    private static List<ListSelectionElementModel> damageTypeSelectionItems;
     private static List<String> enchantmentSuggestions;
     private static List<EnchantmentListSelectionElementModel> enchantmentSelectionItems;
     private static List<String> attributeSuggestions;
@@ -90,6 +91,7 @@ public final class ClientCache {
         blockTagSelectionItems = null;
         itemTagSelectionItems = null;
         damageTypeTagSelectionItems = null;
+        damageTypeSelectionItems = null;
         enchantmentSuggestions = null;
         enchantmentSelectionItems = null;
         attributeSuggestions = null;
@@ -146,6 +148,10 @@ public final class ClientCache {
 
     public static List<TagListSelectionElementModel> getDamageTypeTagSelectionItems() {
         return damageTypeTagSelectionItems == null ? damageTypeTagSelectionItems = buildDamageTypeTagSelectionItems() : damageTypeTagSelectionItems;
+    }
+
+    public static List<ListSelectionElementModel> getDamageTypeSelectionItems() {
+        return damageTypeSelectionItems == null ? damageTypeSelectionItems = buildDamageTypeSelectionItems() : damageTypeSelectionItems;
     }
 
     public static List<String> getBlockEntityTypeSuggestions() {
@@ -494,6 +500,17 @@ public final class ClientCache {
         return buildTagSelectionItems(Registries.DAMAGE_TYPE);
     }
 
+    private static List<ListSelectionElementModel> buildDamageTypeSelectionItems() {
+        return registryAccess().lookup(Registries.DAMAGE_TYPE)
+                .map(lookup -> lookup.listElements()
+                        .map(element -> new ListSelectionElementModel(
+                                element.key().identifier().toString(),
+                                element.key().identifier()))
+                        .sorted()
+                        .toList())
+                .orElseGet(List::of);
+    }
+
     private static <T> List<TagListSelectionElementModel> buildTagSelectionItems(ResourceKey<Registry<T>> registryKey) {
         return registryAccess().lookup(registryKey)
                 .map(lookup -> lookup.listTags()
@@ -804,10 +821,20 @@ public final class ClientCache {
     private static List<ListSelectionFilter> buildSoundEventFilters() {
         List<SoundEventListSelectionElementModel> items = getSoundEventSelectionItems();
         if (items.isEmpty()) {
-            return List.of(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
+            return List.of(
+                    new ListSelectionFilter("category:all", ModTexts.soundFilterCategoryAll(), null),
+                    new ListSelectionFilter("namespace:all", ModTexts.soundFilterNamespaceAll(), null)
+            );
         }
         List<ListSelectionFilter> filters = new ArrayList<>();
-        filters.add(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
+        filters.add(new ListSelectionFilter("category:all", ModTexts.soundFilterCategoryAll(), null));
+        for (SoundEventListSelectionElementModel.SoundCategory category : SoundEventListSelectionElementModel.SoundCategory.values()) {
+            filters.add(new ListSelectionFilter("category:" + category.id(),
+                    ModTexts.soundFilterCategory(category.label()),
+                    element -> element instanceof SoundEventListSelectionElementModel sound
+                            && sound.getPrimaryCategory() == category));
+        }
+        filters.add(new ListSelectionFilter("namespace:all", ModTexts.soundFilterNamespaceAll(), null));
         items.stream()
                 .map(SoundEventListSelectionElementModel::getNamespace)
                 .distinct()

@@ -23,9 +23,27 @@ public class VanillaLabelSkin extends AbstractSkin<Label> {
 
     protected void renderText(Label node, GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         Component text = node.getLabel();
-        int x = Align.getAlignedX(node.getTextAlign().getHorizontalAlign(), node, RenderHelper.getFontWidth(text));
-        int y = Align.getAlignedY(node.getTextAlign().getVerticalAlign(), node, RenderHelper.getFontHeight());
+        int x = getTextX(node, text);
+        int y = getTextY(node);
         RenderHelper.drawString(guiGraphics, text, x, y, resolveBaseColor(text), node.hasShadow());
+    }
+
+    @Override
+    protected int getTooltipX(Label node, int mouseX, int mouseY) {
+        return getTextX(node, node.getLabel()) + 2;
+    }
+
+    @Override
+    protected int getTooltipY(Label node, int mouseX, int mouseY) {
+        return getTextY(node) + RenderHelper.getFontHeight() + 2;
+    }
+
+    private static int getTextX(Label node, Component text) {
+        return Align.getAlignedX(node.getTextAlign().getHorizontalAlign(), node, RenderHelper.getFontWidth(text));
+    }
+
+    private static int getTextY(Label node) {
+        return Align.getAlignedY(node.getTextAlign().getVerticalAlign(), node, RenderHelper.getFontHeight());
     }
 
     private static int resolveBaseColor(Component component) {

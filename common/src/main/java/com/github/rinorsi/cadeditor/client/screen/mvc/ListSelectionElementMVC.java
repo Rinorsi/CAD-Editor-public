@@ -7,6 +7,7 @@ import com.github.rinorsi.cadeditor.client.screen.view.selection.element.Enchant
 import com.github.rinorsi.cadeditor.client.screen.view.selection.element.ImageListSelectionElementView;
 import com.github.rinorsi.cadeditor.client.screen.view.selection.element.ItemListSelectionElementView;
 import com.github.rinorsi.cadeditor.client.screen.view.selection.element.ListSelectionElementView;
+import com.github.rinorsi.cadeditor.client.screen.view.selection.element.SoundEventListSelectionElementView;
 import com.github.rinorsi.cadeditor.client.screen.view.selection.element.SpriteListSelectionElementView;
 
 public final class ListSelectionElementMVC implements MVC<ListSelectionElementModel, ListSelectionElementView, ListSelectionElementController<ListSelectionElementModel, ListSelectionElementView>> {
@@ -24,6 +25,7 @@ public final class ListSelectionElementMVC implements MVC<ListSelectionElementMo
             case SPRITE -> MVC.createViewAndBind((SpriteListSelectionElementModel) model, SpriteListSelectionElementView::new, SpriteListSelectionElementController::new);
             case ENCHANTMENT -> MVC.createViewAndBind((SortedEnchantmentListSelectionElementModel) model, EnchantmentListSelectionElementView::new, SortedEnchantmentListSelectionElementController::new);
             case TAG -> MVC.createViewAndBind((TagListSelectionElementModel) model, ListSelectionElementView::new, ListSelectionElementController::new);
+            case SOUND -> MVC.createViewAndBind((SoundEventListSelectionElementModel) model, SoundEventListSelectionElementView::new, SoundEventListSelectionElementController::new);
         };
     }
 }

@@ -10,9 +10,11 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.LabeledEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.SoundEventSelectionEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,6 +23,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
@@ -33,14 +36,21 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Unit;
+import net.minecraft.world.item.EitherHolder;
+import net.minecraft.world.item.SwingAnimationType;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.BlocksAttacks.DamageReduction;
 import net.minecraft.world.item.component.BlocksAttacks.ItemDamageFunction;
 import net.minecraft.world.item.component.DamageResistant;
+import net.minecraft.world.item.component.KineticWeapon;
+import net.minecraft.world.item.component.PiercingWeapon;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.component.UseCooldown;
+import net.minecraft.world.item.component.UseEffects;
 import net.minecraft.world.item.component.Weapon;
 import net.minecraft.world.item.enchantment.Enchantable;
 import net.minecraft.world.item.enchantment.Repairable;
@@ -77,6 +87,97 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
     private boolean weaponEnabled;
     private int weaponDamagePerAttack;
     private float weaponDisableSeconds;
+
+    private BooleanEntryModel minimumAttackChargeToggleEntry;
+    private FloatEntryModel minimumAttackChargeValueEntry;
+    private boolean minimumAttackChargeEnabled;
+    private float minimumAttackCharge;
+
+    private BooleanEntryModel directDamageTypeToggleEntry;
+    private StringWithActionsEntryModel directDamageTypeEntry;
+    private boolean directDamageTypeEnabled;
+    private String directDamageTypeId;
+
+    private BooleanEntryModel attackRangeToggleEntry;
+    private FloatEntryModel attackRangeMinEntry;
+    private FloatEntryModel attackRangeMaxEntry;
+    private FloatEntryModel attackRangeMinCreativeEntry;
+    private FloatEntryModel attackRangeMaxCreativeEntry;
+    private FloatEntryModel attackRangeHitboxMarginEntry;
+    private FloatEntryModel attackRangeMobFactorEntry;
+    private boolean attackRangeEnabled;
+    private float attackRangeMin;
+    private float attackRangeMax;
+    private float attackRangeMinCreative;
+    private float attackRangeMaxCreative;
+    private float attackRangeHitboxMargin;
+    private float attackRangeMobFactor;
+
+    private BooleanEntryModel swingAnimationToggleEntry;
+    private StringWithActionsEntryModel swingAnimationTypeEntry;
+    private IntegerEntryModel swingAnimationDurationEntry;
+    private boolean swingAnimationEnabled;
+    private String swingAnimationTypeId;
+    private int swingAnimationDuration;
+
+    private BooleanEntryModel useEffectsToggleEntry;
+    private BooleanEntryModel useEffectsCanSprintEntry;
+    private BooleanEntryModel useEffectsInteractVibrationsEntry;
+    private FloatEntryModel useEffectsSpeedMultiplierEntry;
+    private boolean useEffectsEnabled;
+    private boolean useEffectsCanSprint;
+    private boolean useEffectsInteractVibrations;
+    private float useEffectsSpeedMultiplier;
+
+    private BooleanEntryModel piercingWeaponToggleEntry;
+    private BooleanEntryModel piercingWeaponDealsKnockbackEntry;
+    private BooleanEntryModel piercingWeaponDismountsEntry;
+    private SoundEventSelectionEntryModel piercingWeaponSoundEntry;
+    private SoundEventSelectionEntryModel piercingWeaponHitSoundEntry;
+    private boolean piercingWeaponEnabled;
+    private boolean piercingWeaponDealsKnockback;
+    private boolean piercingWeaponDismounts;
+    private String piercingWeaponSoundId;
+    private String piercingWeaponHitSoundId;
+
+    private BooleanEntryModel kineticWeaponToggleEntry;
+    private IntegerEntryModel kineticWeaponContactCooldownEntry;
+    private IntegerEntryModel kineticWeaponDelayEntry;
+    private FloatEntryModel kineticWeaponForwardMovementEntry;
+    private FloatEntryModel kineticWeaponDamageMultiplierEntry;
+    private SoundEventSelectionEntryModel kineticWeaponSoundEntry;
+    private SoundEventSelectionEntryModel kineticWeaponHitSoundEntry;
+    private BooleanEntryModel kineticWeaponDismountConditionToggleEntry;
+    private IntegerEntryModel kineticWeaponDismountConditionDurationEntry;
+    private FloatEntryModel kineticWeaponDismountConditionMinSpeedEntry;
+    private FloatEntryModel kineticWeaponDismountConditionMinRelativeSpeedEntry;
+    private BooleanEntryModel kineticWeaponKnockbackConditionToggleEntry;
+    private IntegerEntryModel kineticWeaponKnockbackConditionDurationEntry;
+    private FloatEntryModel kineticWeaponKnockbackConditionMinSpeedEntry;
+    private FloatEntryModel kineticWeaponKnockbackConditionMinRelativeSpeedEntry;
+    private BooleanEntryModel kineticWeaponDamageConditionToggleEntry;
+    private IntegerEntryModel kineticWeaponDamageConditionDurationEntry;
+    private FloatEntryModel kineticWeaponDamageConditionMinSpeedEntry;
+    private FloatEntryModel kineticWeaponDamageConditionMinRelativeSpeedEntry;
+    private boolean kineticWeaponEnabled;
+    private int kineticWeaponContactCooldownTicks;
+    private int kineticWeaponDelayTicks;
+    private float kineticWeaponForwardMovement;
+    private float kineticWeaponDamageMultiplier;
+    private String kineticWeaponSoundId;
+    private String kineticWeaponHitSoundId;
+    private boolean kineticWeaponDismountConditionEnabled;
+    private int kineticWeaponDismountConditionDuration;
+    private float kineticWeaponDismountConditionMinSpeed;
+    private float kineticWeaponDismountConditionMinRelativeSpeed;
+    private boolean kineticWeaponKnockbackConditionEnabled;
+    private int kineticWeaponKnockbackConditionDuration;
+    private float kineticWeaponKnockbackConditionMinSpeed;
+    private float kineticWeaponKnockbackConditionMinRelativeSpeed;
+    private boolean kineticWeaponDamageConditionEnabled;
+    private int kineticWeaponDamageConditionDuration;
+    private float kineticWeaponDamageConditionMinSpeed;
+    private float kineticWeaponDamageConditionMinRelativeSpeed;
 
     private BooleanEntryModel blocksAttacksToggleEntry;
     private FloatEntryModel blockDelayEntry;
@@ -158,12 +259,234 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         weaponEnabled = weapon != null;
         weaponDamagePerAttack = weapon != null ? weapon.itemDamagePerAttack() : 1;
         weaponDisableSeconds = weapon != null ? weapon.disableBlockingForSeconds() : 0f;
-        weaponToggleEntry = new BooleanEntryModel(this, ModTexts.gui("weapon_enabled"), weaponEnabled, this::setWeaponEnabled);
+        weaponToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("weapon_enabled"), weaponEnabled, this::setWeaponEnabled),
+                "weapon_enabled", 2);
         getEntries().add(weaponToggleEntry);
-        weaponDamageEntry = new IntegerEntryModel(this, ModTexts.gui("weapon_item_damage"), weaponDamagePerAttack, this::setWeaponDamagePerAttack, value -> value != null && value >= 0);
-        weaponDisableEntry = new FloatEntryModel(this, ModTexts.gui("weapon_disable_blocking"), weaponDisableSeconds, this::setWeaponDisableSeconds, value -> value != null && value >= 0f);
+        weaponDamageEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("weapon_item_damage"), weaponDamagePerAttack, this::setWeaponDamagePerAttack, value -> value != null && value >= 0),
+                "weapon_item_damage", 1);
+        weaponDisableEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("weapon_disable_blocking"), weaponDisableSeconds, this::setWeaponDisableSeconds, value -> value != null && value >= 0f),
+                "weapon_disable_blocking", 1);
         if (weaponEnabled) {
             insertAfter(weaponToggleEntry, weaponDamageEntry, weaponDisableEntry);
+        }
+
+        // Minimum attack charge
+        Float minimumAttackChargeComponent = stack.get(DataComponents.MINIMUM_ATTACK_CHARGE);
+        minimumAttackChargeEnabled = minimumAttackChargeComponent != null;
+        minimumAttackCharge = minimumAttackChargeComponent != null ? minimumAttackChargeComponent : 0f;
+        minimumAttackChargeToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("minimum_attack_charge_enabled"), minimumAttackChargeEnabled, this::setMinimumAttackChargeEnabled),
+                "minimum_attack_charge_enabled", 2);
+        getEntries().add(minimumAttackChargeToggleEntry);
+        minimumAttackChargeValueEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("minimum_attack_charge_value"), minimumAttackCharge, this::setMinimumAttackCharge, value -> value != null && value >= 0f && value <= 1f),
+                "minimum_attack_charge_value", 2);
+        if (minimumAttackChargeEnabled) {
+            insertAfter(minimumAttackChargeToggleEntry, minimumAttackChargeValueEntry);
+        }
+
+        // Direct damage type
+        EitherHolder<DamageType> directDamageType = stack.get(DataComponents.DAMAGE_TYPE);
+        directDamageTypeEnabled = directDamageType != null;
+        directDamageTypeId = directDamageType != null ? extractDamageTypeId(directDamageType) : "";
+        directDamageTypeToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("damage_type_enabled"), directDamageTypeEnabled, this::setDirectDamageTypeEnabled),
+                "damage_type_enabled", 1);
+        getEntries().add(directDamageTypeToggleEntry);
+        directDamageTypeEntry = withWikiTooltip(new StringWithActionsEntryModel(this, ModTexts.gui("damage_type_value"), directDamageTypeId, this::setDirectDamageTypeId),
+                "damage_type_value", 1);
+        directDamageTypeEntry.setPlaceholder("minecraft:player_attack");
+        directDamageTypeEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_damage_type"), this::openDirectDamageTypeSelection));
+        if (directDamageTypeEnabled) {
+            insertAfter(directDamageTypeToggleEntry, directDamageTypeEntry);
+        }
+
+        // Attack range
+        AttackRange attackRange = stack.get(DataComponents.ATTACK_RANGE);
+        attackRangeEnabled = attackRange != null;
+        attackRangeMin = attackRange != null ? attackRange.minRange() : 0f;
+        attackRangeMax = attackRange != null ? attackRange.maxRange() : 3f;
+        attackRangeMinCreative = attackRange != null ? attackRange.minCreativeRange() : 0f;
+        attackRangeMaxCreative = attackRange != null ? attackRange.maxCreativeRange() : 5f;
+        attackRangeHitboxMargin = attackRange != null ? attackRange.hitboxMargin() : 0.3f;
+        attackRangeMobFactor = attackRange != null ? attackRange.mobFactor() : 1f;
+        attackRangeToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("attack_range_enabled"), attackRangeEnabled, this::setAttackRangeEnabled),
+                "attack_range_enabled", 2);
+        getEntries().add(attackRangeToggleEntry);
+        attackRangeMinEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_min"), attackRangeMin, this::setAttackRangeMin, value -> value != null && value >= 0f && value <= 64f),
+                "attack_range_min", 2);
+        attackRangeMaxEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_max"), attackRangeMax, this::setAttackRangeMax, value -> value != null && value >= 0f && value <= 64f),
+                "attack_range_max", 2);
+        attackRangeMinCreativeEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_min_creative"), attackRangeMinCreative, this::setAttackRangeMinCreative, value -> value != null && value >= 0f && value <= 64f),
+                "attack_range_min_creative", 2);
+        attackRangeMaxCreativeEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_max_creative"), attackRangeMaxCreative, this::setAttackRangeMaxCreative, value -> value != null && value >= 0f && value <= 64f),
+                "attack_range_max_creative", 2);
+        attackRangeHitboxMarginEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_hitbox_margin"), attackRangeHitboxMargin, this::setAttackRangeHitboxMargin, value -> value != null && value >= 0f && value <= 1f),
+                "attack_range_hitbox_margin", 2);
+        attackRangeMobFactorEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("attack_range_mob_factor"), attackRangeMobFactor, this::setAttackRangeMobFactor, value -> value != null && value >= 0f && value <= 2f),
+                "attack_range_mob_factor", 2);
+        if (attackRangeEnabled) {
+            insertAfter(
+                    attackRangeToggleEntry,
+                    attackRangeMinEntry,
+                    attackRangeMaxEntry,
+                    attackRangeMinCreativeEntry,
+                    attackRangeMaxCreativeEntry,
+                    attackRangeHitboxMarginEntry,
+                    attackRangeMobFactorEntry
+            );
+        }
+
+        // Swing animation
+        SwingAnimation swingAnimation = stack.get(DataComponents.SWING_ANIMATION);
+        swingAnimationEnabled = swingAnimation != null;
+        swingAnimationTypeId = swingAnimation != null
+                ? swingAnimation.type().getSerializedName()
+                : SwingAnimation.DEFAULT.type().getSerializedName();
+        swingAnimationDuration = swingAnimation != null ? swingAnimation.duration() : SwingAnimation.DEFAULT.duration();
+        swingAnimationToggleEntry = new BooleanEntryModel(this, ModTexts.gui("swing_animation_enabled"), swingAnimationEnabled, this::setSwingAnimationEnabled);
+        getEntries().add(swingAnimationToggleEntry);
+        swingAnimationTypeEntry = new StringWithActionsEntryModel(this, ModTexts.gui("swing_animation_type"), swingAnimationTypeId, this::setSwingAnimationTypeId);
+        swingAnimationTypeEntry.setPlaceholder("whack | stab | none");
+        swingAnimationTypeEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_swing_animation_type"), this::openSwingAnimationTypeSelection));
+        swingAnimationDurationEntry = new IntegerEntryModel(this, ModTexts.gui("swing_animation_duration"), swingAnimationDuration, this::setSwingAnimationDuration, value -> value != null && value >= 0);
+        if (swingAnimationEnabled) {
+            insertAfter(swingAnimationToggleEntry, swingAnimationTypeEntry, swingAnimationDurationEntry);
+        }
+
+        // Use effects
+        UseEffects useEffects = stack.get(DataComponents.USE_EFFECTS);
+        useEffectsEnabled = useEffects != null;
+        useEffectsCanSprint = useEffects != null ? useEffects.canSprint() : UseEffects.DEFAULT.canSprint();
+        useEffectsInteractVibrations = useEffects != null ? useEffects.interactVibrations() : UseEffects.DEFAULT.interactVibrations();
+        useEffectsSpeedMultiplier = useEffects != null ? useEffects.speedMultiplier() : UseEffects.DEFAULT.speedMultiplier();
+        useEffectsToggleEntry = new BooleanEntryModel(this, ModTexts.gui("use_effects_enabled"), useEffectsEnabled, this::setUseEffectsEnabled);
+        getEntries().add(useEffectsToggleEntry);
+        useEffectsCanSprintEntry = new BooleanEntryModel(this, ModTexts.gui("use_effects_can_sprint"), useEffectsCanSprint, this::setUseEffectsCanSprint);
+        useEffectsInteractVibrationsEntry = new BooleanEntryModel(this, ModTexts.gui("use_effects_interact_vibrations"), useEffectsInteractVibrations, this::setUseEffectsInteractVibrations);
+        useEffectsSpeedMultiplierEntry = new FloatEntryModel(this, ModTexts.gui("use_effects_speed_multiplier"), useEffectsSpeedMultiplier, this::setUseEffectsSpeedMultiplier, value -> value != null && value > 0f);
+        if (useEffectsEnabled) {
+            insertAfter(useEffectsToggleEntry, useEffectsCanSprintEntry, useEffectsInteractVibrationsEntry, useEffectsSpeedMultiplierEntry);
+        }
+
+        // Piercing weapon
+        PiercingWeapon piercingWeapon = stack.get(DataComponents.PIERCING_WEAPON);
+        piercingWeaponEnabled = piercingWeapon != null;
+        piercingWeaponDealsKnockback = piercingWeapon != null ? piercingWeapon.dealsKnockback() : true;
+        piercingWeaponDismounts = piercingWeapon != null && piercingWeapon.dismounts();
+        piercingWeaponSoundId = piercingWeapon != null && piercingWeapon.sound().isPresent()
+                ? piercingWeapon.sound().get().unwrapKey().map(key -> key.identifier().toString()).orElse("")
+                : "";
+        piercingWeaponHitSoundId = piercingWeapon != null && piercingWeapon.hitSound().isPresent()
+                ? piercingWeapon.hitSound().get().unwrapKey().map(key -> key.identifier().toString()).orElse("")
+                : "";
+        piercingWeaponToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("piercing_weapon_enabled"), piercingWeaponEnabled, this::setPiercingWeaponEnabled),
+                "piercing_weapon_enabled", 2);
+        getEntries().add(piercingWeaponToggleEntry);
+        piercingWeaponDealsKnockbackEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("piercing_weapon_knockback"), piercingWeaponDealsKnockback, this::setPiercingWeaponDealsKnockback),
+                "piercing_weapon_knockback", 1);
+        piercingWeaponDismountsEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("piercing_weapon_dismounts"), piercingWeaponDismounts, this::setPiercingWeaponDismounts),
+                "piercing_weapon_dismounts", 1);
+        piercingWeaponSoundEntry = withWikiTooltip(new SoundEventSelectionEntryModel(this, ModTexts.gui("piercing_weapon_sound"), piercingWeaponSoundId, this::setPiercingWeaponSoundId, namespaceFilter(piercingWeaponSoundId)),
+                "piercing_weapon_sound", 1);
+        piercingWeaponHitSoundEntry = withWikiTooltip(new SoundEventSelectionEntryModel(this, ModTexts.gui("piercing_weapon_hit_sound"), piercingWeaponHitSoundId, this::setPiercingWeaponHitSoundId, namespaceFilter(piercingWeaponHitSoundId)),
+                "piercing_weapon_hit_sound", 1);
+        if (piercingWeaponEnabled) {
+            insertAfter(
+                    piercingWeaponToggleEntry,
+                    piercingWeaponDealsKnockbackEntry,
+                    piercingWeaponDismountsEntry,
+                    piercingWeaponSoundEntry,
+                    piercingWeaponHitSoundEntry
+            );
+        }
+
+        // Kinetic weapon
+        KineticWeapon kineticWeapon = stack.get(DataComponents.KINETIC_WEAPON);
+        kineticWeaponEnabled = kineticWeapon != null;
+        kineticWeaponContactCooldownTicks = kineticWeapon != null ? kineticWeapon.contactCooldownTicks() : 10;
+        kineticWeaponDelayTicks = kineticWeapon != null ? kineticWeapon.delayTicks() : 0;
+        kineticWeaponForwardMovement = kineticWeapon != null ? kineticWeapon.forwardMovement() : 0f;
+        kineticWeaponDamageMultiplier = kineticWeapon != null ? kineticWeapon.damageMultiplier() : 1f;
+        kineticWeaponSoundId = kineticWeapon != null && kineticWeapon.sound().isPresent()
+                ? kineticWeapon.sound().get().unwrapKey().map(key -> key.identifier().toString()).orElse("")
+                : "";
+        kineticWeaponHitSoundId = kineticWeapon != null && kineticWeapon.hitSound().isPresent()
+                ? kineticWeapon.hitSound().get().unwrapKey().map(key -> key.identifier().toString()).orElse("")
+                : "";
+        kineticWeaponDismountConditionEnabled = kineticWeapon != null && kineticWeapon.dismountConditions().isPresent();
+        kineticWeaponKnockbackConditionEnabled = kineticWeapon != null && kineticWeapon.knockbackConditions().isPresent();
+        kineticWeaponDamageConditionEnabled = kineticWeapon != null && kineticWeapon.damageConditions().isPresent();
+        KineticWeapon.Condition dismountCondition = kineticWeapon != null ? kineticWeapon.dismountConditions().orElse(null) : null;
+        KineticWeapon.Condition knockbackCondition = kineticWeapon != null ? kineticWeapon.knockbackConditions().orElse(null) : null;
+        KineticWeapon.Condition damageCondition = kineticWeapon != null ? kineticWeapon.damageConditions().orElse(null) : null;
+        kineticWeaponDismountConditionDuration = dismountCondition != null ? dismountCondition.maxDurationTicks() : 0;
+        kineticWeaponDismountConditionMinSpeed = dismountCondition != null ? dismountCondition.minSpeed() : 0f;
+        kineticWeaponDismountConditionMinRelativeSpeed = dismountCondition != null ? dismountCondition.minRelativeSpeed() : 0f;
+        kineticWeaponKnockbackConditionDuration = knockbackCondition != null ? knockbackCondition.maxDurationTicks() : 0;
+        kineticWeaponKnockbackConditionMinSpeed = knockbackCondition != null ? knockbackCondition.minSpeed() : 0f;
+        kineticWeaponKnockbackConditionMinRelativeSpeed = knockbackCondition != null ? knockbackCondition.minRelativeSpeed() : 0f;
+        kineticWeaponDamageConditionDuration = damageCondition != null ? damageCondition.maxDurationTicks() : 0;
+        kineticWeaponDamageConditionMinSpeed = damageCondition != null ? damageCondition.minSpeed() : 0f;
+        kineticWeaponDamageConditionMinRelativeSpeed = damageCondition != null ? damageCondition.minRelativeSpeed() : 0f;
+        kineticWeaponToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("kinetic_weapon_enabled"), kineticWeaponEnabled, this::setKineticWeaponEnabled),
+                "kinetic_weapon_enabled", 2);
+        getEntries().add(kineticWeaponToggleEntry);
+        kineticWeaponContactCooldownEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("kinetic_weapon_contact_cooldown"), kineticWeaponContactCooldownTicks, this::setKineticWeaponContactCooldownTicks, value -> value != null && value >= 0),
+                "kinetic_weapon_contact_cooldown", 2);
+        kineticWeaponDelayEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("kinetic_weapon_delay_ticks"), kineticWeaponDelayTicks, this::setKineticWeaponDelayTicks, value -> value != null && value >= 0),
+                "kinetic_weapon_delay_ticks", 1);
+        kineticWeaponForwardMovementEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_forward_movement"), kineticWeaponForwardMovement, this::setKineticWeaponForwardMovement),
+                "kinetic_weapon_forward_movement", 1);
+        kineticWeaponDamageMultiplierEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_damage_multiplier"), kineticWeaponDamageMultiplier, this::setKineticWeaponDamageMultiplier, value -> value != null && value >= 0f),
+                "kinetic_weapon_damage_multiplier", 2);
+        kineticWeaponSoundEntry = withWikiTooltip(new SoundEventSelectionEntryModel(this, ModTexts.gui("kinetic_weapon_sound"), kineticWeaponSoundId, this::setKineticWeaponSoundId, namespaceFilter(kineticWeaponSoundId)),
+                "kinetic_weapon_sound", 1);
+        kineticWeaponHitSoundEntry = withWikiTooltip(new SoundEventSelectionEntryModel(this, ModTexts.gui("kinetic_weapon_hit_sound"), kineticWeaponHitSoundId, this::setKineticWeaponHitSoundId, namespaceFilter(kineticWeaponHitSoundId)),
+                "kinetic_weapon_hit_sound", 1);
+        kineticWeaponDismountConditionToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("kinetic_weapon_dismount_conditions"), kineticWeaponDismountConditionEnabled, this::setKineticWeaponDismountConditionEnabled),
+                "kinetic_weapon_dismount_conditions", 1);
+        kineticWeaponDismountConditionDurationEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("kinetic_weapon_condition_max_duration"), kineticWeaponDismountConditionDuration, this::setKineticWeaponDismountConditionDuration, value -> value != null && value >= 0),
+                "kinetic_weapon_condition_max_duration", 1);
+        kineticWeaponDismountConditionMinSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_speed"), kineticWeaponDismountConditionMinSpeed, this::setKineticWeaponDismountConditionMinSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_speed", 1);
+        kineticWeaponDismountConditionMinRelativeSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_relative_speed"), kineticWeaponDismountConditionMinRelativeSpeed, this::setKineticWeaponDismountConditionMinRelativeSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_relative_speed", 1);
+        kineticWeaponKnockbackConditionToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("kinetic_weapon_knockback_conditions"), kineticWeaponKnockbackConditionEnabled, this::setKineticWeaponKnockbackConditionEnabled),
+                "kinetic_weapon_knockback_conditions", 1);
+        kineticWeaponKnockbackConditionDurationEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("kinetic_weapon_condition_max_duration"), kineticWeaponKnockbackConditionDuration, this::setKineticWeaponKnockbackConditionDuration, value -> value != null && value >= 0),
+                "kinetic_weapon_condition_max_duration", 1);
+        kineticWeaponKnockbackConditionMinSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_speed"), kineticWeaponKnockbackConditionMinSpeed, this::setKineticWeaponKnockbackConditionMinSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_speed", 1);
+        kineticWeaponKnockbackConditionMinRelativeSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_relative_speed"), kineticWeaponKnockbackConditionMinRelativeSpeed, this::setKineticWeaponKnockbackConditionMinRelativeSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_relative_speed", 1);
+        kineticWeaponDamageConditionToggleEntry = withWikiTooltip(new BooleanEntryModel(this, ModTexts.gui("kinetic_weapon_damage_conditions"), kineticWeaponDamageConditionEnabled, this::setKineticWeaponDamageConditionEnabled),
+                "kinetic_weapon_damage_conditions", 1);
+        kineticWeaponDamageConditionDurationEntry = withWikiTooltip(new IntegerEntryModel(this, ModTexts.gui("kinetic_weapon_condition_max_duration"), kineticWeaponDamageConditionDuration, this::setKineticWeaponDamageConditionDuration, value -> value != null && value >= 0),
+                "kinetic_weapon_condition_max_duration", 1);
+        kineticWeaponDamageConditionMinSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_speed"), kineticWeaponDamageConditionMinSpeed, this::setKineticWeaponDamageConditionMinSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_speed", 1);
+        kineticWeaponDamageConditionMinRelativeSpeedEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("kinetic_weapon_condition_min_relative_speed"), kineticWeaponDamageConditionMinRelativeSpeed, this::setKineticWeaponDamageConditionMinRelativeSpeed, value -> value != null && value >= 0f),
+                "kinetic_weapon_condition_min_relative_speed", 1);
+        if (kineticWeaponEnabled) {
+            insertAfter(
+                    kineticWeaponToggleEntry,
+                    kineticWeaponContactCooldownEntry,
+                    kineticWeaponDelayEntry,
+                    kineticWeaponForwardMovementEntry,
+                    kineticWeaponDamageMultiplierEntry,
+                    kineticWeaponSoundEntry,
+                    kineticWeaponHitSoundEntry,
+                    kineticWeaponDismountConditionToggleEntry,
+                    kineticWeaponDismountConditionDurationEntry,
+                    kineticWeaponDismountConditionMinSpeedEntry,
+                    kineticWeaponDismountConditionMinRelativeSpeedEntry,
+                    kineticWeaponKnockbackConditionToggleEntry,
+                    kineticWeaponKnockbackConditionDurationEntry,
+                    kineticWeaponKnockbackConditionMinSpeedEntry,
+                    kineticWeaponKnockbackConditionMinRelativeSpeedEntry,
+                    kineticWeaponDamageConditionToggleEntry,
+                    kineticWeaponDamageConditionDurationEntry,
+                    kineticWeaponDamageConditionMinSpeedEntry,
+                    kineticWeaponDamageConditionMinRelativeSpeedEntry
+            );
         }
 
         // Blocks attacks
@@ -501,6 +824,398 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
+    private void setMinimumAttackChargeEnabled(boolean value) {
+        minimumAttackChargeEnabled = value;
+        if (value) {
+            insertAfter(minimumAttackChargeToggleEntry, minimumAttackChargeValueEntry);
+        } else {
+            removeEntries(minimumAttackChargeValueEntry);
+        }
+        applyMinimumAttackChargeComponent();
+    }
+
+    private void setMinimumAttackCharge(Float value) {
+        minimumAttackCharge = value == null ? 0f : value;
+        if (minimumAttackChargeEnabled) {
+            applyMinimumAttackChargeComponent();
+        }
+    }
+
+    private void setDirectDamageTypeEnabled(boolean value) {
+        directDamageTypeEnabled = value;
+        if (value) {
+            insertAfter(directDamageTypeToggleEntry, directDamageTypeEntry);
+        } else {
+            removeEntries(directDamageTypeEntry);
+        }
+        applyDirectDamageTypeComponent();
+    }
+
+    private void setDirectDamageTypeId(String value) {
+        directDamageTypeId = value == null ? "" : value.trim();
+        if (directDamageTypeEnabled) {
+            applyDirectDamageTypeComponent();
+        }
+    }
+
+    private void setAttackRangeEnabled(boolean value) {
+        attackRangeEnabled = value;
+        if (value) {
+            insertAfter(
+                    attackRangeToggleEntry,
+                    attackRangeMinEntry,
+                    attackRangeMaxEntry,
+                    attackRangeMinCreativeEntry,
+                    attackRangeMaxCreativeEntry,
+                    attackRangeHitboxMarginEntry,
+                    attackRangeMobFactorEntry
+            );
+        } else {
+            removeEntries(
+                    attackRangeMinEntry,
+                    attackRangeMaxEntry,
+                    attackRangeMinCreativeEntry,
+                    attackRangeMaxCreativeEntry,
+                    attackRangeHitboxMarginEntry,
+                    attackRangeMobFactorEntry
+            );
+        }
+        applyAttackRangeComponent();
+    }
+
+    private void setAttackRangeMin(Float value) {
+        attackRangeMin = value == null ? 0f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setAttackRangeMax(Float value) {
+        attackRangeMax = value == null ? 3f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setAttackRangeMinCreative(Float value) {
+        attackRangeMinCreative = value == null ? 0f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setAttackRangeMaxCreative(Float value) {
+        attackRangeMaxCreative = value == null ? 5f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setAttackRangeHitboxMargin(Float value) {
+        attackRangeHitboxMargin = value == null ? 0.3f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setAttackRangeMobFactor(Float value) {
+        attackRangeMobFactor = value == null ? 1f : value;
+        if (attackRangeEnabled) {
+            applyAttackRangeComponent();
+        }
+    }
+
+    private void setSwingAnimationEnabled(boolean value) {
+        swingAnimationEnabled = value;
+        if (value) {
+            insertAfter(swingAnimationToggleEntry, swingAnimationTypeEntry, swingAnimationDurationEntry);
+        } else {
+            removeEntries(swingAnimationTypeEntry, swingAnimationDurationEntry);
+        }
+        applySwingAnimationComponent();
+    }
+
+    private void setSwingAnimationTypeId(String value) {
+        swingAnimationTypeId = value == null ? "" : value.trim();
+        if (swingAnimationEnabled) {
+            applySwingAnimationComponent();
+        }
+    }
+
+    private void setSwingAnimationDuration(Integer value) {
+        swingAnimationDuration = value == null ? SwingAnimation.DEFAULT.duration() : Math.max(0, value);
+        if (swingAnimationEnabled) {
+            applySwingAnimationComponent();
+        }
+    }
+
+    private void setUseEffectsEnabled(boolean value) {
+        useEffectsEnabled = value;
+        if (value) {
+            insertAfter(useEffectsToggleEntry, useEffectsCanSprintEntry, useEffectsInteractVibrationsEntry, useEffectsSpeedMultiplierEntry);
+        } else {
+            removeEntries(useEffectsCanSprintEntry, useEffectsInteractVibrationsEntry, useEffectsSpeedMultiplierEntry);
+        }
+        applyUseEffectsComponent();
+    }
+
+    private void setUseEffectsCanSprint(boolean value) {
+        useEffectsCanSprint = value;
+        if (useEffectsEnabled) {
+            applyUseEffectsComponent();
+        }
+    }
+
+    private void setUseEffectsInteractVibrations(boolean value) {
+        useEffectsInteractVibrations = value;
+        if (useEffectsEnabled) {
+            applyUseEffectsComponent();
+        }
+    }
+
+    private void setUseEffectsSpeedMultiplier(Float value) {
+        useEffectsSpeedMultiplier = value == null ? UseEffects.DEFAULT.speedMultiplier() : value;
+        if (useEffectsEnabled) {
+            applyUseEffectsComponent();
+        }
+    }
+
+    private void setPiercingWeaponEnabled(boolean value) {
+        piercingWeaponEnabled = value;
+        if (value) {
+            insertAfter(
+                    piercingWeaponToggleEntry,
+                    piercingWeaponDealsKnockbackEntry,
+                    piercingWeaponDismountsEntry,
+                    piercingWeaponSoundEntry,
+                    piercingWeaponHitSoundEntry
+            );
+        } else {
+            removeEntries(
+                    piercingWeaponDealsKnockbackEntry,
+                    piercingWeaponDismountsEntry,
+                    piercingWeaponSoundEntry,
+                    piercingWeaponHitSoundEntry
+            );
+        }
+        applyPiercingWeaponComponent();
+    }
+
+    private void setPiercingWeaponDealsKnockback(boolean value) {
+        piercingWeaponDealsKnockback = value;
+        if (piercingWeaponEnabled) {
+            applyPiercingWeaponComponent();
+        }
+    }
+
+    private void setPiercingWeaponDismounts(boolean value) {
+        piercingWeaponDismounts = value;
+        if (piercingWeaponEnabled) {
+            applyPiercingWeaponComponent();
+        }
+    }
+
+    private void setPiercingWeaponSoundId(String id) {
+        piercingWeaponSoundId = sanitizeId(id);
+        if (piercingWeaponSoundEntry != null) {
+            piercingWeaponSoundEntry.setValid(piercingWeaponSoundId.isBlank() || resolveSoundHolder(piercingWeaponSoundId).isPresent());
+        }
+        if (piercingWeaponEnabled) {
+            applyPiercingWeaponComponent();
+        }
+    }
+
+    private void setPiercingWeaponHitSoundId(String id) {
+        piercingWeaponHitSoundId = sanitizeId(id);
+        if (piercingWeaponHitSoundEntry != null) {
+            piercingWeaponHitSoundEntry.setValid(piercingWeaponHitSoundId.isBlank() || resolveSoundHolder(piercingWeaponHitSoundId).isPresent());
+        }
+        if (piercingWeaponEnabled) {
+            applyPiercingWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponEnabled(boolean value) {
+        kineticWeaponEnabled = value;
+        if (value) {
+            insertAfter(
+                    kineticWeaponToggleEntry,
+                    kineticWeaponContactCooldownEntry,
+                    kineticWeaponDelayEntry,
+                    kineticWeaponForwardMovementEntry,
+                    kineticWeaponDamageMultiplierEntry,
+                    kineticWeaponSoundEntry,
+                    kineticWeaponHitSoundEntry,
+                    kineticWeaponDismountConditionToggleEntry,
+                    kineticWeaponDismountConditionDurationEntry,
+                    kineticWeaponDismountConditionMinSpeedEntry,
+                    kineticWeaponDismountConditionMinRelativeSpeedEntry,
+                    kineticWeaponKnockbackConditionToggleEntry,
+                    kineticWeaponKnockbackConditionDurationEntry,
+                    kineticWeaponKnockbackConditionMinSpeedEntry,
+                    kineticWeaponKnockbackConditionMinRelativeSpeedEntry,
+                    kineticWeaponDamageConditionToggleEntry,
+                    kineticWeaponDamageConditionDurationEntry,
+                    kineticWeaponDamageConditionMinSpeedEntry,
+                    kineticWeaponDamageConditionMinRelativeSpeedEntry
+            );
+        } else {
+            removeEntries(
+                    kineticWeaponContactCooldownEntry,
+                    kineticWeaponDelayEntry,
+                    kineticWeaponForwardMovementEntry,
+                    kineticWeaponDamageMultiplierEntry,
+                    kineticWeaponSoundEntry,
+                    kineticWeaponHitSoundEntry,
+                    kineticWeaponDismountConditionToggleEntry,
+                    kineticWeaponDismountConditionDurationEntry,
+                    kineticWeaponDismountConditionMinSpeedEntry,
+                    kineticWeaponDismountConditionMinRelativeSpeedEntry,
+                    kineticWeaponKnockbackConditionToggleEntry,
+                    kineticWeaponKnockbackConditionDurationEntry,
+                    kineticWeaponKnockbackConditionMinSpeedEntry,
+                    kineticWeaponKnockbackConditionMinRelativeSpeedEntry,
+                    kineticWeaponDamageConditionToggleEntry,
+                    kineticWeaponDamageConditionDurationEntry,
+                    kineticWeaponDamageConditionMinSpeedEntry,
+                    kineticWeaponDamageConditionMinRelativeSpeedEntry
+            );
+        }
+        applyKineticWeaponComponent();
+    }
+
+    private void setKineticWeaponContactCooldownTicks(Integer value) {
+        kineticWeaponContactCooldownTicks = value == null ? 10 : Math.max(0, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDelayTicks(Integer value) {
+        kineticWeaponDelayTicks = value == null ? 0 : Math.max(0, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponForwardMovement(Float value) {
+        kineticWeaponForwardMovement = value == null ? 0f : value;
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDamageMultiplier(Float value) {
+        kineticWeaponDamageMultiplier = value == null ? 1f : value;
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponSoundId(String id) {
+        kineticWeaponSoundId = sanitizeId(id);
+        if (kineticWeaponSoundEntry != null) {
+            kineticWeaponSoundEntry.setValid(kineticWeaponSoundId.isBlank() || resolveSoundHolder(kineticWeaponSoundId).isPresent());
+        }
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponHitSoundId(String id) {
+        kineticWeaponHitSoundId = sanitizeId(id);
+        if (kineticWeaponHitSoundEntry != null) {
+            kineticWeaponHitSoundEntry.setValid(kineticWeaponHitSoundId.isBlank() || resolveSoundHolder(kineticWeaponHitSoundId).isPresent());
+        }
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDismountConditionEnabled(boolean value) {
+        kineticWeaponDismountConditionEnabled = value;
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDismountConditionDuration(Integer value) {
+        kineticWeaponDismountConditionDuration = value == null ? 0 : Math.max(0, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDismountConditionMinSpeed(Float value) {
+        kineticWeaponDismountConditionMinSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDismountConditionMinRelativeSpeed(Float value) {
+        kineticWeaponDismountConditionMinRelativeSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponKnockbackConditionEnabled(boolean value) {
+        kineticWeaponKnockbackConditionEnabled = value;
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponKnockbackConditionDuration(Integer value) {
+        kineticWeaponKnockbackConditionDuration = value == null ? 0 : Math.max(0, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponKnockbackConditionMinSpeed(Float value) {
+        kineticWeaponKnockbackConditionMinSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponKnockbackConditionMinRelativeSpeed(Float value) {
+        kineticWeaponKnockbackConditionMinRelativeSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDamageConditionEnabled(boolean value) {
+        kineticWeaponDamageConditionEnabled = value;
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDamageConditionDuration(Integer value) {
+        kineticWeaponDamageConditionDuration = value == null ? 0 : Math.max(0, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDamageConditionMinSpeed(Float value) {
+        kineticWeaponDamageConditionMinSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
+    private void setKineticWeaponDamageConditionMinRelativeSpeed(Float value) {
+        kineticWeaponDamageConditionMinRelativeSpeed = value == null ? 0f : Math.max(0f, value);
+        if (kineticWeaponEnabled) {
+            applyKineticWeaponComponent();
+        }
+    }
+
     private void setBlocksAttacksEnabled(boolean value) {
         blocksAttacksEnabled = value;
         if (value) {
@@ -682,6 +1397,44 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         );
     }
 
+    private void openDirectDamageTypeSelection() {
+        ModScreenHandler.openListSelectionScreen(
+                ModTexts.gui("select_damage_type"),
+                "damage_type",
+                ClientCache.getDamageTypeSelectionItems(),
+                value -> {
+                    if (value == null || value.isBlank()) {
+                        return;
+                    }
+                    directDamageTypeId = value;
+                    directDamageTypeEntry.setValue(value);
+                    if (directDamageTypeEnabled) {
+                        applyDirectDamageTypeComponent();
+                    }
+                }
+        );
+    }
+
+    private void openSwingAnimationTypeSelection() {
+        ModScreenHandler.openListSelectionScreen(
+                ModTexts.gui("select_swing_animation_type"),
+                "swing_animation_type",
+                swingAnimationTypeSelectionItems(),
+                value -> {
+                    if (value == null || value.isBlank()) {
+                        return;
+                    }
+                    Identifier id = tryParse(value);
+                    String normalized = id != null ? id.getPath() : value;
+                    swingAnimationTypeId = normalized;
+                    swingAnimationTypeEntry.setValue(normalized);
+                    if (swingAnimationEnabled) {
+                        applySwingAnimationComponent();
+                    }
+                }
+        );
+    }
+
     private void openBypassedTagSelection() {
         ModScreenHandler.openListSelectionScreen(
                 ModTexts.gui("select_tag"),
@@ -806,6 +1559,184 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         stack.set(DataComponents.WEAPON, new Weapon(damage, disable));
     }
 
+    private void applyMinimumAttackChargeComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!minimumAttackChargeEnabled) {
+            stack.remove(DataComponents.MINIMUM_ATTACK_CHARGE);
+            getParent().removeComponentFromDataTag("minecraft:minimum_attack_charge");
+            if (minimumAttackChargeValueEntry != null) {
+                minimumAttackChargeValueEntry.setValid(true);
+            }
+            return;
+        }
+        float clamped = Math.max(0f, Math.min(1f, minimumAttackCharge));
+        if (minimumAttackChargeValueEntry != null) {
+            minimumAttackChargeValueEntry.setValid(minimumAttackCharge >= 0f && minimumAttackCharge <= 1f);
+        }
+        stack.set(DataComponents.MINIMUM_ATTACK_CHARGE, clamped);
+    }
+
+    private void applyDirectDamageTypeComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!directDamageTypeEnabled || sanitizeId(directDamageTypeId).isBlank()) {
+            stack.remove(DataComponents.DAMAGE_TYPE);
+            getParent().removeComponentFromDataTag("minecraft:damage_type");
+            if (directDamageTypeEntry != null) {
+                directDamageTypeEntry.setValid(true);
+            }
+            return;
+        }
+        Identifier parsed = tryParse(directDamageTypeId);
+        if (parsed == null) {
+            if (directDamageTypeEntry != null) {
+                directDamageTypeEntry.setValid(false);
+            }
+            return;
+        }
+        ResourceKey<DamageType> key = ResourceKey.create(Registries.DAMAGE_TYPE, parsed);
+        var lookupOpt = ClientUtil.registryAccess().lookup(Registries.DAMAGE_TYPE);
+        if (lookupOpt.isEmpty() || lookupOpt.get().get(key).isEmpty()) {
+            if (directDamageTypeEntry != null) {
+                directDamageTypeEntry.setValid(false);
+            }
+            return;
+        }
+        if (directDamageTypeEntry != null) {
+            directDamageTypeEntry.setValid(true);
+        }
+        stack.set(DataComponents.DAMAGE_TYPE, new EitherHolder<>(key));
+    }
+
+    private void applyAttackRangeComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!attackRangeEnabled) {
+            stack.remove(DataComponents.ATTACK_RANGE);
+            getParent().removeComponentFromDataTag("minecraft:attack_range");
+            markAttackRangeEntriesValid(true);
+            return;
+        }
+        boolean boundsValid = attackRangeMin <= attackRangeMax && attackRangeMinCreative <= attackRangeMaxCreative;
+        markAttackRangeEntriesValid(boundsValid);
+        if (!boundsValid) {
+            return;
+        }
+        stack.set(DataComponents.ATTACK_RANGE, new AttackRange(
+                clamp(attackRangeMin, 0f, 64f),
+                clamp(attackRangeMax, 0f, 64f),
+                clamp(attackRangeMinCreative, 0f, 64f),
+                clamp(attackRangeMaxCreative, 0f, 64f),
+                clamp(attackRangeHitboxMargin, 0f, 1f),
+                clamp(attackRangeMobFactor, 0f, 2f)
+        ));
+    }
+
+    private void applySwingAnimationComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!swingAnimationEnabled) {
+            stack.remove(DataComponents.SWING_ANIMATION);
+            getParent().removeComponentFromDataTag("minecraft:swing_animation");
+            if (swingAnimationTypeEntry != null) {
+                swingAnimationTypeEntry.setValid(true);
+            }
+            return;
+        }
+        Optional<SwingAnimationType> parsedType = parseSwingAnimationType(swingAnimationTypeId);
+        if (parsedType.isEmpty()) {
+            if (swingAnimationTypeEntry != null) {
+                swingAnimationTypeEntry.setValid(false);
+            }
+            return;
+        }
+        if (swingAnimationTypeEntry != null) {
+            swingAnimationTypeEntry.setValid(true);
+        }
+        stack.set(DataComponents.SWING_ANIMATION, new SwingAnimation(parsedType.get(), Math.max(0, swingAnimationDuration)));
+    }
+
+    private void applyUseEffectsComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!useEffectsEnabled) {
+            stack.remove(DataComponents.USE_EFFECTS);
+            getParent().removeComponentFromDataTag("minecraft:use_effects");
+            if (useEffectsSpeedMultiplierEntry != null) {
+                useEffectsSpeedMultiplierEntry.setValid(true);
+            }
+            return;
+        }
+        if (useEffectsSpeedMultiplierEntry != null) {
+            useEffectsSpeedMultiplierEntry.setValid(useEffectsSpeedMultiplier > 0f);
+        }
+        if (useEffectsSpeedMultiplier <= 0f) {
+            return;
+        }
+        stack.set(DataComponents.USE_EFFECTS, new UseEffects(
+                useEffectsCanSprint,
+                useEffectsInteractVibrations,
+                useEffectsSpeedMultiplier
+        ));
+    }
+
+    private void applyPiercingWeaponComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!piercingWeaponEnabled) {
+            stack.remove(DataComponents.PIERCING_WEAPON);
+            getParent().removeComponentFromDataTag("minecraft:piercing_weapon");
+            return;
+        }
+        stack.set(DataComponents.PIERCING_WEAPON, new PiercingWeapon(
+                piercingWeaponDealsKnockback,
+                piercingWeaponDismounts,
+                resolveSoundHolder(piercingWeaponSoundId),
+                resolveSoundHolder(piercingWeaponHitSoundId)
+        ));
+    }
+
+    private void applyKineticWeaponComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!kineticWeaponEnabled) {
+            stack.remove(DataComponents.KINETIC_WEAPON);
+            getParent().removeComponentFromDataTag("minecraft:kinetic_weapon");
+            markKineticConditionEntriesValid(true);
+            return;
+        }
+        Optional<KineticWeapon.Condition> dismountCondition = buildKineticCondition(
+                kineticWeaponDismountConditionEnabled,
+                kineticWeaponDismountConditionDuration,
+                kineticWeaponDismountConditionMinSpeed,
+                kineticWeaponDismountConditionMinRelativeSpeed
+        );
+        Optional<KineticWeapon.Condition> knockbackCondition = buildKineticCondition(
+                kineticWeaponKnockbackConditionEnabled,
+                kineticWeaponKnockbackConditionDuration,
+                kineticWeaponKnockbackConditionMinSpeed,
+                kineticWeaponKnockbackConditionMinRelativeSpeed
+        );
+        Optional<KineticWeapon.Condition> damageCondition = buildKineticCondition(
+                kineticWeaponDamageConditionEnabled,
+                kineticWeaponDamageConditionDuration,
+                kineticWeaponDamageConditionMinSpeed,
+                kineticWeaponDamageConditionMinRelativeSpeed
+        );
+        boolean valid = (!kineticWeaponDismountConditionEnabled || dismountCondition.isPresent())
+                && (!kineticWeaponKnockbackConditionEnabled || knockbackCondition.isPresent())
+                && (!kineticWeaponDamageConditionEnabled || damageCondition.isPresent());
+        markKineticConditionEntriesValid(valid);
+        if (!valid) {
+            return;
+        }
+        stack.set(DataComponents.KINETIC_WEAPON, new KineticWeapon(
+                Math.max(0, kineticWeaponContactCooldownTicks),
+                Math.max(0, kineticWeaponDelayTicks),
+                dismountCondition,
+                knockbackCondition,
+                damageCondition,
+                kineticWeaponForwardMovement,
+                Math.max(0f, kineticWeaponDamageMultiplier),
+                resolveSoundHolder(kineticWeaponSoundId),
+                resolveSoundHolder(kineticWeaponHitSoundId)
+        ));
+    }
+
     private void applyBlocksAttacksComponent() {
         ItemStack stack = getParent().getContext().getItemStack();
         if (!blocksAttacksEnabled) {
@@ -840,6 +1771,18 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
         stack.set(DataComponents.BLOCKS_ATTACKS, component);
     }
 
+    private <T extends LabeledEntryModel> T withWikiTooltip(T entry, String key, int lines) {
+        if (entry == null || lines <= 0) {
+            return entry;
+        }
+        var tooltipLines = ModTexts.wikiTooltip(key, lines);
+        for (int i = 0; i < tooltipLines.length; i++) {
+            tooltipLines[i] = tooltipLines[i].copy().withStyle(ChatFormatting.GRAY);
+        }
+        entry.setLabelTooltip(tooltipLines);
+        return entry;
+    }
+
     private void insertAfter(EntryModel anchor, EntryModel... entries) {
         if (anchor == null || entries == null || entries.length == 0) return;
         int index = getEntries().indexOf(anchor);
@@ -860,6 +1803,90 @@ public class ItemEquipmentTraitsCategoryModel extends ItemEditorCategoryModel {
                 getEntries().remove(entry);
             }
         }
+    }
+
+    private void markAttackRangeEntriesValid(boolean valid) {
+        if (attackRangeMinEntry != null) attackRangeMinEntry.setValid(valid);
+        if (attackRangeMaxEntry != null) attackRangeMaxEntry.setValid(valid);
+        if (attackRangeMinCreativeEntry != null) attackRangeMinCreativeEntry.setValid(valid);
+        if (attackRangeMaxCreativeEntry != null) attackRangeMaxCreativeEntry.setValid(valid);
+        if (attackRangeHitboxMarginEntry != null) attackRangeHitboxMarginEntry.setValid(valid);
+        if (attackRangeMobFactorEntry != null) attackRangeMobFactorEntry.setValid(valid);
+    }
+
+    private void markKineticConditionEntriesValid(boolean valid) {
+        setConditionEntriesValid(
+                kineticWeaponDismountConditionDurationEntry,
+                kineticWeaponDismountConditionMinSpeedEntry,
+                kineticWeaponDismountConditionMinRelativeSpeedEntry,
+                !kineticWeaponDismountConditionEnabled || valid
+        );
+        setConditionEntriesValid(
+                kineticWeaponKnockbackConditionDurationEntry,
+                kineticWeaponKnockbackConditionMinSpeedEntry,
+                kineticWeaponKnockbackConditionMinRelativeSpeedEntry,
+                !kineticWeaponKnockbackConditionEnabled || valid
+        );
+        setConditionEntriesValid(
+                kineticWeaponDamageConditionDurationEntry,
+                kineticWeaponDamageConditionMinSpeedEntry,
+                kineticWeaponDamageConditionMinRelativeSpeedEntry,
+                !kineticWeaponDamageConditionEnabled || valid
+        );
+    }
+
+    private void setConditionEntriesValid(IntegerEntryModel durationEntry, FloatEntryModel minSpeedEntry, FloatEntryModel minRelativeEntry, boolean valid) {
+        if (durationEntry != null) durationEntry.setValid(valid);
+        if (minSpeedEntry != null) minSpeedEntry.setValid(valid);
+        if (minRelativeEntry != null) minRelativeEntry.setValid(valid);
+    }
+
+    private Optional<KineticWeapon.Condition> buildKineticCondition(boolean enabled, int maxDurationTicks, float minSpeed, float minRelativeSpeed) {
+        if (!enabled) {
+            return Optional.empty();
+        }
+        if (maxDurationTicks < 0 || minSpeed < 0f || minRelativeSpeed < 0f) {
+            return Optional.empty();
+        }
+        return Optional.of(new KineticWeapon.Condition(maxDurationTicks, minSpeed, minRelativeSpeed));
+    }
+
+    private List<ListSelectionElementModel> swingAnimationTypeSelectionItems() {
+        List<ListSelectionElementModel> items = new ArrayList<>();
+        for (SwingAnimationType type : SwingAnimationType.values()) {
+            String key = "cadeditor.gui.swing_animation_type." + type.getSerializedName();
+            Identifier id = Identifier.withDefaultNamespace(type.getSerializedName());
+            items.add(new ListSelectionElementModel(key, id));
+        }
+        return items;
+    }
+
+    private Optional<SwingAnimationType> parseSwingAnimationType(String value) {
+        String sanitized = sanitizeId(value).toLowerCase(Locale.ROOT);
+        if (sanitized.isBlank()) {
+            return Optional.empty();
+        }
+        if (sanitized.startsWith("minecraft:")) {
+            sanitized = sanitized.substring("minecraft:".length());
+        }
+        for (SwingAnimationType type : SwingAnimationType.values()) {
+            if (type.getSerializedName().equals(sanitized) || type.name().equalsIgnoreCase(sanitized)) {
+                return Optional.of(type);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String extractDamageTypeId(EitherHolder<DamageType> eitherHolder) {
+        return eitherHolder.key()
+                .map(key -> key.identifier().toString())
+                .or(() -> eitherHolder.unwrap(ClientUtil.registryAccess())
+                        .flatMap(holder -> holder.unwrapKey().map(key -> key.identifier().toString())))
+                .orElse("");
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private List<Holder<Item>> resolveItemHolders(List<String> ids) {
