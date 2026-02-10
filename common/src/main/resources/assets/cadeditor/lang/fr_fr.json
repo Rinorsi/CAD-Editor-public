@@ -443,6 +443,16 @@
   "cadeditor.text.entity": "Entité",
   "cadeditor.text.item": "Item",
   "cadeditor.text.vault": "Favoris",
+  "cadeditor.gui.spawner": "Spawner",
+  "cadeditor.gui.spawner_entity": "Spawn Entity",
+  "cadeditor.gui.spawner_delay": "Current Delay",
+  "cadeditor.gui.spawner_min_delay": "Min Spawn Delay",
+  "cadeditor.gui.spawner_max_delay": "Max Spawn Delay",
+  "cadeditor.gui.spawner_count": "Spawn Count",
+  "cadeditor.gui.spawner_max_nearby": "Max Nearby Entities",
+  "cadeditor.gui.spawner_required_player_range": "Required Player Range",
+  "cadeditor.gui.spawner_spawn_range": "Spawn Range",
+  "cadeditor.gui.spawner_hint": "Note: this category only edits common spawner fields; advanced fields like spawn_potentials/custom_spawn_rules are preserved and can be edited in NBT/SNBT editor.",
   "cadeditor.gui.equipment_slot.saddle": "Selle",
   "cadeditor.gui.attribute_tooltip_info": "Remarque : les valeurs affichées dans l'infobulle sont les valeurs finales (base + modificateurs). La liste ci-dessous montre les modificateurs bruts."
 }

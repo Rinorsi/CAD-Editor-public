@@ -5,6 +5,7 @@ import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.context.ItemEditorContext;
 import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.common.network.*;
+import net.minecraft.nbt.CompoundTag;
 
 public class ClientEditorUpdateLogic {
     public static void updateMainHandItem(MainHandItemEditorPacket.Response response, ItemEditorContext context) {
@@ -28,12 +29,36 @@ public class ClientEditorUpdateLogic {
     }
 
     public static void updateBlock(BlockEditorPacket.Response response, BlockEditorContext context) {
-        NetworkManager.sendToServer(NetworkManager.BLOCK_EDITOR_UPDATE, new BlockEditorPacket.Update(response, context.getBlockState(), context.getTag()));
+        CompoundTag tag = context.getTag();
+        DebugLog.info(() -> "[BlockUpdate->Server] pos=" + response.getBlockPos()
+                + " block=" + context.getBlockState().getBlock().getName().getString()
+                + " " + summarizeSpawner(tag));
+        NetworkManager.sendToServer(NetworkManager.BLOCK_EDITOR_UPDATE, new BlockEditorPacket.Update(response, context.getBlockState(), tag));
         DebugLog.infoKey("cadeditor.debug.update.block", response.getBlockPos());
     }
 
     public static void updateEntity(EntityEditorPacket.Response response, EntityEditorContext context) {
         NetworkManager.sendToServer(NetworkManager.ENTITY_EDITOR_UPDATE, new EntityEditorPacket.Update(response, context.getTag()));
         DebugLog.infoKey("cadeditor.debug.update.entity");
+    }
+
+    private static String summarizeSpawner(CompoundTag tag) {
+        if (tag == null) {
+            return "tag=<null>";
+        }
+        CompoundTag spawnData = tag.getCompound("spawn_data")
+                .or(() -> tag.getCompound("SpawnData"))
+                .orElse(null);
+        String entityId = "";
+        if (spawnData != null) {
+            CompoundTag entity = spawnData.getCompound("entity")
+                    .or(() -> spawnData.getCompound("Entity"))
+                    .orElse(spawnData);
+            entityId = entity.getStringOr("id", "");
+        }
+        return "spawnEntity=" + entityId
+                + " hasSpawnData=" + (spawnData != null)
+                + " hasPotentials=" + (tag.contains("spawn_potentials") || tag.contains("SpawnPotentials"))
+                + " hasNextSpawnData=" + (tag.contains("next_spawn_data") || tag.contains("NextSpawnData"));
     }
 }

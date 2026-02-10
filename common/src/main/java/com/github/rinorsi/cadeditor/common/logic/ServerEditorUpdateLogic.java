@@ -6,6 +6,7 @@ import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
@@ -151,6 +152,13 @@ public final class ServerEditorUpdateLogic {
         var pos = update.getBlockPos();
         var oldState = level.getBlockState(pos);
         try {
+            if (isInfoDebugEnabled()) {
+                LOGGER.info("[CAD-Editor][SpawnerUpdate][Server][Incoming] player={} pos={} block={} {}",
+                        player.getGameProfile().getName(),
+                        pos,
+                        BuiltInRegistries.BLOCK.getKey(update.getBlockState().getBlock()),
+                        summarizeSpawner(update.getTag()));
+            }
             level.setBlock(pos, update.getBlockState(), Block.UPDATE_ALL);
             var currentState = level.getBlockState(pos);
             if (update.getTag() != null) {
@@ -162,6 +170,10 @@ public final class ServerEditorUpdateLogic {
                 var input = TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), update.getTag());
                 blockEntity.loadWithComponents(input);
                 blockEntity.setChanged();
+                if (isInfoDebugEnabled()) {
+                    CompoundTag applied = blockEntity.saveWithFullMetadata(player.registryAccess());
+                    LOGGER.info("[CAD-Editor][SpawnerUpdate][Server][Applied] pos={} {}", pos, summarizeSpawner(applied));
+                }
             }
             level.sendBlockUpdated(pos, oldState, currentState, Block.UPDATE_CLIENTS);
             CommonUtil.showUpdateSuccess(player, ModTexts.BLOCK);
@@ -421,5 +433,34 @@ public final class ServerEditorUpdateLogic {
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    private static boolean isInfoDebugEnabled() {
+        try {
+            return ClientConfiguration.INSTANCE != null
+                    && ClientConfiguration.INSTANCE.getGuapiDebugMode() == DebugMode.INFO;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static String summarizeSpawner(CompoundTag tag) {
+        if (tag == null) {
+            return "tag=<null>";
+        }
+        CompoundTag spawnData = tag.getCompound("spawn_data")
+                .or(() -> tag.getCompound("SpawnData"))
+                .orElse(null);
+        String entityId = "";
+        if (spawnData != null) {
+            CompoundTag entity = spawnData.getCompound("entity")
+                    .or(() -> spawnData.getCompound("Entity"))
+                    .orElse(spawnData);
+            entityId = entity.getStringOr("id", "");
+        }
+        return "spawnEntity=" + entityId
+                + " hasSpawnData=" + (spawnData != null)
+                + " hasPotentials=" + (tag.contains("spawn_potentials") || tag.contains("SpawnPotentials"))
+                + " hasNextSpawnData=" + (tag.contains("next_spawn_data") || tag.contains("NextSpawnData"));
     }
 }
