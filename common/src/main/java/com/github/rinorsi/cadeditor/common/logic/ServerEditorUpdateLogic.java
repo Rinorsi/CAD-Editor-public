@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -150,6 +151,13 @@ public final class ServerEditorUpdateLogic {
         var level = player.level();
         var pos = update.getBlockPos();
         var oldState = level.getBlockState(pos);
+        if (isInfoDebugEnabled()) {
+            LOGGER.info("[CAD-Editor][BlockUpdate][incoming] player={} pos={} state={} {}",
+                    player.getName().getString(),
+                    pos,
+                    update.getBlockState(),
+                    summarizeBlockTag(update.getTag()));
+        }
         try {
             level.setBlock(pos, update.getBlockState(), Block.UPDATE_ALL);
             var currentState = level.getBlockState(pos);
@@ -162,6 +170,13 @@ public final class ServerEditorUpdateLogic {
                 var input = TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), update.getTag());
                 blockEntity.loadWithComponents(input);
                 blockEntity.setChanged();
+                if (isInfoDebugEnabled()) {
+                    CompoundTag appliedTag = saveBlockEntityTag(player, blockEntity);
+                    LOGGER.info("[CAD-Editor][BlockUpdate][applied] player={} pos={} {}",
+                            player.getName().getString(),
+                            pos,
+                            summarizeBlockTag(appliedTag));
+                }
             }
             level.sendBlockUpdated(pos, oldState, currentState, Block.UPDATE_CLIENTS);
             CommonUtil.showUpdateSuccess(player, ModTexts.BLOCK);
@@ -411,6 +426,58 @@ public final class ServerEditorUpdateLogic {
         for (Entity passenger : List.copyOf(root.getPassengers())) {
             passenger.stopRiding();
             passenger.discard();
+        }
+    }
+
+    private static CompoundTag saveBlockEntityTag(ServerPlayer player, BlockEntity blockEntity) {
+        if (blockEntity == null) {
+            return null;
+        }
+        try {
+            TagValueOutput writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, player.registryAccess());
+            blockEntity.saveWithId(writer);
+            return writer.buildResult();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static String summarizeBlockTag(CompoundTag tag) {
+        if (tag == null) {
+            return "tag=null";
+        }
+        String blockEntityId = tag.getStringOr("id", "");
+        CompoundTag spawnData = readCompound(tag, "spawn_data", "SpawnData");
+        CompoundTag entityData = readCompound(spawnData, "entity", "Entity");
+        String entityId = entityData.getStringOr("id", "");
+        return "tagKeys=" + tag.size()
+                + " blockEntityId=" + (blockEntityId.isEmpty() ? "-" : blockEntityId)
+                + " spawnEntityId=" + (entityId.isEmpty() ? "-" : entityId)
+                + " hasSpawnData=" + !spawnData.isEmpty();
+    }
+
+    private static CompoundTag readCompound(CompoundTag tag, String primary, String secondary) {
+        if (tag == null) {
+            return new CompoundTag();
+        }
+        if (tag.contains(primary)) {
+            return tag.getCompound(primary).map(CompoundTag::copy).orElseGet(CompoundTag::new);
+        }
+        if (tag.contains(secondary)) {
+            return tag.getCompound(secondary).map(CompoundTag::copy).orElseGet(CompoundTag::new);
+        }
+        return new CompoundTag();
+    }
+
+    private static boolean isInfoDebugEnabled() {
+        try {
+            if (ClientConfiguration.INSTANCE == null) {
+                return false;
+            }
+            DebugMode mode = ClientConfiguration.INSTANCE.getGuapiDebugMode();
+            return mode == DebugMode.INFO || mode == DebugMode.FEATURE;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
