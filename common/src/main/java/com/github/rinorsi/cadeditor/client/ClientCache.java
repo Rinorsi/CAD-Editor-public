@@ -45,6 +45,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class ClientCache {
+    private static final Identifier BLOCKS_ATLAS_LOCATION =
+            Identifier.fromNamespaceAndPath("minecraft", "textures/atlas/blocks.png");
+
     private static List<String> itemSuggestions;
     private static List<ItemListSelectionElementModel> itemSelectionItems;
     private static List<String> blockSuggestions;
@@ -847,11 +850,11 @@ public final class ClientCache {
 
     private static Supplier<TextureAtlasSprite> mobEffectSpriteSupplier(Holder<MobEffect> holder) {
         return () -> {
-            var texture = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS);
+            var texture = Minecraft.getInstance().getTextureManager().getTexture(BLOCKS_ATLAS_LOCATION);
             if (texture instanceof TextureAtlas atlas) {
                 return atlas.getSprite(Gui.getMobEffectSprite(holder));
             }
-            return ((TextureAtlas) Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS))
+            return ((TextureAtlas) Minecraft.getInstance().getTextureManager().getTexture(BLOCKS_ATLAS_LOCATION))
                     .getSprite(Gui.getMobEffectSprite(holder));
         };
     }
