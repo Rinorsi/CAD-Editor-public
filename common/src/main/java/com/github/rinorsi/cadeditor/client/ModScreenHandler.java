@@ -103,11 +103,16 @@ public final class ModScreenHandler {
     }
 
     public static void openEditor(EditorType editorType, EditorContext<?> context, boolean replace) {
-        if (editorType != EditorType.STANDARD && context.getTag() == null) {
-            ClientUtil.showMessage(ModTexts.Messages.NO_BLOCK_DATA);
-            return;
+        EditorType resolvedEditorType = editorType;
+        if (resolvedEditorType != EditorType.STANDARD && context.getTag() == null) {
+            if (context instanceof BlockEditorContext blockContext && !blockContext.getBlockState().hasBlockEntity()) {
+                resolvedEditorType = EditorType.STANDARD;
+            } else {
+                ClientUtil.showMessage(ModTexts.Messages.NO_BLOCK_DATA);
+                return;
+            }
         }
-        openScaledScreen(switch (editorType) {
+        openScaledScreen(switch (resolvedEditorType) {
             case STANDARD -> {
                 if (context instanceof ItemEditorContext ctx) {
                     yield mvc(StandardEditorMVC.INSTANCE, new ItemEditorModel(ctx));

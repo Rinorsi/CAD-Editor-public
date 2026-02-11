@@ -165,7 +165,8 @@ public final class ServerEditorUpdateLogic {
                     summarizeBlockTag(update.getTag()));
         }
         try {
-            level.setBlock(pos, update.getBlockState(), Block.UPDATE_ALL);
+            int flags = selectBlockUpdateFlags(oldState, update.getBlockState());
+            level.setBlock(pos, update.getBlockState(), flags);
             var currentState = level.getBlockState(pos);
             if (update.getTag() != null) {
                 BlockEntity blockEntity = level.getBlockEntity(pos);
@@ -538,6 +539,16 @@ public final class ServerEditorUpdateLogic {
 
     private static float clampAbilitySpeed(float value) {
         return Math.max(0f, Math.min(value, 1f));
+    }
+
+    private static int selectBlockUpdateFlags(net.minecraft.world.level.block.state.BlockState oldState,
+                                              net.minecraft.world.level.block.state.BlockState newState) {
+        // Keep user-edited state values (e.g. grass_block[snowy=true]) from being immediately recomputed
+        // by neighbor/shape updates when the block type itself did not change.
+        if (oldState.getBlock() == newState.getBlock()) {
+            return Block.UPDATE_CLIENTS;
+        }
+        return Block.UPDATE_ALL;
     }
 
     private static void rebuildPassengers(ServerLevel level, Entity root, ListTag passengers) {
