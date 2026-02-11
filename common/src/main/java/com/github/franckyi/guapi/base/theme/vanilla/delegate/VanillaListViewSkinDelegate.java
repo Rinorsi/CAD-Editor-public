@@ -31,7 +31,6 @@ public class VanillaListViewSkinDelegate<E> extends AbstractVanillaListNodeSkinD
 
         @Override
         public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            entryWidth = getList().getMaxScroll() == 0 ? entryWidth + 6 : entryWidth;
             getNode().setX(x);
             getNode().setY(y);
             getNode().setParentPrefWidth(entryWidth);

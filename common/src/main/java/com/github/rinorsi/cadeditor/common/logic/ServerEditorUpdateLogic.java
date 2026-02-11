@@ -11,8 +11,14 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -20,9 +26,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -142,7 +154,8 @@ public final class ServerEditorUpdateLogic {
         var pos = update.getBlockPos();
         var oldState = level.getBlockState(pos);
         try {
-            level.setBlock(pos, update.getBlockState(), Block.UPDATE_ALL);
+            int flags = selectBlockUpdateFlags(oldState, update.getBlockState());
+            level.setBlock(pos, update.getBlockState(), flags);
             var currentState = level.getBlockState(pos);
             if (update.getTag() != null) {
                 BlockEntity blockEntity = level.getBlockEntity(pos);
@@ -172,10 +185,29 @@ public final class ServerEditorUpdateLogic {
             try {
                 CompoundTag appliedTag = update.getTag().copy();
                 entity.load(appliedTag);
+                if (entity instanceof LivingEntity livingEntity) {
+                    applyRequestedAttributes(livingEntity, appliedTag);
+                    applyRequestedHealth(livingEntity, appliedTag);
+                }
+                if (entity instanceof ServerPlayer targetPlayer) {
+                    applyRequestedPlayerAbilities(targetPlayer, appliedTag);
+                }
                 if (entity.level() instanceof ServerLevel serverLevel) {
                     reloadPassengers(serverLevel, entity, appliedTag);
                     serverLevel.getChunkSource().broadcastAndSend(entity,
                             new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues()));
+                    if (entity instanceof LivingEntity livingEntity) {
+                        serverLevel.getChunkSource().broadcastAndSend(entity,
+                                new ClientboundUpdateAttributesPacket(entity.getId(), livingEntity.getAttributes().getSyncableAttributes()));
+                    }
+                }
+                if (entity instanceof ServerPlayer targetPlayer) {
+                    targetPlayer.connection.send(new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues()));
+                    targetPlayer.connection.send(new ClientboundSetHealthPacket(
+                            targetPlayer.getHealth(),
+                            targetPlayer.getFoodData().getFoodLevel(),
+                            targetPlayer.getFoodData().getSaturationLevel()
+                    ));
                 }
                 CommonUtil.showUpdateSuccess(player, ModTexts.ENTITY);
             } catch (Exception e) {
@@ -348,5 +380,141 @@ public final class ServerEditorUpdateLogic {
             return false;
         }
         return a.getCount() == b.getCount() && ItemStack.isSameItemSameComponents(a, b);
+    }
+
+    private static int selectBlockUpdateFlags(BlockState oldState, BlockState newState) {
+        // Keep edited state values (e.g. grass_block[snowy=true]) from immediate neighbor recomputation
+        // when only properties changed and block type stayed the same.
+        if (oldState.getBlock() == newState.getBlock()) {
+            return Block.UPDATE_CLIENTS;
+        }
+        return Block.UPDATE_ALL;
+    }
+
+    private static void applyRequestedAttributes(LivingEntity livingEntity, CompoundTag updateTag) {
+        if (updateTag == null || updateTag.isEmpty()) {
+            return;
+        }
+        ListTag attributes = null;
+        if (updateTag.contains("attributes", Tag.TAG_LIST)) {
+            attributes = updateTag.getList("attributes", Tag.TAG_COMPOUND);
+        } else if (updateTag.contains("Attributes", Tag.TAG_LIST)) {
+            attributes = updateTag.getList("Attributes", Tag.TAG_COMPOUND);
+        }
+        if (attributes == null || attributes.isEmpty()) {
+            return;
+        }
+        var lookupOpt = livingEntity.registryAccess().lookup(Registries.ATTRIBUTE);
+        if (lookupOpt.isEmpty()) {
+            return;
+        }
+        HolderLookup.RegistryLookup<Attribute> lookup = lookupOpt.get();
+        for (Tag element : attributes) {
+            if (!(element instanceof CompoundTag attributeTag)) {
+                continue;
+            }
+            String id = readAttributeId(attributeTag);
+            if (id.isEmpty()) {
+                continue;
+            }
+            ResourceLocation location = ResourceLocation.tryParse(id);
+            if (location == null) {
+                continue;
+            }
+            double baseValue = readAttributeBase(attributeTag);
+            if (!Double.isFinite(baseValue)) {
+                continue;
+            }
+            ResourceKey<Attribute> key = ResourceKey.create(Registries.ATTRIBUTE, location);
+            var holderOpt = lookup.get(key);
+            if (holderOpt.isEmpty()) {
+                continue;
+            }
+            AttributeInstance instance = livingEntity.getAttribute(holderOpt.get());
+            if (instance != null) {
+                instance.setBaseValue(baseValue);
+            }
+        }
+    }
+
+    private static String readAttributeId(CompoundTag attributeTag) {
+        String id = attributeTag.contains("id", Tag.TAG_STRING) ? attributeTag.getString("id") : "";
+        if (id.isBlank()) {
+            id = attributeTag.contains("Name", Tag.TAG_STRING) ? attributeTag.getString("Name") : "";
+        }
+        if (id.startsWith("minecraft:generic.")) {
+            return "minecraft:" + id.substring("minecraft:generic.".length());
+        }
+        if (id.startsWith("generic.")) {
+            return "minecraft:" + id.substring("generic.".length());
+        }
+        return id;
+    }
+
+    private static double readAttributeBase(CompoundTag attributeTag) {
+        if (attributeTag.contains("base", Tag.TAG_DOUBLE) || attributeTag.contains("base", Tag.TAG_FLOAT) || attributeTag.contains("base", Tag.TAG_INT)) {
+            return attributeTag.getDouble("base");
+        }
+        if (attributeTag.contains("Base", Tag.TAG_DOUBLE) || attributeTag.contains("Base", Tag.TAG_FLOAT) || attributeTag.contains("Base", Tag.TAG_INT)) {
+            return attributeTag.getDouble("Base");
+        }
+        return Double.NaN;
+    }
+
+    private static void applyRequestedHealth(LivingEntity livingEntity, CompoundTag updateTag) {
+        if (updateTag == null || !updateTag.contains("Health")) {
+            return;
+        }
+        float requestedHealth = updateTag.getFloat("Health");
+        float sanitized = requestedHealth <= 0f ? 0.0001f : requestedHealth;
+        AttributeInstance maxHealth = livingEntity.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(sanitized);
+        }
+        livingEntity.setHealth(Math.min(sanitized, livingEntity.getMaxHealth()));
+    }
+
+    private static void applyRequestedPlayerAbilities(ServerPlayer player, CompoundTag updateTag) {
+        if (updateTag == null || updateTag.isEmpty()) {
+            return;
+        }
+        CompoundTag requested = null;
+        if (updateTag.contains("abilities", Tag.TAG_COMPOUND)) {
+            requested = updateTag.getCompound("abilities");
+        } else if (updateTag.contains("Abilities", Tag.TAG_COMPOUND)) {
+            requested = updateTag.getCompound("Abilities");
+        }
+        if (requested == null) {
+            return;
+        }
+        Abilities abilities = player.getAbilities();
+        if (requested.contains("invulnerable")) {
+            abilities.invulnerable = requested.getBoolean("invulnerable");
+        }
+        if (requested.contains("mayfly")) {
+            abilities.mayfly = requested.getBoolean("mayfly");
+        }
+        if (requested.contains("flying")) {
+            abilities.flying = requested.getBoolean("flying") && abilities.mayfly;
+        } else if (!abilities.mayfly) {
+            abilities.flying = false;
+        }
+        if (requested.contains("mayBuild")) {
+            abilities.mayBuild = requested.getBoolean("mayBuild");
+        }
+        if (requested.contains("instabuild")) {
+            abilities.instabuild = requested.getBoolean("instabuild");
+        }
+        if (requested.contains("walkSpeed")) {
+            abilities.setWalkingSpeed(clampAbilitySpeed(requested.getFloat("walkSpeed")));
+        }
+        if (requested.contains("flySpeed")) {
+            abilities.setFlyingSpeed(clampAbilitySpeed(requested.getFloat("flySpeed")));
+        }
+        player.onUpdateAbilities();
+    }
+
+    private static float clampAbilitySpeed(float value) {
+        return Math.max(0f, Math.min(value, 1f));
     }
 }

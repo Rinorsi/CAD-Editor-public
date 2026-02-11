@@ -65,6 +65,24 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
     }
 
     @Override
+    protected void renderSelection(GuiGraphics guiGraphics, int rowTop, int rowWidth, int rowHeight, int borderColor, int fillColor) {
+        renderSelectionAt(guiGraphics, rowTop, rowWidth, rowHeight, borderColor, fillColor);
+    }
+
+    private void renderSelectionAt(GuiGraphics guiGraphics, int rowTop, int rowWidth, int rowHeight, int borderColor, int fillColor) {
+        int left = node.getLeft();
+        int right = node.getRight() - node.getPadding().getRight();
+        if (scrollbarVisible()) {
+            right = Math.min(right, getScrollbarPosition());
+        }
+        if (right <= left) {
+            right = left + rowWidth;
+        }
+        guiGraphics.fill(left, rowTop - 2, right, rowTop + rowHeight + 2, borderColor);
+        guiGraphics.fill(left + 1, rowTop - 1, right - 1, rowTop + rowHeight + 1, fillColor);
+    }
+
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (getEntryAtPosition(mouseX, mouseY) == null && (mouseX < getScrollbarPosition() || mouseX > node.getRight())) {
             setFocused(null);
@@ -133,6 +151,8 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
         height = node.getHeight();
         setX(node.getX());
         setY(node.getY());
+        // Force row anchors to recompute with the latest bounds on first frame.
+        setScrollAmount(getScrollAmount());
         shouldRefreshSize = false;
     }
 
@@ -223,10 +243,9 @@ public abstract class AbstractVanillaListNodeSkinDelegate<N extends ListNode<E>,
             return;
         }
         Node childNode = entry.getNode();
-        if (childNode == null) {
-            return;
+        if (childNode != null) {
+            childNode.handleEvent(target, event);
         }
-        childNode.handleEvent(target, event);
     }
 
     protected abstract static class NodeEntry<N extends ListNode<E>, E, T extends NodeEntry<N, E, T>> extends Entry<T> {

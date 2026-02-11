@@ -420,6 +420,18 @@ public final class ModTexts {
         return translated("cadeditor.gui.sound_filter_namespace", namespace);
     }
 
+    public static MutableComponent soundFilterCategory(MutableComponent category) {
+        return translated("cadeditor.gui.sound_filter_category", category);
+    }
+
+    public static MutableComponent soundFilterNamespaceAll() {
+        return translated("cadeditor.gui.sound_filter_namespace_all");
+    }
+
+    public static MutableComponent soundFilterCategoryAll() {
+        return translated("cadeditor.gui.sound_filter_category_all");
+    }
+
     public static MutableComponent fireworkPrimaryColor(int index) {
         return translated("cadeditor.gui.firework_color_primary", index);
     }

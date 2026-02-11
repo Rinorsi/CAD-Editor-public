@@ -675,10 +675,20 @@ public final class ClientCache {
     private static List<ListSelectionFilter> buildSoundEventFilters() {
         List<SoundEventListSelectionElementModel> items = getSoundEventSelectionItems();
         if (items.isEmpty()) {
-            return List.of(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
+            return List.of(
+                    new ListSelectionFilter("category:all", ModTexts.soundFilterCategoryAll(), null),
+                    new ListSelectionFilter("namespace:all", ModTexts.soundFilterNamespaceAll(), null)
+            );
         }
         List<ListSelectionFilter> filters = new ArrayList<>();
-        filters.add(new ListSelectionFilter("all", ModTexts.SOUND_FILTER_ALL, null));
+        filters.add(new ListSelectionFilter("category:all", ModTexts.soundFilterCategoryAll(), null));
+        for (SoundEventListSelectionElementModel.SoundCategory category : SoundEventListSelectionElementModel.SoundCategory.values()) {
+            filters.add(new ListSelectionFilter("category:" + category.id(),
+                    ModTexts.soundFilterCategory(category.label()),
+                    element -> element instanceof SoundEventListSelectionElementModel sound
+                            && sound.getPrimaryCategory() == category));
+        }
+        filters.add(new ListSelectionFilter("namespace:all", ModTexts.soundFilterNamespaceAll(), null));
         items.stream()
                 .map(SoundEventListSelectionElementModel::getNamespace)
                 .distinct()

@@ -17,6 +17,8 @@ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -26,15 +28,15 @@ public final class ClientEditorRequestLogic {
     public static void requestWorldEditor(EditorType editorType) {
         DebugLog.infoKey("cadeditor.debug.request.world.start", editorType);
         if (!(requestEntityEditor(editorType) || requestBlockEditor(editorType) || requestMainHandItemEditor(editorType))) {
-            DebugLog.infoKey("cadeditor.debug.request.world.fallback", editorType);
-            requestSelfEditor(editorType);
+            DebugLog.infoKey("cadeditor.debug.request.world.no_target", editorType);
+            ClientUtil.showMessage(ModTexts.Messages.errorNoTargetFound(ModTexts.ENTITY));
         }
     }
 
     public static boolean requestEntityEditor(EditorType editorType) {
         DebugLog.infoKey("cadeditor.debug.request.entity.start", editorType);
-        if (Minecraft.getInstance().hitResult instanceof EntityHitResult res) {
-            var entity = res.getEntity();
+        Entity entity = resolveEntityEditorTarget();
+        if (entity != null) {
             if (ClientContext.isModInstalledOnServer()) {
                 DebugLog.infoKey("cadeditor.debug.request.entity.server", entity.getId());
                 NetworkManager.sendToServer(NetworkManager.ENTITY_EDITOR_REQUEST, new EntityEditorPacket.Request(editorType, entity.getId()));
@@ -48,6 +50,31 @@ public final class ClientEditorRequestLogic {
         }
         DebugLog.infoKey("cadeditor.debug.request.entity.missing");
         return false;
+    }
+
+    private static Entity resolveEntityEditorTarget() {
+        if (!(Minecraft.getInstance().hitResult instanceof EntityHitResult res)) {
+            return null;
+        }
+        Entity direct = res.getEntity();
+        if (direct == null) {
+            return null;
+        }
+        Entity villagerPassenger = findFirstVillagerPassenger(direct);
+        return villagerPassenger != null ? villagerPassenger : direct;
+    }
+
+    private static Entity findFirstVillagerPassenger(Entity root) {
+        for (Entity passenger : root.getPassengers()) {
+            if (passenger instanceof AbstractVillager) {
+                return passenger;
+            }
+            Entity nested = findFirstVillagerPassenger(passenger);
+            if (nested != null) {
+                return nested;
+            }
+        }
+        return null;
     }
 
     public static boolean requestBlockEditor(EditorType editorType) {

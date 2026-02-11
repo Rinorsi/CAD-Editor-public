@@ -49,7 +49,7 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
     @Override
     protected void openSelectionScreen() {
         ItemEnchantmentsCategoryModel category = (ItemEnchantmentsCategoryModel) model.getCategory();
-        Set<ResourceLocation> selected = new HashSet<>();
+        Set<ResourceLocation> selected = new HashSet<>(category.getExistingEnchantmentIds());
         ResourceLocation currentId = parseResourceLocation(model.getValue());
         if (currentId != null) {
             selected.add(currentId);
@@ -61,13 +61,7 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
                 model::setValue,
                 true,
                 ids -> {
-                    if (ids.isEmpty()) {
-                        return;
-                    }
-                    model.setValue(ids.get(0).toString());
-                    for (int i = 1; i < ids.size(); i++) {
-                        category.addEnchantmentEntryIfAbsent(ids.get(i).toString(), model.getLevel());
-                    }
+                    category.syncSelection(new HashSet<>(ids), model);
                 },
                 selected);
     }

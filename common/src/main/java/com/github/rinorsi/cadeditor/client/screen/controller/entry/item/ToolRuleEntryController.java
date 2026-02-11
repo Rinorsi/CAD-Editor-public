@@ -388,7 +388,7 @@ public class ToolRuleEntryController extends EntryController<ToolRuleEntryModel,
             model.setValid(false);
             return;
         }
-        model.setValid(model.toRule(lookup).isPresent());
+        model.setValid(model.toRules(lookup).isPresent());
     }
 
     private void updateBehaviorTooltip() {
