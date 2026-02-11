@@ -42,8 +42,8 @@ public final class ClientEventHandler {
             } else if (KeyBindings.getSNBTEditorKey().matches(keyEvent)) {
                 return ClientEditorRequestLogic.requestInventoryItemEditor(EditorType.SNBT, screen);
             } else if (KeyBindings.getVaultKey().matches(keyEvent)) {
-                if (screen instanceof CreativeModeInventoryScreen creativeScreen) {
-                    CreativeModeTab.Type type = ((CreativeModeInventoryScreenMixin) creativeScreen).getSelectedTab().getType();
+                if (screen instanceof CreativeModeInventoryScreen) {
+                    CreativeModeTab.Type type = CreativeModeInventoryScreenMixin.getSelectedTab().getType();
                     if (type == CreativeModeTab.Type.SEARCH) return false;
                 }
                 if (!ClientVaultActionLogic.openVaultSelection(screen)) {
