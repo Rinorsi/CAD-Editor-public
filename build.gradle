@@ -74,6 +74,9 @@ allprojects {
     ext {
         def slurper = new groovy.json.JsonSlurper()
         def versionsFile = rootProject.file("versions.json")
+        if (!versionsFile.exists()) {
+            versionsFile = rootProject.file("common/src/main/resources/versions.json")
+        }
         def versionsMap = versionsFile.exists() ? slurper.parse(versionsFile) : [:]
 
         def verKey = (project.version ?: "").toString()

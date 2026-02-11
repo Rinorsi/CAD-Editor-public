@@ -99,3 +99,70 @@ afterEvaluate {
         logger.warn("Warning: accesswidener file missing at " + aw.path + " — runtime may fail with 'Missing accessWidener file' error.")
     }
 }
+
+def publishModrinth = (rootProject.findProperty("publish_modrinth") ?: "true").toString().toBoolean()
+def publishCurseforge = (rootProject.findProperty("publish_curseforge") ?: "true").toString().toBoolean()
+def modrinthToken = providers.gradleProperty("modrinth_token").orElse(providers.environmentVariable("MODRINTH_TOKEN"))
+def curseforgeToken = providers.gradleProperty("curseforge_token").orElse(providers.environmentVariable("CURSEFORGE_TOKEN"))
+def modrinthLoader = (rootProject.findProperty("modrinth_loader") ?: "both").toString().toLowerCase()
+def modrinthVersionSuffix = (rootProject.findProperty("modrinth_version_suffix") ?: "").toString()
+def curseforgeLoader = (rootProject.findProperty("curseforge_loader") ?: "neoforge").toString().toLowerCase()
+def curseforgeGameLoader = curseforgeLoader == "fabric" ? "fabric" : "neoforge"
+def enableModrinth = publishModrinth && modrinthToken.isPresent()
+def enableCurseforge = publishCurseforge && curseforgeToken.isPresent()
+def modrinthProjectId = (rootProject.hasProperty("modrinthProjectId") ? rootProject.modrinthProjectId : "MJW1h2CF").toString()
+def curseforgeProjectId = (rootProject.hasProperty("curseforgeProjectId") ? rootProject.curseforgeProjectId : "1352735").toString()
+def fabricRemapJar = project(":fabric").tasks.named("remapJar")
+def curseforgeRemapJar = curseforgeGameLoader == "fabric" ? fabricRemapJar : tasks.named("remapJar")
+
+if (publishModrinth && !enableModrinth) {
+    logger.lifecycle("Unified publishing: skipping Modrinth target (no token set).")
+}
+if (publishCurseforge && !enableCurseforge) {
+    logger.lifecycle("Unified publishing: skipping CurseForge target (no token set).")
+}
+
+unifiedPublishing {
+    project {
+        displayName = "CAD Editor ${project.version} for Minecraft ${rootProject.minecraft_version}"
+        version = "${project.version}+${rootProject.minecraft_version}"
+        changelog = rootProject.versionInfoChangelog
+        releaseType = rootProject.versionInfoType
+        gameVersions = rootProject.compatibleGameVersions
+        gameLoaders = ["neoforge"]
+
+        mainPublication(tasks.named("remapJar").get())
+
+        if (enableModrinth) {
+            modrinth {
+                token.set(modrinthToken)
+                id.set(modrinthProjectId)
+                if (!modrinthVersionSuffix.isBlank()) {
+                    version.set("${project.version}+${rootProject.minecraft_version}-${modrinthVersionSuffix}")
+                }
+
+                if (modrinthLoader == "fabric") {
+                    gameLoaders.set(["fabric"])
+                    mainPublication(fabricRemapJar.get())
+                } else if (modrinthLoader == "neoforge") {
+                    gameLoaders.set(["neoforge"])
+                    mainPublication(tasks.named("remapJar").get())
+                } else {
+                    gameLoaders.set(["fabric", "neoforge"])
+                    mainPublication(fabricRemapJar.get())
+                    mainPublicationDepends(tasks.named("remapJar").get())
+                    secondaryPublication(tasks.named("remapJar").flatMap { it.archiveFile })
+                }
+            }
+        }
+
+        if (enableCurseforge) {
+            curseforge {
+                token.set(curseforgeToken)
+                id.set(curseforgeProjectId)
+                gameLoaders.set([curseforgeGameLoader])
+                mainPublication(curseforgeRemapJar.get())
+            }
+        }
+    }
+}
