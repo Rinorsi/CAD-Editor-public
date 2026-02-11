@@ -232,6 +232,9 @@ public final class ServerEditorUpdateLogic {
                         logLivingEntityState("after_applied", livingAfterLoad, requestedHealth);
                     }
                 }
+                if (entity instanceof ServerPlayer targetPlayer) {
+                    applyRequestedPlayerAbilities(targetPlayer, update.getTag());
+                }
                 ClientboundSetEntityDataPacket dataPacket =
                         new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().getNonDefaultValues());
                 if (entity.level() instanceof ServerLevel serverLevel) {
@@ -486,6 +489,55 @@ public final class ServerEditorUpdateLogic {
             return attributeTag.getDoubleOr("base", Double.NaN);
         }
         return attributeTag.getDoubleOr("Base", Double.NaN);
+    }
+
+    private static void applyRequestedPlayerAbilities(ServerPlayer player, CompoundTag updateTag) {
+        CompoundTag requested = readRequestedAbilities(updateTag);
+        if (requested == null) {
+            return;
+        }
+        var abilities = player.getAbilities();
+        if (requested.contains("invulnerable")) {
+            abilities.invulnerable = requested.getBooleanOr("invulnerable", abilities.invulnerable);
+        }
+        if (requested.contains("mayfly")) {
+            abilities.mayfly = requested.getBooleanOr("mayfly", abilities.mayfly);
+        }
+        if (requested.contains("flying")) {
+            abilities.flying = requested.getBooleanOr("flying", abilities.flying) && abilities.mayfly;
+        } else if (!abilities.mayfly) {
+            abilities.flying = false;
+        }
+        if (requested.contains("mayBuild")) {
+            abilities.mayBuild = requested.getBooleanOr("mayBuild", abilities.mayBuild);
+        }
+        if (requested.contains("instabuild")) {
+            abilities.instabuild = requested.getBooleanOr("instabuild", abilities.instabuild);
+        }
+        if (requested.contains("walkSpeed")) {
+            abilities.setWalkingSpeed(clampAbilitySpeed(requested.getFloatOr("walkSpeed", 0.1f)));
+        }
+        if (requested.contains("flySpeed")) {
+            abilities.setFlyingSpeed(clampAbilitySpeed(requested.getFloatOr("flySpeed", 0.05f)));
+        }
+        player.onUpdateAbilities();
+    }
+
+    private static CompoundTag readRequestedAbilities(CompoundTag root) {
+        if (root == null) {
+            return null;
+        }
+        if (root.contains("abilities")) {
+            return root.getCompound("abilities").map(CompoundTag::copy).orElse(null);
+        }
+        if (root.contains("Abilities")) {
+            return root.getCompound("Abilities").map(CompoundTag::copy).orElse(null);
+        }
+        return null;
+    }
+
+    private static float clampAbilitySpeed(float value) {
+        return Math.max(0f, Math.min(value, 1f));
     }
 
     private static void rebuildPassengers(ServerLevel level, Entity root, ListTag passengers) {
