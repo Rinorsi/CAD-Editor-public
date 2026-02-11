@@ -24,7 +24,7 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
     private static final String ATTRIBUTES_TAG = "attributes";
     private static final String ATTRIBUTE_ID_TAG = "id";
     private static final String ATTRIBUTE_BASE_TAG = "base";
-    private static final String MAX_HEALTH_ATTRIBUTE_ID = "minecraft:generic.max_health";
+    private static final String MAX_HEALTH_ATTRIBUTE_ID = "minecraft:max_health";
 
     public EntityGeneralCategoryModel(EntityEditorModel model) {
         super(ModTexts.GENERAL, model);

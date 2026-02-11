@@ -6,9 +6,12 @@ import com.github.rinorsi.cadeditor.common.CommonUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.github.rinorsi.cadeditor.common.network.*;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
@@ -27,12 +30,15 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -219,6 +225,7 @@ public final class ServerEditorUpdateLogic {
                     }
                 }
                 if (entity instanceof LivingEntity livingAfterLoad) {
+                    applyRequestedAttributes(livingAfterLoad, update.getTag());
                     logLivingEntityState("after_load", livingAfterLoad, requestedHealth);
                     if (!Float.isNaN(requestedHealth)) {
                         applyRequestedHealth(livingAfterLoad, requestedHealth);
@@ -398,6 +405,87 @@ public final class ServerEditorUpdateLogic {
             maxHealth.setBaseValue(sanitized);
         }
         livingEntity.setHealth(Math.min(sanitized, livingEntity.getMaxHealth()));
+    }
+
+    private static void applyRequestedAttributes(LivingEntity livingEntity, CompoundTag updateTag) {
+        if (updateTag == null) {
+            return;
+        }
+        ListTag attributes = readRequestedAttributes(updateTag);
+        if (attributes == null || attributes.isEmpty()) {
+            return;
+        }
+        var lookupOpt = livingEntity.registryAccess().lookup(Registries.ATTRIBUTE);
+        if (lookupOpt.isEmpty()) {
+            return;
+        }
+        HolderLookup.RegistryLookup<Attribute> lookup = lookupOpt.get();
+        for (Tag element : attributes) {
+            if (!(element instanceof CompoundTag attributeTag)) {
+                continue;
+            }
+            applyRequestedAttribute(livingEntity, lookup, attributeTag);
+        }
+    }
+
+    private static void applyRequestedAttribute(
+            LivingEntity livingEntity,
+            HolderLookup.RegistryLookup<Attribute> lookup,
+            CompoundTag attributeTag
+    ) {
+        String idString = readAttributeId(attributeTag);
+        if (idString.isEmpty()) {
+            return;
+        }
+        Identifier id = Identifier.tryParse(idString);
+        if (id == null) {
+            return;
+        }
+        double baseValue = readAttributeBase(attributeTag);
+        if (!Double.isFinite(baseValue)) {
+            return;
+        }
+        ResourceKey<Attribute> key = ResourceKey.create(Registries.ATTRIBUTE, id);
+        var holderOpt = lookup.get(key);
+        if (holderOpt.isEmpty()) {
+            return;
+        }
+        AttributeInstance instance = livingEntity.getAttribute(holderOpt.get());
+        if (instance == null) {
+            return;
+        }
+        instance.setBaseValue(baseValue);
+    }
+
+    private static ListTag readRequestedAttributes(CompoundTag root) {
+        if (root.contains("attributes")) {
+            return root.getList("attributes").orElse(null);
+        }
+        if (root.contains("Attributes")) {
+            return root.getList("Attributes").orElse(null);
+        }
+        return null;
+    }
+
+    private static String readAttributeId(CompoundTag attributeTag) {
+        String id = attributeTag.getStringOr("id", "");
+        if (id.isBlank()) {
+            id = attributeTag.getStringOr("Name", "");
+        }
+        if (id.startsWith("minecraft:generic.")) {
+            return "minecraft:" + id.substring("minecraft:generic.".length());
+        }
+        if (id.startsWith("generic.")) {
+            return "minecraft:" + id.substring("generic.".length());
+        }
+        return id;
+    }
+
+    private static double readAttributeBase(CompoundTag attributeTag) {
+        if (attributeTag.contains("base")) {
+            return attributeTag.getDoubleOr("base", Double.NaN);
+        }
+        return attributeTag.getDoubleOr("Base", Double.NaN);
     }
 
     private static void rebuildPassengers(ServerLevel level, Entity root, ListTag passengers) {

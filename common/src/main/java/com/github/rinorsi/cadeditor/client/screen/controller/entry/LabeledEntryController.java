@@ -42,6 +42,9 @@ public abstract class LabeledEntryController<M extends LabeledEntryModel, V exte
     }
 
     private Collection<Component> resolveWikiTooltipFromLabel() {
+        if (model.getLabel() == null) {
+            return List.of();
+        }
         if (!(model.getLabel().getContents() instanceof TranslatableContents contents)) {
             return List.of();
         }
