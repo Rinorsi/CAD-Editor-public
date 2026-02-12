@@ -28,6 +28,11 @@ public final class ClientEditorRequestLogic {
     public static void requestWorldEditor(EditorType editorType) {
         DebugLog.infoKey("cadeditor.debug.request.world.start", editorType);
         if (!(requestEntityEditor(editorType) || requestBlockEditor(editorType) || requestMainHandItemEditor(editorType))) {
+            if (ClientContext.isModInstalledOnServer() && Minecraft.getInstance().player != null) {
+                DebugLog.infoKey("cadeditor.debug.request.world.fallback", Minecraft.getInstance().player.getGameProfile().getName());
+                requestSelfEditor(editorType);
+                return;
+            }
             DebugLog.infoKey("cadeditor.debug.request.world.no_target", editorType);
             ClientUtil.showMessage(ModTexts.Messages.errorNoTargetFound(ModTexts.ENTITY));
         }
