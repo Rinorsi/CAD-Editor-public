@@ -17,6 +17,11 @@ import java.util.List;
 public class EntityVillagerTradeCategoryModel extends EntityCategoryModel {
     private static final String OFFERS_TAG = "Offers";
     private static final String RECIPES_TAG = "Recipes";
+    private static final String VILLAGER_DATA_TAG = "VillagerData";
+    private static final String ASSIGN_PROFESSION_WHEN_SPAWNED_TAG = "AssignProfessionWhenSpawned";
+    private static final String DEFAULT_VILLAGER_TYPE = "minecraft:plains";
+    private static final String DEFAULT_TRADING_PROFESSION = "minecraft:farmer";
+    private static final String NONE_PROFESSION = "minecraft:none";
 
     private int tradeListStartIndex = -1;
     private CompoundTag offersExtra = new CompoundTag();
@@ -152,6 +157,45 @@ public class EntityVillagerTradeCategoryModel extends EntityCategoryModel {
         } else {
             getData().remove(OFFERS_TAG);
         }
+
+        ensureVillagerTradeMetadata(!recipeList.isEmpty());
+    }
+
+    private void ensureVillagerTradeMetadata(boolean hasCustomTrades) {
+        if (!hasCustomTrades) {
+            return;
+        }
+        CompoundTag data = getData();
+        CompoundTag villagerData = data.getCompound(VILLAGER_DATA_TAG).orElseGet(CompoundTag::new);
+        String profession = normalizeId(villagerData.getStringOr("profession", ""), NONE_PROFESSION);
+        if (NONE_PROFESSION.equals(profession)) {
+            villagerData.putString("profession", DEFAULT_TRADING_PROFESSION);
+        } else {
+            villagerData.putString("profession", profession);
+        }
+        villagerData.putString("type", normalizeId(villagerData.getStringOr("type", ""), DEFAULT_VILLAGER_TYPE));
+        villagerData.putInt("level", clampLevel(villagerData.getIntOr("level", 1)));
+        data.put(VILLAGER_DATA_TAG, villagerData);
+        // Prevent spawn-time AI from replacing the profession we just forced for custom trades.
+        data.putBoolean(ASSIGN_PROFESSION_WHEN_SPAWNED_TAG, false);
+    }
+
+    private static String normalizeId(String value, String defaultValue) {
+        String result = value == null || value.isBlank() ? defaultValue : value;
+        if (!result.contains(":")) {
+            result = "minecraft:" + result;
+        }
+        return result;
+    }
+
+    private static int clampLevel(int level) {
+        if (level < 1) {
+            return 1;
+        }
+        if (level > 5) {
+            return 5;
+        }
+        return level;
     }
     private void appendTradeEntries(VillagerTradeEntryModel trade) {
         getEntries().add(new VillagerTradeItemsEntryModel(trade));

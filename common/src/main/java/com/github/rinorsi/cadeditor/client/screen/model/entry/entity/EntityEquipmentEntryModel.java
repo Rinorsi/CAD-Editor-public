@@ -60,10 +60,6 @@ public class EntityEquipmentEntryModel extends EntryModel {
         if (stack == null) {
             return ItemStack.EMPTY;
         }
-        // Preserve placeholder stacks for empty-slot editing flow
-        if (stack.getItem() == net.minecraft.world.item.Items.STICK) {
-            return new ItemStack(net.minecraft.world.item.Items.STICK);
-        }
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }

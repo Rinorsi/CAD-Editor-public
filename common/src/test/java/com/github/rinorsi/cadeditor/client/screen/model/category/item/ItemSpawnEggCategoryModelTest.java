@@ -46,4 +46,48 @@ class ItemSpawnEggCategoryModelTest {
         Assertions.assertEquals(20.0f, sanitized.getFloat("Health").orElse(0f), 1e-6f);
         Assertions.assertEquals("{\"text\":\"moo\"}", sanitized.getString("CustomName").orElse(""));
     }
+
+    @Test
+    void professionChangeFallbackPromotesLevelTo2() {
+        CompoundTag current = new CompoundTag();
+        CompoundTag currentVillagerData = new CompoundTag();
+        currentVillagerData.putString("profession", "minecraft:librarian");
+        currentVillagerData.putInt("level", 1);
+        current.put("VillagerData", currentVillagerData);
+
+        CompoundTag baseline = new CompoundTag();
+        CompoundTag baselineVillagerData = new CompoundTag();
+        baselineVillagerData.putString("profession", "minecraft:none");
+        baselineVillagerData.putInt("level", 1);
+        baseline.put("VillagerData", baselineVillagerData);
+
+        ItemSpawnEggCategoryModel.enforceVillagerLevelFallbackOnProfessionChange(current, baseline);
+
+        int level = current.getCompound("VillagerData")
+                .flatMap(data -> data.getInt("level"))
+                .orElse(0);
+        Assertions.assertEquals(2, level);
+    }
+
+    @Test
+    void professionFallbackDoesNotTriggerWithoutProfessionChange() {
+        CompoundTag current = new CompoundTag();
+        CompoundTag currentVillagerData = new CompoundTag();
+        currentVillagerData.putString("profession", "minecraft:librarian");
+        currentVillagerData.putInt("level", 1);
+        current.put("VillagerData", currentVillagerData);
+
+        CompoundTag baseline = new CompoundTag();
+        CompoundTag baselineVillagerData = new CompoundTag();
+        baselineVillagerData.putString("profession", "minecraft:librarian");
+        baselineVillagerData.putInt("level", 1);
+        baseline.put("VillagerData", baselineVillagerData);
+
+        ItemSpawnEggCategoryModel.enforceVillagerLevelFallbackOnProfessionChange(current, baseline);
+
+        int level = current.getCompound("VillagerData")
+                .flatMap(data -> data.getInt("level"))
+                .orElse(0);
+        Assertions.assertEquals(1, level);
+    }
 }

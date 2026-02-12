@@ -17,13 +17,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
 public class EntityEquipmentEntryController extends EntryController<EntityEquipmentEntryModel, EntityEquipmentEntryView> {
-    private boolean placeholder;
     public EntityEquipmentEntryController(EntityEquipmentEntryModel model, EntityEquipmentEntryView view) {
         super(model, view);
     }
@@ -95,7 +93,6 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
         view.getOpenEditorButton().onAction(() -> openEditor(EditorType.STANDARD));
         view.getOpenSnbtEditorButton().onAction(() -> openEditor(EditorType.SNBT));
         view.getClearButton().onAction(() -> {
-            placeholder = false;
             model.setItemStack(ItemStack.EMPTY);
         });
     }
@@ -109,13 +106,6 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
     }
 
     private void openEditor(EditorType type) {
-        if (model.getItemStack().isEmpty()) {
-            placeholder = true;
-            model.setItemStack(new ItemStack(Items.STICK));
-            openEditorNow(type);
-            return;
-        }
-        placeholder = false;
         ensureItemStack(() -> openEditorNow(type));
     }
 
@@ -124,13 +114,6 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
         ItemEditorContext context = new ItemEditorContext(initial, null, false, ctx -> {
             ItemStack result = ctx.getItemStack().copy();
             model.setItemStack(result);
-            if (placeholder) {
-                if (result.is(Items.STICK)) {
-                    model.setItemStack(ItemStack.EMPTY);
-                }
-                placeholder = false;
-            }
-            placeholder = false;
         });
         ModScreenHandler.openEditor(type, context);
     }
@@ -152,7 +135,6 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
                 Identifier id = Identifier.parse(selection);
                 BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
                     model.setItemStack(new ItemStack(item));
-                    placeholder = false;
                     if (afterSelection != null) {
                         afterSelection.run();
                     }
@@ -184,7 +166,6 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
                 return;
             }
             model.setItemStack(chosen.copy());
-            placeholder = false;
         });
     }
 }

@@ -6,8 +6,10 @@ import com.github.franckyi.databindings.api.ObjectProperty;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityCategoryModel;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashSet;
@@ -80,9 +82,23 @@ public class VillagerTradeEntryModel extends EntryModel {
         if (!tag.contains(key)) {
             return ItemStack.EMPTY;
         }
-        return tag.getCompound(key)
-                .map(compound -> ClientUtil.parseItemStack(ClientUtil.registryAccess(), compound))
-                .orElse(ItemStack.EMPTY);
+        CompoundTag compound = tag.getCompound(key).orElse(null);
+        if (compound == null) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack parsed = ClientUtil.parseItemStack(ClientUtil.registryAccess(), compound);
+        if (!parsed.isEmpty()) {
+            return parsed;
+        }
+
+        // 1.21.11 villager costs use ItemCost; fallback to a minimal stack preview.
+        Identifier itemId = ClientUtil.parseResourceLocation(compound.getStringOr("id", ""));
+        if (itemId == null || !BuiltInRegistries.ITEM.containsKey(itemId)) {
+            return ItemStack.EMPTY;
+        }
+        int count = compound.getIntOr("count", compound.getIntOr("Count", 1));
+        return new ItemStack(BuiltInRegistries.ITEM.getValue(itemId), Math.max(1, count));
     }
 
     private ItemStack sanitize(ItemStack stack) {
@@ -236,6 +252,7 @@ public class VillagerTradeEntryModel extends EntryModel {
 
     public boolean isTradeValid() {
         return isValid()
+                && !getPrimaryItem().isEmpty()
                 && !getResultItem().isEmpty()
                 && getMaxUses() >= getUses();
     }
@@ -254,9 +271,9 @@ public class VillagerTradeEntryModel extends EntryModel {
             }
         }
 
-        tag.put("buy", createItemTag(getPrimaryItem()));
+        tag.put("buy", createItemCostTag(getPrimaryItem()));
         if (hasSecondaryItem()) {
-            tag.put("buyB", createItemTag(getSecondaryItem()));
+            tag.put("buyB", createItemCostTag(getSecondaryItem()));
         } else {
             tag.remove("buyB");
         }
@@ -270,6 +287,35 @@ public class VillagerTradeEntryModel extends EntryModel {
         tag.putInt("xp", Math.max(0, getXp()));
 
         return tag;
+    }
+
+    private CompoundTag createItemCostTag(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return new CompoundTag();
+        }
+        CompoundTag encodedStack = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
+        CompoundTag cost = new CompoundTag();
+
+        String id = encodedStack.getStringOr("id", "");
+        if (id.isBlank()) {
+            Identifier itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            if (itemId != null) {
+                id = itemId.toString();
+            }
+        }
+        if (!id.isBlank()) {
+            cost.putString("id", id);
+        }
+
+        int count = encodedStack.getIntOr("count", encodedStack.getIntOr("Count", Math.max(1, stack.getCount())));
+        cost.putInt("count", Math.max(1, count));
+
+        encodedStack.getCompound("components").ifPresent(components -> {
+            if (!components.isEmpty()) {
+                cost.put("components", components.copy());
+            }
+        });
+        return cost;
     }
 
     private CompoundTag createItemTag(ItemStack stack) {
@@ -316,6 +362,9 @@ public class VillagerTradeEntryModel extends EntryModel {
 
     private void updateValidity() {
         boolean valid = true;
+        if (getPrimaryItem().isEmpty()) {
+            valid = false;
+        }
         if (getResultItem().isEmpty()) {
             valid = false;
         }

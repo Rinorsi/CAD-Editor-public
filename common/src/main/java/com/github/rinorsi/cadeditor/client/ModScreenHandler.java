@@ -11,7 +11,13 @@ import com.github.rinorsi.cadeditor.client.screen.model.*;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionScreenModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ItemListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SelectableItemListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SelectableSpriteListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SelectableTagListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.SpriteListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.TagListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.mvc.*;
 import com.github.rinorsi.cadeditor.client.util.ScreenScalingManager;
 import com.github.rinorsi.cadeditor.common.EditorType;
@@ -25,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
@@ -64,9 +71,31 @@ public final class ModScreenHandler {
                                                Set<Identifier> initiallySelected,
                                                List<ListSelectionFilter> filters,
                                                String initialFilterId) {
+        List<? extends ListSelectionElementModel> renderedItems = multiSelect
+                ? items
+                : toSingleSelectionItems(items);
         openScaledScreen(mvc(ListSelectionScreenMVC.INSTANCE,
-                new ListSelectionScreenModel(title, attributeName, items, action, multiSelect, multiAction,
+                new ListSelectionScreenModel(title, attributeName, renderedItems, action, multiSelect, multiAction,
                         initiallySelected, filters == null ? Collections.emptyList() : filters, initialFilterId)));
+    }
+
+    private static List<ListSelectionElementModel> toSingleSelectionItems(List<? extends ListSelectionElementModel> items) {
+        return items.stream()
+                .map(ModScreenHandler::toSingleSelectionItem)
+                .collect(Collectors.toList());
+    }
+
+    private static ListSelectionElementModel toSingleSelectionItem(ListSelectionElementModel item) {
+        if (item instanceof SelectableItemListSelectionElementModel selectable) {
+            return new ItemListSelectionElementModel(selectable.getName(), selectable.getId(), () -> selectable.getItem().copy());
+        }
+        if (item instanceof SelectableTagListSelectionElementModel selectable) {
+            return new TagListSelectionElementModel(selectable.getId());
+        }
+        if (item instanceof SelectableSpriteListSelectionElementModel selectable) {
+            return new SpriteListSelectionElementModel(selectable.getName(), selectable.getId(), selectable.getSpriteFactory());
+        }
+        return item;
     }
 
     public static void openColorSelectionScreen(ColorSelectionScreenModel.Target target, int color, Consumer<String> action) {
