@@ -504,7 +504,7 @@ public final class ClientCache {
         if (!slotLabels.isEmpty()) {
             return joinComponents(slotLabels);
         }
-        return icon.getHoverName().copy();
+        return safeItemName(icon, icon.getItem());
     }
 
     private static Item getEnchantmentTypeItem(Holder<Enchantment> enchantment) {
@@ -523,10 +523,24 @@ public final class ClientCache {
                 .filter(item -> item != Items.AIR)
                 .forEach(item -> {
                     if (seen.add(item.getDescriptionId())) {
-                        result.add(new ItemStack(item).getHoverName().copy());
+                        result.add(safeItemName(new ItemStack(item), item));
                     }
                 });
         return limitComponentList(result);
+    }
+
+    private static Component safeItemName(ItemStack stack, Item item) {
+        try {
+            return stack.getHoverName().copy();
+        } catch (Throwable ignored) {
+            // Some third-party items may crash while building hover names from malformed internal NBT.
+        }
+        String descriptionId = item.getDescriptionId();
+        if (descriptionId != null && !descriptionId.isEmpty()) {
+            return Component.translatable(descriptionId);
+        }
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+        return key == null ? Component.literal("unknown_item") : Component.literal(key.toString());
     }
 
     private static List<Component> describeSlotGroups(List<EquipmentSlotGroup> slots) {

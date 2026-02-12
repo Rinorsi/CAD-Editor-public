@@ -6,9 +6,10 @@ import com.github.rinorsi.cadeditor.client.screen.controller.entry.EntryControll
 import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultEntityEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.vault.VaultEntityEntryView;
 import com.github.rinorsi.cadeditor.common.EditorType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 
 public class VaultEntityEntryController extends EntryController<VaultEntityEntryModel, VaultEntityEntryView> {
     public VaultEntityEntryController(VaultEntityEntryModel model, VaultEntityEntryView view) {
@@ -18,7 +19,7 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
     @Override
     public void bind() {
         super.bind();
-        view.getImageView().setTextureId(getEntityIconTexture());
+        view.getIconView().setItem(getEntityIconItem());
         view.getLabel().labelProperty().bind(model.entityProperty().map(Entity::getName));
         view.getButtonBox().getChildren().remove(view.getResetButton());
         view.getOpenEditorButton().onAction(() -> openEditor(EditorType.STANDARD));
@@ -31,8 +32,12 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
                 null, false, context -> model.setData(context.getTag())));
     }
 
-    private ResourceLocation getEntityIconTexture() {
-        var entityTexture = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(model.getEntity()).getTextureLocation(model.getEntity());
-        return ResourceLocation.fromNamespaceAndPath(entityTexture.getNamespace(), entityTexture.getPath().replace("/entity/", "/entity_icon/"));
+    private ItemStack getEntityIconItem() {
+        Entity entity = model.getEntity();
+        if (entity == null) {
+            return new ItemStack(Items.SPAWNER);
+        }
+        SpawnEggItem egg = SpawnEggItem.byId(entity.getType());
+        return egg != null ? new ItemStack(egg) : new ItemStack(Items.SPAWNER);
     }
 }
