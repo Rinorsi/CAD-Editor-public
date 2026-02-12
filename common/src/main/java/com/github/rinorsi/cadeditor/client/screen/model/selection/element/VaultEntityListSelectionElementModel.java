@@ -2,20 +2,23 @@ package com.github.rinorsi.cadeditor.client.screen.model.selection.element;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 
 import java.util.Locale;
 
 /**
  * List selection element representing an entity stored in the vault.
  */
-public class VaultEntityListSelectionElementModel extends ListSelectionElementModel {
+public class VaultEntityListSelectionElementModel extends ItemListSelectionElementModel {
     private final Component displayName;
     private final String searchLabel;
 
     public VaultEntityListSelectionElementModel(Identifier id, CompoundTag tag) {
-        super(buildName(tag), id);
+        super(buildName(tag), id, () -> buildIcon(tag));
         this.searchLabel = buildName(tag);
         this.displayName = Component.literal(searchLabel);
     }
@@ -42,5 +45,16 @@ public class VaultEntityListSelectionElementModel extends ListSelectionElementMo
             return true;
         }
         return searchLabel.toLowerCase(Locale.ROOT).contains(s.toLowerCase(Locale.ROOT)) || super.matches(s);
+    }
+
+    private static ItemStack buildIcon(CompoundTag tag) {
+        String id = tag.getStringOr("id", "");
+        if (!id.isEmpty()) {
+            SpawnEggItem egg = EntityType.byString(id).map(SpawnEggItem::byId).orElse(null);
+            if (egg != null) {
+                return new ItemStack(egg);
+            }
+        }
+        return new ItemStack(Items.SPAWNER);
     }
 }

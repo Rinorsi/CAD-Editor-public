@@ -6,11 +6,10 @@ import com.github.rinorsi.cadeditor.client.screen.controller.entry.EntryControll
 import com.github.rinorsi.cadeditor.client.screen.model.entry.vault.VaultEntityEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.view.entry.vault.VaultEntityEntryView;
 import com.github.rinorsi.cadeditor.common.EditorType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 
 public class VaultEntityEntryController extends EntryController<VaultEntityEntryModel, VaultEntityEntryView> {
     public VaultEntityEntryController(VaultEntityEntryModel model, VaultEntityEntryView view) {
@@ -20,7 +19,7 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
     @Override
     public void bind() {
         super.bind();
-        view.getImageView().setTextureId(getEntityIconTexture());
+        view.getIconView().setItem(getEntityIconItem());
         view.getLabel().labelProperty().bind(model.entityProperty().map(Entity::getName));
         view.getButtonBox().getChildren().remove(view.getResetButton());
         view.getOpenEditorButton().onAction(() -> openEditor(EditorType.STANDARD));
@@ -33,42 +32,12 @@ public class VaultEntityEntryController extends EntryController<VaultEntityEntry
                 null, false, context -> model.setData(context.getTag())));
     }
 
-    private Identifier getEntityIconTexture() {
+    private ItemStack getEntityIconItem() {
         Entity entity = model.getEntity();
         if (entity == null) {
-            return Identifier.withDefaultNamespace("textures/entity_icon/missing.png");
+            return new ItemStack(Items.SPAWNER);
         }
-        var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        var renderer = dispatcher.getRenderer(entity);
-        EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, 0.0f);
-        Identifier texture = null;
-        if (texture == null) {
-            for (var method : renderer.getClass().getMethods()) {
-                if (!method.getName().equals("getTextureLocation") || method.getParameterCount() != 1) continue;
-                Class<?> parameter = method.getParameterTypes()[0];
-                if (!parameter.isInstance(state)) continue;
-                try {
-                    texture = (Identifier) method.invoke(renderer, state);
-                    break;
-                } catch (ReflectiveOperationException ignored) {
-                }
-            }
-        }
-        if (texture == null) {
-            var typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-            if (typeKey != null) {
-                texture = Identifier.fromNamespaceAndPath(typeKey.getNamespace(), "textures/entity/" + typeKey.getPath() + ".png");
-            } else {
-                texture = Identifier.withDefaultNamespace("textures/entity/missing.png");
-            }
-        }
-        String rawPath = texture.getPath();
-        if (!rawPath.startsWith("textures/")) {
-            rawPath = "textures/" + rawPath;
-        }
-        String iconPath = rawPath.contains("/entity/")
-                ? rawPath.replace("/entity/", "/entity_icon/")
-                : "textures/entity_icon/" + rawPath.substring("textures/".length());
-        return Identifier.fromNamespaceAndPath(texture.getNamespace(), iconPath);
+        SpawnEggItem egg = SpawnEggItem.byId(entity.getType());
+        return egg != null ? new ItemStack(egg) : new ItemStack(Items.SPAWNER);
     }
 }

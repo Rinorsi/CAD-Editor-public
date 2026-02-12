@@ -1,6 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.view.entry.vault;
 
-import com.github.franckyi.guapi.api.node.ImageView;
+import com.github.franckyi.guapi.api.node.ItemView;
 import com.github.franckyi.guapi.api.node.Label;
 import com.github.franckyi.guapi.api.node.Node;
 import com.github.franckyi.guapi.api.node.TexturedButton;
@@ -11,14 +11,14 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class VaultEntityEntryView extends EntryView {
-    private ImageView imageView;
+    private ItemView iconView;
     private Label label;
     private TexturedButton openEditorButton, openNBTEditorButton, openSNBTEditorButton;
 
     @Override
     protected Node createContent() {
         return hBox(content -> {
-            content.add(imageView = imageView(null, 16, 16));
+            content.add(iconView = itemView().prefWidth(16).prefHeight(16));
             content.add(label = label(), 1);
             content.add(hBox(buttons -> {
                 buttons.add(openEditorButton = texturedButton(ModTextures.EDITOR, 16, 16, false).tooltip(ModTexts.OPEN_EDITOR));
@@ -30,8 +30,8 @@ public class VaultEntityEntryView extends EntryView {
         });
     }
 
-    public ImageView getImageView() {
-        return imageView;
+    public ItemView getIconView() {
+        return iconView;
     }
 
     public Label getLabel() {
