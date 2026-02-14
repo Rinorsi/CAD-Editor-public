@@ -33,6 +33,9 @@ public final class ClientEventHandler {
     }
 
     public static boolean onScreenEvent(AbstractContainerScreen<?> screen, int keyCode, int scanCode, int modifiers) {
+        if (ClientConfiguration.INSTANCE == null || !ClientConfiguration.INSTANCE.isAllowEditorInContainerScreens()) {
+            return false;
+        }
         try {
             KeyEvent keyEvent = new KeyEvent(keyCode, scanCode, modifiers);
             if (KeyBindings.getEditorKey().matches(keyEvent)) {

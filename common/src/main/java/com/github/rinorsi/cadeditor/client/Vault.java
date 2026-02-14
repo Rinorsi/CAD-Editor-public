@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -107,11 +108,32 @@ public final class Vault {
             IntStream.range(0, entityCount).forEach(i -> INSTANCE.entities.add(safeReadNbt()));
             LOGGER.info("保险库已加载");
         } catch (VaultFileFormatException e) {
-            LOGGER.warn("保险库文件格式无效：{}", e.getMessage());
-        } catch (IOException e) {
-            LOGGER.error("加载保险库时出错", e);
+            handleCorruptedVault(path, e);
+        } catch (IOException | RuntimeException e) {
+            handleCorruptedVault(path, e);
         } finally {
             buffer.clear();
+        }
+    }
+
+    private static void handleCorruptedVault(Path sourcePath, Exception exception) {
+        LOGGER.error("读取保险库失败，文件可能已损坏：{}", sourcePath, exception);
+        backupBrokenVault(sourcePath);
+        INSTANCE = new Vault();
+        save();
+    }
+
+    private static void backupBrokenVault(Path sourcePath) {
+        try {
+            if (!Files.exists(sourcePath)) {
+                return;
+            }
+            String backupName = sourcePath.getFileName() + ".broken-" + System.currentTimeMillis();
+            Path backupPath = sourcePath.resolveSibling(backupName);
+            Files.move(sourcePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.warn("已备份损坏的保险库文件到 {}", backupPath);
+        } catch (IOException e) {
+            LOGGER.warn("备份损坏保险库文件失败：{}", sourcePath, e);
         }
     }
 

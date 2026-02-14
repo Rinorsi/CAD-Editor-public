@@ -475,6 +475,7 @@
   "cadeditor.gui.showing_all": "Showing full list",
   "cadeditor.gui.seconds": "Seconds",
   "cadeditor.gui.selection_screen_max_items": "Selection Screen Max Items",
+  "cadeditor.gui.allow_editor_in_container_screens": "Allow hotkeys in container screens",
   "cadeditor.gui.settings": "Settings",
   "cadeditor.gui.show_icon": "Show Icon",
   "cadeditor.gui.show_particles": "Show Particles",

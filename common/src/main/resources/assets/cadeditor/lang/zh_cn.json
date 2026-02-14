@@ -478,6 +478,7 @@
   "cadeditor.gui.showing_all": "已显示全部",
   "cadeditor.gui.seconds": "秒",
   "cadeditor.gui.selection_screen_max_items": "选择界面最多条目数",
+  "cadeditor.gui.allow_editor_in_container_screens": "允许在容器界面触发快捷键",
   "cadeditor.gui.settings": "设置",
   "cadeditor.gui.show_icon": "显示图标",
   "cadeditor.gui.show_particles": "显示粒子",

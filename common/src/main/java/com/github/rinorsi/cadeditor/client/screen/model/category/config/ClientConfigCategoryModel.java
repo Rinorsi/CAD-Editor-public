@@ -5,6 +5,7 @@ import com.github.rinorsi.cadeditor.client.ClientConfiguration;
 import com.github.rinorsi.cadeditor.client.ClientInit;
 import com.github.rinorsi.cadeditor.client.screen.model.ConfigEditorScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ActionEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EnumEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
@@ -16,6 +17,7 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
     private EnumEntryModel<DebugMode> guapiDebugModeEntry;
     private EnumEntryModel<SyntaxHighlightingPreset> syntaxHighlightingPresetEntry;
     private IntegerEntryModel selectionScreenMaxItemsEntry;
+    private BooleanEntryModel allowEditorInContainerScreensEntry;
 
     public ClientConfigCategoryModel(ConfigEditorScreenModel editor) {
         super(ModTexts.CLIENT, editor);
@@ -32,6 +34,9 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
                         .withTextFactory(SyntaxHighlightingPreset::toComponent)
                         .withWeight(2),
                 selectionScreenMaxItemsEntry = new IntegerEntryModel(this, ModTexts.SELECTION_SCREEN_MAX_ITEMS, ClientConfiguration.INSTANCE.getSelectionScreenMaxItems(), ClientConfiguration.INSTANCE::setSelectionScreenMaxItems).withWeight(2),
+                allowEditorInContainerScreensEntry = new BooleanEntryModel(this, ModTexts.gui("allow_editor_in_container_screens"),
+                        ClientConfiguration.INSTANCE.isAllowEditorInContainerScreens(),
+                        ClientConfiguration.INSTANCE::setAllowEditorInContainerScreens).withWeight(2),
                 new ActionEntryModel(this, ModTexts.RELOAD_CONFIG, this::reload)
         );
     }
@@ -46,6 +51,7 @@ public class ClientConfigCategoryModel extends ConfigCategoryModel {
         guapiDebugModeEntry.setValue(ClientConfiguration.INSTANCE.getGuapiDebugMode());
         syntaxHighlightingPresetEntry.setValue(ClientConfiguration.INSTANCE.getSyntaxHighlightingPreset());
         selectionScreenMaxItemsEntry.setValue(ClientConfiguration.INSTANCE.getSelectionScreenMaxItems());
+        allowEditorInContainerScreensEntry.setValue(ClientConfiguration.INSTANCE.isAllowEditorInContainerScreens());
     }
 
     @Override

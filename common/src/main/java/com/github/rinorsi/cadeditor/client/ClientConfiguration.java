@@ -31,6 +31,7 @@ public final class ClientConfiguration {
     private int selectionScreenMaxItems;
     private String lastSeenUpdateLogVersion;
     private String syntaxHighlightingPreset;
+    private Boolean allowEditorInContainerScreens;
 
     private ClientConfiguration() {
         version = 0;
@@ -40,6 +41,7 @@ public final class ClientConfiguration {
         selectionScreenMaxItems = 100;
         lastSeenUpdateLogVersion = "";
         syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
+        allowEditorInContainerScreens = true;
     }
 
     public int getEditorScale() {
@@ -113,6 +115,17 @@ public final class ClientConfiguration {
         }
     }
 
+    public boolean isAllowEditorInContainerScreens() {
+        return allowEditorInContainerScreens == null || allowEditorInContainerScreens;
+    }
+
+    public void setAllowEditorInContainerScreens(boolean allowEditorInContainerScreens) {
+        if (this.allowEditorInContainerScreens == null || this.allowEditorInContainerScreens != allowEditorInContainerScreens) {
+            this.allowEditorInContainerScreens = allowEditorInContainerScreens;
+            changed = true;
+        }
+    }
+
     public static void load() {
         Path source = null;
         if (Files.exists(CLIENT_CONFIG_FILE)) {
@@ -174,6 +187,10 @@ public final class ClientConfiguration {
         }
         if (syntaxHighlightingPreset == null || syntaxHighlightingPreset.isBlank()) {
             syntaxHighlightingPreset = SyntaxHighlightingPreset.LEGACY.id();
+        }
+        if (allowEditorInContainerScreens == null) {
+            allowEditorInContainerScreens = true;
+            changed = true;
         }
     }
 }
