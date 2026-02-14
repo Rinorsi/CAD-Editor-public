@@ -505,6 +505,9 @@ public final class ServerEditorUpdateLogic {
         if (requested.contains("instabuild")) {
             abilities.instabuild = requested.getBoolean("instabuild");
         }
+        if (abilities.instabuild) {
+            abilities.mayBuild = true;
+        }
         if (requested.contains("walkSpeed")) {
             abilities.setWalkingSpeed(clampAbilitySpeed(requested.getFloat("walkSpeed")));
         }

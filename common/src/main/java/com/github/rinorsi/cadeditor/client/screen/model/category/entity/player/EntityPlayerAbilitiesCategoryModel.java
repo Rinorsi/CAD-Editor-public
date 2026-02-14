@@ -58,10 +58,11 @@ public class EntityPlayerAbilitiesCategoryModel extends EntityCategoryModel {
         super.apply();
         CompoundTag data = ensurePlayerTag();
         CompoundTag abilities = new CompoundTag();
+        boolean effectiveMayBuild = mayBuild || instabuild;
         abilities.putBoolean("invulnerable", invulnerable);
         abilities.putBoolean("mayfly", mayFly);
         abilities.putBoolean("flying", flying && mayFly);
-        abilities.putBoolean("mayBuild", mayBuild);
+        abilities.putBoolean("mayBuild", effectiveMayBuild);
         abilities.putBoolean("instabuild", instabuild);
         abilities.putFloat("walkSpeed", clampSpeed(walkSpeed));
         abilities.putFloat("flySpeed", clampSpeed(flySpeed));
@@ -78,7 +79,7 @@ public class EntityPlayerAbilitiesCategoryModel extends EntityCategoryModel {
         abilities.invulnerable = invulnerable;
         abilities.mayfly = mayFly;
         abilities.flying = flying && mayFly;
-        abilities.mayBuild = mayBuild;
+        abilities.mayBuild = mayBuild || instabuild;
         abilities.instabuild = instabuild;
         abilities.setWalkingSpeed(clampSpeed(walkSpeed));
         abilities.setFlyingSpeed(clampSpeed(flySpeed));
