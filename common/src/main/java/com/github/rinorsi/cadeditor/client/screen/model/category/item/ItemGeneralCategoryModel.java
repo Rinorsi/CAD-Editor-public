@@ -1,5 +1,6 @@
 package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 
+import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.ItemSelectionEntryModel;
@@ -7,12 +8,16 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelecti
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 
 public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
+    private static final String COMPONENTS_KEY = "components";
+    private static final String ITEM_MODEL_COMPONENT_KEY = "minecraft:item_model";
+
     public ItemGeneralCategoryModel(ItemEditorModel editor) {
         super(ModTexts.GENERAL, editor);
     }
@@ -28,6 +33,9 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(new IntegerEntryModel(this, ModTexts.MAX_STACK_SIZE, getMaxStackSizeValue(stack), this::setMaxStackSize,
                 value -> value >= 0 && value <= Item.ABSOLUTE_MAX_STACK_SIZE));
         getEntries().add(new RaritySelectionEntryModel(this, ModTexts.gui("rarity"), getRarityString(stack), this::setRarity));
+        ItemSelectionEntryModel itemModelEntry = new ItemSelectionEntryModel(this, ModTexts.gui("item_model"), getItemModelId(stack), this::setItemModelId);
+        itemModelEntry.setPlaceholder("minecraft:diamond");
+        getEntries().add(itemModelEntry);
     }
 
     private void setItemId(String id) {
@@ -96,5 +104,47 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
             }
         } catch (Exception ignored) {
         }
+    }
+
+    private String getItemModelId(ItemStack stack) {
+        CompoundTag root = ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
+        return root.getCompound(COMPONENTS_KEY)
+                .flatMap(components -> components.getString(ITEM_MODEL_COMPONENT_KEY))
+                .orElse("");
+    }
+
+    private void setItemModelId(String value) {
+        ItemStack current = getParent().getContext().getItemStack();
+        CompoundTag root = ClientUtil.saveItemStack(ClientUtil.registryAccess(), current);
+        CompoundTag components = root.getCompound(COMPONENTS_KEY).orElseGet(() -> {
+            CompoundTag created = new CompoundTag();
+            root.put(COMPONENTS_KEY, created);
+            return created;
+        });
+
+        String normalized = normalizeResourceId(value);
+        if (normalized.isEmpty()) {
+            components.remove(ITEM_MODEL_COMPONENT_KEY);
+        } else {
+            components.putString(ITEM_MODEL_COMPONENT_KEY, normalized);
+        }
+        if (components.isEmpty()) {
+            root.remove(COMPONENTS_KEY);
+        }
+
+        ItemStack parsed = ClientUtil.parseItemStack(ClientUtil.registryAccess(), root);
+        if (!parsed.isEmpty()) {
+            getParent().getContext().setItemStack(parsed);
+            getParent().getContext().setTag(root);
+        }
+    }
+
+    private String normalizeResourceId(String raw) {
+        String trimmed = raw == null ? "" : raw.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        ResourceLocation location = ClientUtil.parseResourceLocation(trimmed);
+        return location == null ? "" : location.toString();
     }
 }

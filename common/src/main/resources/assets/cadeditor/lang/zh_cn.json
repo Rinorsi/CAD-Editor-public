@@ -166,6 +166,7 @@
   "cadeditor.gui.consume_sound": "使用音效",
   "cadeditor.gui.custom_name": "自定义名称",
   "cadeditor.gui.item_name": "物品名",
+  "cadeditor.gui.item_model": "物品外观模型",
   "cadeditor.gui.cut": "剪切",
   "cadeditor.gui.damage": "损耗值",
   "cadeditor.gui.max_damage": "最大耐久",
@@ -598,5 +599,9 @@
   "cadeditor.gui.color_yellow": "黄色",
   "cadeditor.gui.color_white": "白色",
   "cadeditor.gui.equipment_slot.saddle": "鞍具",
-  "cadeditor.gui.attribute_tooltip_info": "提示： \n物品悬停中显示的属性是最终值（基础值+加成）；\n下方列表显示各项加成值。"
+  "cadeditor.gui.attribute_tooltip_info": "提示： \n物品悬停中显示的属性是最终值（基础值+加成）；\n下方列表显示各项加成值。",
+  "cadeditor.gui.wiki.item_model.0": "minecraft:item_model",
+  "cadeditor.gui.wiki.item_model.1": "控制物品的模型映射（仅改变外观）。",
+  "cadeditor.gui.wiki.item_model.2": "填写命名空间ID，例如 minecraft:diamond。",
+  "cadeditor.gui.wiki.item_model.3": "留空表示移除该组件并恢复默认外观。"
 }

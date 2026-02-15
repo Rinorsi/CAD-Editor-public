@@ -17,10 +17,12 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 public class EntityEquipmentCategoryModel extends EntityCategoryModel {
-    private static final String HAND_ITEMS_TAG = "HandItems";
-    private static final String HAND_DROPS_TAG = "HandDropChances";
-    private static final String ARMOR_ITEMS_TAG = "ArmorItems";
-    private static final String ARMOR_DROPS_TAG = "ArmorDropChances";
+    private static final String EQUIPMENT_TAG = "equipment";
+    private static final String DROP_CHANCES_TAG = "drop_chances";
+    private static final String LEGACY_HAND_ITEMS_TAG = "HandItems";
+    private static final String LEGACY_HAND_DROPS_TAG = "HandDropChances";
+    private static final String LEGACY_ARMOR_ITEMS_TAG = "ArmorItems";
+    private static final String LEGACY_ARMOR_DROPS_TAG = "ArmorDropChances";
     public static final float DEFAULT_DROP_CHANCE = 0.085f;
     public static final float DROP_EPSILON = 1.0e-4f;
 
@@ -45,14 +47,26 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
 
     private ItemStack readItem(Slot slot) {
         CompoundTag data = getData();
-        if (data == null || !data.contains(slot.itemListTag)) {
+        if (data == null) {
             return ItemStack.EMPTY;
         }
-        ListTag list = data.getListOrEmpty(slot.itemListTag);
-        if (slot.index >= list.size()) {
+
+        CompoundTag equipment = data.getCompound(EQUIPMENT_TAG).orElse(null);
+        if (equipment != null && equipment.contains(slot.equipmentKey)) {
+            CompoundTag itemTag = equipment.getCompound(slot.equipmentKey).orElse(null);
+            if (itemTag != null) {
+                return ClientUtil.parseItemStack(ClientUtil.registryAccess(), itemTag);
+            }
+        }
+
+        if (!data.contains(slot.legacyItemListTag)) {
             return ItemStack.EMPTY;
         }
-        Tag tag = list.get(slot.index);
+        ListTag list = data.getListOrEmpty(slot.legacyItemListTag);
+        if (slot.legacyIndex >= list.size()) {
+            return ItemStack.EMPTY;
+        }
+        Tag tag = list.get(slot.legacyIndex);
         if (!(tag instanceof CompoundTag compound)) {
             return ItemStack.EMPTY;
         }
@@ -61,14 +75,23 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
 
     private float readDropChance(Slot slot) {
         CompoundTag data = getData();
-        if (data == null || !data.contains(slot.dropChanceListTag)) {
+        if (data == null) {
             return slot.defaultDropChance;
         }
-        ListTag list = data.getListOrEmpty(slot.dropChanceListTag);
-        if (slot.index >= list.size()) {
+
+        CompoundTag dropChances = data.getCompound(DROP_CHANCES_TAG).orElse(null);
+        if (dropChances != null && dropChances.contains(slot.equipmentKey)) {
+            return dropChances.getFloatOr(slot.equipmentKey, slot.defaultDropChance);
+        }
+
+        if (!data.contains(slot.legacyDropChanceListTag)) {
             return slot.defaultDropChance;
         }
-        Tag tag = list.get(slot.index);
+        ListTag list = data.getListOrEmpty(slot.legacyDropChanceListTag);
+        if (slot.legacyIndex >= list.size()) {
+            return slot.defaultDropChance;
+        }
+        Tag tag = list.get(slot.legacyIndex);
         if (tag instanceof FloatTag floatTag) {
             return floatTag.floatValue();
         }
@@ -82,69 +105,45 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
     }
 
     private void writeToTag() {
-        ListTag handItems = new ListTag();
-        ListTag handDropChances = new ListTag();
-        ListTag armorItems = new ListTag();
-        ListTag armorDropChances = new ListTag();
+        CompoundTag data = getData();
+        CompoundTag equipment = data.getCompound(EQUIPMENT_TAG).map(CompoundTag::copy).orElseGet(CompoundTag::new);
+        CompoundTag dropChances = data.getCompound(DROP_CHANCES_TAG).map(CompoundTag::copy).orElseGet(CompoundTag::new);
+        for (Slot slot : Slot.values()) {
+            equipment.remove(slot.equipmentKey);
+            dropChances.remove(slot.equipmentKey);
+        }
 
-        boolean hasHandItems = false;
-        boolean hasArmorItems = false;
-        boolean customHandDropChance = false;
-        boolean customArmorDropChance = false;
+        boolean managedEquipment = false;
+        boolean managedDropChances = false;
 
         for (EntityEquipmentEntryModel entry : equipmentEntries) {
             Slot slot = entry.getSlot();
-            // Treat placeholder stick as empty (ignore when writing)
-            CompoundTag itemTag;
-            if (entry.getItemStack().is(net.minecraft.world.item.Items.STICK)) {
-                itemTag = new CompoundTag();
-            } else {
-                itemTag = entry.createItemTag();
+            CompoundTag itemTag = entry.createItemTag();
+            if (!itemTag.isEmpty()) {
+                equipment.put(slot.equipmentKey, itemTag);
+                managedEquipment = true;
             }
-            FloatTag dropTag = FloatTag.valueOf(entry.getDropChance());
-            if (slot.isHand()) {
-                handItems.add(itemTag);
-                handDropChances.add(dropTag);
-                if (!itemTag.isEmpty()) {
-                    hasHandItems = true;
-                }
-                if (!entry.isDefaultDropChance()) {
-                    customHandDropChance = true;
-                }
-            } else {
-                armorItems.add(itemTag);
-                armorDropChances.add(dropTag);
-                if (!itemTag.isEmpty()) {
-                    hasArmorItems = true;
-                }
-                if (!entry.isDefaultDropChance()) {
-                    customArmorDropChance = true;
-                }
+            if (!itemTag.isEmpty() && !entry.isDefaultDropChance()) {
+                dropChances.putFloat(slot.equipmentKey, entry.getDropChance());
+                managedDropChances = true;
             }
         }
 
-        CompoundTag data = getData();
-        if (hasHandItems) {
-            data.put(HAND_ITEMS_TAG, handItems);
+        if (managedEquipment || !equipment.isEmpty()) {
+            data.put(EQUIPMENT_TAG, equipment);
         } else {
-            data.remove(HAND_ITEMS_TAG);
+            data.remove(EQUIPMENT_TAG);
         }
-        if (customHandDropChance && hasHandItems) {
-            data.put(HAND_DROPS_TAG, handDropChances);
+        if (managedDropChances || !dropChances.isEmpty()) {
+            data.put(DROP_CHANCES_TAG, dropChances);
         } else {
-            data.remove(HAND_DROPS_TAG);
+            data.remove(DROP_CHANCES_TAG);
         }
 
-        if (hasArmorItems) {
-            data.put(ARMOR_ITEMS_TAG, armorItems);
-        } else {
-            data.remove(ARMOR_ITEMS_TAG);
-        }
-        if (customArmorDropChance && hasArmorItems) {
-            data.put(ARMOR_DROPS_TAG, armorDropChances);
-        } else {
-            data.remove(ARMOR_DROPS_TAG);
-        }
+        data.remove(LEGACY_HAND_ITEMS_TAG);
+        data.remove(LEGACY_HAND_DROPS_TAG);
+        data.remove(LEGACY_ARMOR_ITEMS_TAG);
+        data.remove(LEGACY_ARMOR_DROPS_TAG);
     }
 
     public String formatDropChance(float value) {
@@ -152,28 +151,30 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
     }
 
     public enum Slot {
-        MAIN_HAND(HAND_ITEMS_TAG, HAND_DROPS_TAG, 0, true, () -> ModTexts.MAIN_HAND.copy()),
-        OFF_HAND(HAND_ITEMS_TAG, HAND_DROPS_TAG, 1, true, () -> ModTexts.OFF_HAND.copy()),
-        FEET(ARMOR_ITEMS_TAG, ARMOR_DROPS_TAG, 0, false, () -> ModTexts.FEET.copy()),
-        LEGS(ARMOR_ITEMS_TAG, ARMOR_DROPS_TAG, 1, false, () -> ModTexts.LEGS.copy()),
-        CHEST(ARMOR_ITEMS_TAG, ARMOR_DROPS_TAG, 2, false, () -> ModTexts.CHEST.copy()),
-        HEAD(ARMOR_ITEMS_TAG, ARMOR_DROPS_TAG, 3, false, () -> ModTexts.HEAD.copy());
+        MAIN_HAND("mainhand", LEGACY_HAND_ITEMS_TAG, LEGACY_HAND_DROPS_TAG, 0, true, () -> ModTexts.MAIN_HAND.copy()),
+        OFF_HAND("offhand", LEGACY_HAND_ITEMS_TAG, LEGACY_HAND_DROPS_TAG, 1, true, () -> ModTexts.OFF_HAND.copy()),
+        FEET("feet", LEGACY_ARMOR_ITEMS_TAG, LEGACY_ARMOR_DROPS_TAG, 0, false, () -> ModTexts.FEET.copy()),
+        LEGS("legs", LEGACY_ARMOR_ITEMS_TAG, LEGACY_ARMOR_DROPS_TAG, 1, false, () -> ModTexts.LEGS.copy()),
+        CHEST("chest", LEGACY_ARMOR_ITEMS_TAG, LEGACY_ARMOR_DROPS_TAG, 2, false, () -> ModTexts.CHEST.copy()),
+        HEAD("head", LEGACY_ARMOR_ITEMS_TAG, LEGACY_ARMOR_DROPS_TAG, 3, false, () -> ModTexts.HEAD.copy());
 
-        private final String itemListTag;
-        private final String dropChanceListTag;
-        private final int index;
+        private final String equipmentKey;
+        private final String legacyItemListTag;
+        private final String legacyDropChanceListTag;
+        private final int legacyIndex;
         private final boolean hand;
         private final Supplier<MutableComponent> labelSupplier;
         private final float defaultDropChance;
 
-        Slot(String itemListTag, String dropChanceListTag, int index, boolean hand, Supplier<MutableComponent> labelSupplier) {
-            this(itemListTag, dropChanceListTag, index, hand, labelSupplier, DEFAULT_DROP_CHANCE);
+        Slot(String equipmentKey, String legacyItemListTag, String legacyDropChanceListTag, int legacyIndex, boolean hand, Supplier<MutableComponent> labelSupplier) {
+            this(equipmentKey, legacyItemListTag, legacyDropChanceListTag, legacyIndex, hand, labelSupplier, DEFAULT_DROP_CHANCE);
         }
 
-        Slot(String itemListTag, String dropChanceListTag, int index, boolean hand, Supplier<MutableComponent> labelSupplier, float defaultDropChance) {
-            this.itemListTag = itemListTag;
-            this.dropChanceListTag = dropChanceListTag;
-            this.index = index;
+        Slot(String equipmentKey, String legacyItemListTag, String legacyDropChanceListTag, int legacyIndex, boolean hand, Supplier<MutableComponent> labelSupplier, float defaultDropChance) {
+            this.equipmentKey = equipmentKey;
+            this.legacyItemListTag = legacyItemListTag;
+            this.legacyDropChanceListTag = legacyDropChanceListTag;
+            this.legacyIndex = legacyIndex;
             this.hand = hand;
             this.labelSupplier = labelSupplier;
             this.defaultDropChance = defaultDropChance;

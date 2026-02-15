@@ -159,7 +159,11 @@ public final class Vault {
             } else {
                 buffer.readerIndex(i);
                 try {
-                    return NbtIo.read(new ByteBufInputStream(buffer));
+                    Tag fallback = NbtIo.readAnyTag(new ByteBufInputStream(buffer), NbtAccounter.unlimitedHeap());
+                    if (fallback instanceof CompoundTag compound) {
+                        return compound;
+                    }
+                    throw new RuntimeException("Expected CompoundTag but got " + fallback.getClass().getSimpleName());
                 } catch (IOException e0) {
                     throw new RuntimeException(e0);
                 }
