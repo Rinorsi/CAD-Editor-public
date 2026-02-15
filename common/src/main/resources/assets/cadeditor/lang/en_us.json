@@ -166,6 +166,7 @@
   "cadeditor.gui.consume_sound": "Use Sound",
   "cadeditor.gui.custom_name": "Custom Name",
   "cadeditor.gui.item_name": "Item Name",
+  "cadeditor.gui.item_model": "Item Model Override",
   "cadeditor.gui.cut": "Cut",
   "cadeditor.gui.damage": "Durability Damage",
   "cadeditor.gui.max_damage": "Max Durability",
@@ -694,5 +695,9 @@
   "cadeditor.gui.color_light_purple": "Light Purple",
   "cadeditor.gui.color_yellow": "Yellow",
   "cadeditor.gui.color_white": "White",
-  "cadeditor.gui.attribute_tooltip_info": "Tooltip note: weapon stats shown in the tooltip are the final value (base + modifiers). The entries below list the raw modifier values."
+  "cadeditor.gui.attribute_tooltip_info": "Tooltip note: weapon stats shown in the tooltip are the final value (base + modifiers). The entries below list the raw modifier values.",
+  "cadeditor.gui.wiki.item_model.0": "minecraft:item_model",
+  "cadeditor.gui.wiki.item_model.1": "Controls the item model mapping (visual only).",
+  "cadeditor.gui.wiki.item_model.2": "Enter a namespaced id, e.g. minecraft:diamond.",
+  "cadeditor.gui.wiki.item_model.3": "Leave empty to remove this component and use default visuals."
 }

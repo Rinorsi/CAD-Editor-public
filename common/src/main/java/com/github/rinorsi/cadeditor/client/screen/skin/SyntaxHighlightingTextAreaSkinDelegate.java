@@ -8,7 +8,6 @@ import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPal
 import com.github.rinorsi.cadeditor.client.util.texteditor.SyntaxHighlightingPreset;
 import com.github.rinorsi.cadeditor.mixin.MultiLineEditBoxMixin;
 import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldMixin;
-import com.github.rinorsi.cadeditor.mixin.MultilineTextFieldStringViewAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
@@ -19,6 +18,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.util.List;
 
 public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.guapi.base.theme.vanilla.delegate.VanillaTextAreaSkinDelegate<SyntaxHighlightingTextArea> {
@@ -133,11 +135,43 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
     }
 
     private static int beginIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$beginIndex();
+        return getComponentIndex(view, 0);
     }
 
     private static int endIndex(Object view) {
-        return ((MultilineTextFieldStringViewAccessor) view).cadeditor$endIndex();
+        return getComponentIndex(view, 1);
+    }
+
+    private static int getComponentIndex(Object view, int componentIndex) {
+        Class<?> cls = view.getClass();
+        try {
+            RecordComponent[] components = cls.getRecordComponents();
+            if (components != null && components.length > componentIndex) {
+                Method accessor = components[componentIndex].getAccessor();
+                accessor.setAccessible(true);
+                Object value = accessor.invoke(view);
+                if (value instanceof Integer integer) {
+                    return integer;
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        int intFieldIndex = 0;
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.getType() != int.class) {
+                continue;
+            }
+            if (intFieldIndex == componentIndex) {
+                try {
+                    field.setAccessible(true);
+                    return field.getInt(view);
+                } catch (IllegalAccessException ignored) {
+                }
+                break;
+            }
+            intFieldIndex++;
+        }
+        throw new IllegalStateException("Unable to read StringView component " + componentIndex + " from " + cls.getName());
     }
 
     private int drawSegment(GuiGraphics graphics, String fullText, SyntaxHighlightingPalette palette, int start, int end, int x, int y, int errorOffset) {

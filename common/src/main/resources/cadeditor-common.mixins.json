@@ -13,7 +13,6 @@
     "EditBoxMixin",
     "MultiLineEditBoxMixin",
     "MultilineTextFieldMixin",
-    "MultilineTextFieldStringViewAccessor",
     "InventoryAccessor"
   ],
   "injectors": {
