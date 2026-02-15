@@ -64,6 +64,7 @@ public final class ServerEditorUpdateLogic {
             }
 
             syncMainHand(player);
+            forceInventorySync(player);
 
             queueMainHandVerification(player, normalizedStack);
         } catch (Exception e) {
@@ -86,6 +87,7 @@ public final class ServerEditorUpdateLogic {
             }
 
             syncInventorySlot(player, response.getSlot());
+            forceInventorySync(player);
 
             queueInventoryVerification(player, response.getSlot(), normalizedStack);
         } catch (Exception e) {

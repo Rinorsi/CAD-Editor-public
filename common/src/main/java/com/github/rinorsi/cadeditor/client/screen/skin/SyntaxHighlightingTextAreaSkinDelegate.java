@@ -286,14 +286,20 @@ public class SyntaxHighlightingTextAreaSkinDelegate extends com.github.franckyi.
             }
         } catch (ReflectiveOperationException ignored) {
         }
-        Field[] fields = cls.getDeclaredFields();
-        if (fields.length > componentIndex && fields[componentIndex].getType() == int.class) {
-            try {
-                Field field = fields[componentIndex];
-                field.setAccessible(true);
-                return field.getInt(view);
-            } catch (IllegalAccessException ignored) {
+        int intFieldIndex = 0;
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.getType() != int.class) {
+                continue;
             }
+            if (intFieldIndex == componentIndex) {
+                try {
+                    field.setAccessible(true);
+                    return field.getInt(view);
+                } catch (IllegalAccessException ignored) {
+                }
+                break;
+            }
+            intFieldIndex++;
         }
         throw new IllegalStateException("Unable to read StringView component " + componentIndex + " from " + cls.getName());
     }
