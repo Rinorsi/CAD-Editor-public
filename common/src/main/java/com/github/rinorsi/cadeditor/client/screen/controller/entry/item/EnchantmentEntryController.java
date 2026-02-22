@@ -27,12 +27,12 @@ public class EnchantmentEntryController extends SelectionEntryController<Enchant
         super.bind();
         view.getPlusButton().onAction(() -> model.levelProperty().incr());
         view.getMinusButton().onAction(() -> model.levelProperty().decr());
-        view.getLevelField().setValidator(Predicates.range(0, 256));
+        view.getLevelField().setValidator(Predicates.range(0, 999999999));
         view.getLevelField().textProperty().addListener(value -> {
             if (view.getLevelField().isValid()) {
                 int level = Integer.parseInt(value);
                 model.setLevel(level);
-                view.getPlusButton().setDisable(level == 255);
+                view.getPlusButton().setDisable(level == 999999999);
                 view.getMinusButton().setDisable(level == 0);
             } else {
                 view.getPlusButton().setDisable(true);
