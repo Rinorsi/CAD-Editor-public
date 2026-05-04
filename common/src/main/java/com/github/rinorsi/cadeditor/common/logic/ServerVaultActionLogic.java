@@ -11,7 +11,13 @@ public class ServerVaultActionLogic {
             CommonUtil.showPermissionError(player, ModTexts.VAULT);
             return;
         }
-        player.getInventory().setItem(response.slot(), response.itemStack());
+        int slot = response.slot();
+        if (slot < 0 || slot >= player.getInventory().getContainerSize()) {
+            CommonUtil.showMessage(player, ModTexts.Messages.ERROR_GENERIC);
+            return;
+        }
+
+        player.getInventory().setItem(slot, response.itemStack());
         CommonUtil.showVaultItemGiveSuccess(player);
     }
 }
